@@ -85,8 +85,21 @@ jobs:
           curl -sSL --retry 3 -o xcodegen.zip \
             "https://github.com/yonaskolb/XcodeGen/releases/download/${XCODEGEN_VERSION}/xcodegen.zip"
           unzip -q -o xcodegen.zip
-          sudo mv xcodegen/bin/xcodegen /usr/local/bin/xcodegen
+          # **Both halves.** The binary alone is not enough: XcodeGen reads
+          # its platform presets (which set `SDKROOT` and the supported
+          # destinations) from `share/xcodegen/SettingPresets` next to
+          # itself. Without them it generates a project with no supported
+          # platform, and every build then fails with "Unable to find a
+          # destination matching the provided destination specifier".
+          # `install.sh` is the upstream's own installer and does exactly
+          # this.
+          cd xcodegen
+          sudo ./install.sh /usr/local
+          cd ..
+          rm -rf xcodegen xcodegen.zip
           xcodegen --version
+          echo "--- the presets have to be there ---"
+          ls /usr/local/share/xcodegen/SettingPresets/Platforms/
 
       # The official VLCKit xcframework carries slices for watchOS and visionOS
       # and the debug symbols of every slice - together more than half of the
@@ -161,7 +174,23 @@ jobs:
           set -euo pipefail
           cd "$GITHUB_WORKSPACE"
           xcodegen generate
+          # XcodeGen prints "No \"iOS\" settings found" when its platform
+          # presets are missing. The project then has no `SDKROOT`, and every
+          # build fails with a destination error that says nothing about the
+          # real cause. Catch it here instead.
           xcodebuild -project Swiftly.xcodeproj -list
+          for schema in Swiftly-iOS Swiftly-tvOS Swiftly-macOS; do
+            xcodebuild -project Swiftly.xcodeproj -list | grep -qx "        $schema" \
+              || { echo "Schema fehlt: $schema"; exit 1; }
+          done
+          echo "--- SDKROOT per target ---"
+          for target in Swiftly-iOS Swiftly-tvOS Swiftly-macOS; do
+            sdk=$(xcodebuild -project Swiftly.xcodeproj -target "$target" \
+                    -configuration Release -showBuildSettings 2>/dev/null \
+                    | awk -F' = ' '/ SDKROOT = /{print $2; exit}')
+            echo "$target SDKROOT=$sdk"
+            [ -n "$sdk" ] || { echo "ERROR: $target has no SDKROOT"; exit 1; }
+          done
 
       - name: Build iOS (device, arm64)
         run: |
