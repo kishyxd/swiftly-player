@@ -20,8 +20,11 @@ on:
     branches: [ci/android-build, feature/ftv-rebrand]
 
 concurrency:
-  group: android-build-${{ github.ref }}
-  cancel-in-progress: true
+  # **Never cancel a running build.** A new push must not kill the build that is already
+  # compiling the Swift core; that is minutes of work thrown away, and two workflows on the
+  # same branch would otherwise cancel each other.
+  group: android-build-${{ github.ref }}-${{ github.run_id }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
