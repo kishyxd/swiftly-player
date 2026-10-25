@@ -494,8 +494,17 @@ jobs:
             for platform in ios tvos macos; do
               app=$(ls -d build/$platform/Build/Products/*/*.app 2>/dev/null | grep -v TopShelf | head -1)
               if [ -n "$app" ]; then
-                bin=$(plutil -extract CFBundleExecutable raw "$app/Info.plist")
-                echo "* **$platform**: \`$(basename "$app")\` ($(du -sh "$app" | cut -f1)), binary \`$bin\` $(lipo -info "$app/$bin" | sed 's/.*: //')"
+                # A Mac bundle keeps its Info.plist and its executable in
+                # Contents/; an iOS and tvOS bundle keep them at the top.
+                if [ -f "$app/Contents/Info.plist" ]; then
+                  plist="$app/Contents/Info.plist"
+                  bindir="$app/Contents/MacOS"
+                else
+                  plist="$app/Info.plist"
+                  bindir="$app"
+                fi
+                bin=$(plutil -extract CFBundleExecutable raw "$plist")
+                echo "* **$platform**: \`$(basename "$app")\` ($(du -sh "$app" | cut -f1)), binary \`$bin\` $(lipo -info "$bindir/$bin" | sed 's/.*: //')"
               else
                 echo "* **$platform**: no .app"
               fi
