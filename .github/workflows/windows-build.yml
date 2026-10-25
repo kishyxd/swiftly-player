@@ -206,13 +206,18 @@ jobs:
         shell: pwsh
         run: |
           $swiftRoot = $env:SWIFT_ROOT
+          # **`$LASTEXITCODE` says nothing here.** It is set by *native*
+          # programs, not by a PowerShell script; in a fresh shell it is
+          # `$null`, and `$null -ne 0` is true - so the check would fail a
+          # run that had succeeded. `$?` is the flag for "the last command
+          # worked", and a `throw` inside the script aborts the step anyway.
           & 'C:\swiftly\Windows\Install\package.ps1' `
             -Konfiguration release `
             -Ziel 'C:\swiftly\Windows\Output\FTVPlayer' `
             -Gtk 'C:\Werkzeuge\gtk4' `
             -VlcLaufzeit 'C:\Werkzeuge\vlc\vlc-3.0.21' `
             -SwiftLaufzeit "$swiftRoot\Runtimes\$env:SWIFT_VERSION\usr\bin"
-          if ($LASTEXITCODE -ne 0) { throw "package.ps1 endete mit $LASTEXITCODE" }
+          if (-not $?) { throw "package.ps1 ist fehlgeschlagen." }
           Get-ChildItem 'C:\swiftly\Windows\Output\FTVPlayer' | Select-Object Name
 
       # **What the artifact is.** A short report about the .exe: its size, its
