@@ -1,0 +1,126 @@
+name: Android-Build
+
+# Builds the Android (direct) flavor APK from source on a macOS runner.
+#
+# **Why a macos-26 runner.** The Swift core under `Android/core` is compiled for the Android ABIs
+# with the open Swift toolchain, and `Android/core/build.gradle` hardcodes the macOS paths of a
+# toolchain installed by swiftly, the NDK under `~/Library/Android/sdk/ndk/27.3.13750724` and the
+# Swift SDK for Android under `~/Library/org.swift.swiftpm/swift-sdks`. The runner image has
+# exactly that NDK and that JDK 21, so nothing has to be patched.
+#
+# **The Swift SDK for Android** is the one piece that is not preinstalled. It is an artifact
+# bundle; it must be unpacked to the path the Gradle build expects, and its
+# `setup-android-sdk.sh` must be run once against the NDK so that the bundle gets the
+# `ndk-sysroot` the Swift core links against. Without that step the Swift build fails with a
+# missing sysroot.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ci/android-build, feature/ftv-rebrand]
+
+concurrency:
+  # **Never cancel a running build.** A new push must not kill the build that is already
+  # compiling the Swift core; that is minutes of work thrown away, and two workflows on the
+  # same branch would otherwise cancel each other.
+  group: android-build-${{ github.ref }}-${{ github.run_id }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Android APK
+    runs-on: macos-26
+    env:
+      SWIFT_VERSION: "6.3.3"
+      SDK_BUNDLE: "swift-6.3.3-RELEASE_android.artifactbundle"
+      SDK_URL: "https://download.swift.org/swift-6.3.3-release/android-sdk/swift-6.3.3-RELEASE/swift-6.3.3-RELEASE_android.artifactbundle.tar.gz"
+      SDK_SHA256: "d160cc3206dd1886dae3fef2337af5e25ec034692cd0ec225721c56cc69da7f5"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain versions
+        run: |
+          java -version
+          swift --version || true
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME"
+          ls -d "$ANDROID_HOME"/ndk/* 2>/dev/null || true
+          ls -d /Library/Developer/CommandLineTools/SDKs/MacOSX*.sdk 2>/dev/null || true
+
+      # swiftly: the open Swift toolchain manager. The Android build calls
+      # `~/.swiftly/bin/swiftly run swift build ...`, so swiftly has to live exactly there.
+      - name: Install swiftly
+        run: |
+          set -euo pipefail
+          curl -L -O --retry 3 "https://download.swift.org/swiftly/darwin/swiftly.pkg"
+          installer -pkg swiftly.pkg -target CurrentUserHomeDirectory
+          ~/.swiftly/bin/swiftly init --quiet-shell-followup
+          ~/.swiftly/bin/swiftly --version
+
+      - name: Install Swift 6.3.3
+        run: |
+          set -euo pipefail
+          ~/.swiftly/bin/swiftly install "${SWIFT_VERSION}"
+          ~/.swiftly/bin/swiftly use "${SWIFT_VERSION}"
+          ~/.swiftly/bin/swiftly list
+          ~/.swiftly/bin/swiftly run swift --version
+
+      # The Swift SDK for Android. It goes to the path `Android/core/build.gradle` reads:
+      #   sdkBuendel = ~/Library/org.swift.swiftpm/swift-sdks/swift-6.3.3-RELEASE_android.artifactbundle
+      - name: Install the Swift SDK for Android
+        run: |
+          set -euo pipefail
+          SDKS="$HOME/Library/org.swift.swiftpm/swift-sdks"
+          mkdir -p "$SDKS"
+          curl -L --retry 3 -o sdk.tgz "$SDK_URL"
+          echo "${SDK_SHA256}  sdk.tgz" | shasum -a 256 -c -
+          tar xzf sdk.tgz -C "$SDKS"
+          test -d "$SDKS/$SDK_BUNDLE"
+          # The bundle has no sysroot of its own: this script links the NDK's sysroot into it.
+          export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/27.3.13750724"
+          bash "$SDKS/$SDK_BUNDLE/swift-android/scripts/setup-android-sdk.sh"
+          ls "$SDKS/$SDK_BUNDLE/swift-android/ndk-sysroot/usr/include" | head
+
+      # `swiftkit-core` (org.swift.swiftkit) is not on Maven Central; it is built from the
+      # swift-java repository and published into the local Maven repository, which is what
+      # `Android/settings.gradle.kts` reads (mavenLocal()).
+      - name: Publish swiftkit-core to the local Maven repository
+        run: |
+          set -euo pipefail
+          git clone --depth 1 https://github.com/swiftlang/swift-java swift-java
+          cd swift-java
+          # `SwiftKitCore` compiles against Java 25 (its own toolchain declaration), and the
+          # runner image names the JDKs in variables that are not exported in every step.
+          export JAVA_HOME="$(/usr/libexec/java_home -v 25)"
+          echo "JAVA_HOME=$JAVA_HOME"
+          java -version
+          ./gradlew :SwiftKitCore:publishToMavenLocal \
+            -PswiftkitVersion="1.0.0" \
+            --no-daemon
+          ls -R "$HOME/.m2/repository/org/swift/swiftkit/swiftkit-core" | head -20
+
+      - name: Build the Android APK
+        working-directory: Android
+        run: |
+          set -euo pipefail
+          export JAVA_HOME="$(/usr/libexec/java_home -v 21)"
+          export PATH="$JAVA_HOME/bin:$HOME/.swiftly/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
+          export ANDROID_HOME
+          export ANDROID_SDK_ROOT="$ANDROID_HOME"
+          echo "JAVA_HOME=$JAVA_HOME"
+          java -version
+          ./gradlew :phone:tasks --all --console=plain | grep -iE '^assembleDirect' || true
+          # The FTV edition: the server the app signs in to is fixed at build time.
+          ./gradlew :phone:assembleDirectRelease --console=plain --stacktrace -PftvServer="https://ftv.kxvn.io"
+
+      - name: Upload the APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ftv-android-apk
+          path: |
+            Android/phone/build/outputs/apk/direct/release/*.apk
+            Android/phone/build/outputs/apk/direct/debug/*.apk
+          if-no-files-found: error
