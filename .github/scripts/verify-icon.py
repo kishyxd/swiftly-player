@@ -447,14 +447,19 @@ def car_digest(built_json, reference_json, rendition):
     The two catalogues do not hold the same set of renditions - the built
     one carries the whole app's assets, the reference one only the icon -
     so the renditions are matched by their key (name, idiom, scale and
-    pixel size) and each matching pair is compared.
+    pixel size) and each matching group is compared.
+
+    A key can hold more than one rendition: actool stores the icon twice,
+    once as ARGB and once as ARGB-16, and the two have different digests.
+    The whole group is therefore compared, digest for digest, rather than
+    just the first entry.
     """
     def load(path):
         with open(path) as fp:
             return json.load(fp)
 
     def index(entries, name):
-        """{rendition key: entry} for every rendition called `name`."""
+        """{rendition key: [entry, ...]} for every rendition called `name`."""
         found = {}
         for entry in entries:
             if not isinstance(entry, dict) or entry.get("Name") != name:
@@ -462,7 +467,7 @@ def car_digest(built_json, reference_json, rendition):
             key = (entry.get("RenditionName"), entry.get("Idiom"),
                    entry.get("Scale"), entry.get("PixelWidth"),
                    entry.get("PixelHeight"))
-            found.setdefault(key, entry)
+            found.setdefault(key, []).append(entry)
         return found
 
     built = index(load(built_json), rendition)
@@ -474,23 +479,32 @@ def car_digest(built_json, reference_json, rendition):
         print(f"ERROR: the rendition {rendition!r} is not in {reference_json}.")
         return 1
 
-    common = sorted(set(built) & set(reference))
+    common = sorted(set(built) & set(reference), key=lambda k: tuple(
+        "" if v is None else v for v in k))
     if not common:
         print(f"ERROR: {rendition!r} has no rendition in common between "
               f"the built car and the reference car.")
         return 1
 
     for key in common:
-        b, r = built[key], reference[key]
         name, idiom, scale, width, height = key
-        print(f"  {rendition!r} {name} {width}x{height} {idiom}@{scale}x "
-              f"sha1 {b.get('SHA1Digest')}")
-        if b.get("SHA1Digest") != r.get("SHA1Digest"):
+        b = sorted(built[key], key=lambda e: e.get("SHA1Digest") or "")
+        r = sorted(reference[key], key=lambda e: e.get("SHA1Digest") or "")
+        where = f"{width}x{height} " if width and height else ""
+        print(f"  {rendition!r} {name or '(unnamed)'} {where}{idiom}@{scale}x")
+        if len(b) != len(r):
             print(f"  VERDICT: NOT the FTV artwork "
-                  f"(built digest {b.get('SHA1Digest')}, "
-                  f"reference digest {r.get('SHA1Digest')})")
+                  f"(the built car holds {len(b)} rendition(s), "
+                  f"the reference {len(r)})")
             return 1
-    print(f"  {len(common)} rendition(s) identical to the reference")
+        for be, re_ in zip(b, r):
+            print(f"    {be.get('Encoding')} sha1 {be.get('SHA1Digest')}")
+            if be.get("SHA1Digest") != re_.get("SHA1Digest"):
+                print(f"  VERDICT: NOT the FTV artwork "
+                      f"(built digest {be.get('SHA1Digest')}, "
+                      f"reference digest {re_.get('SHA1Digest')})")
+                return 1
+    print(f"  {len(common)} rendition group(s) identical to the reference")
     print("  VERDICT: FTV artwork")
     return 0
 

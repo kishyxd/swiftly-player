@@ -385,7 +385,29 @@ jobs:
              out/icon-check/ftv-tvos-wordmark-800x480.png
           shasum -a 256 out/icon-check/*.png
           echo
+
+          # **Anchor the references by digest.** The comparison below proves
+          # that the built apps carry *these* files. This proves that *these
+          # files* are the owner's artwork and not something that was
+          # swapped into the repository - the iOS and macOS references are
+          # the owner's own 1024x1024 file byte for byte, and the tvOS one
+          # is the wordmark layer of the FTV brand asset.
+          OWNER_SHA256=6595d46176f7345af73f44de4d4640db2b30b0120fc3d87cef293d7c6a7a2f6c
+          TVOS_SHA256=057f1645a7d0b61b75545f6455c63949f19e42aecd8899038b8110bd2483a34a
           status=0
+          for pair in "out/icon-check/ftv-icon-1024.png:$OWNER_SHA256" \
+                      "out/icon-check/ftv-mac-1024.png:$OWNER_SHA256" \
+                      "out/icon-check/ftv-tvos-wordmark-800x480.png:$TVOS_SHA256"; do
+            f=${pair%%:*}; want=${pair##*:}
+            got=$(shasum -a 256 "$f" | cut -d" " -f1)
+            if [ "$got" = "$want" ]; then
+              echo "  OK   $f is the owner's artwork"
+            else
+              echo "  FAIL $f: sha256 $got, expected $want"
+              status=1
+            fi
+          done
+          echo
 
           ios_app=$(ls -d build/ios/Build/Products/*/*.app 2>/dev/null | grep -v TopShelf | head -1)
           tvos_app=$(ls -d build/tvos/Build/Products/*/*.app 2>/dev/null | grep -v TopShelf | head -1)
@@ -426,6 +448,12 @@ jobs:
             python3 .github/scripts/verify-icon.py \
               --png-dir out/icon-check/ios-built.iconset \
               out/icon-check/ios-ref.iconset/icon_512x512@2x.png || status=1
+            echo "--- the icon in the built car's own asset catalogue, by digest ---"
+            assetutil --info "$ios_app/Assets.car" > out/icon-check/ios-built.json
+            assetutil --info out/icon-check/ref-ios/Assets.car > out/icon-check/ios-ref.json
+            python3 .github/scripts/verify-icon.py --car-digest \
+              out/icon-check/ios-built.json out/icon-check/ios-ref.json \
+              "AppIcon" || status=1
             echo "--- the bundle's own fallback PNG against the owner's artwork ---"
             python3 .github/scripts/verify-icon.py \
               out/icon-check/ftv-icon-1024.png "$ios_app" || status=1
