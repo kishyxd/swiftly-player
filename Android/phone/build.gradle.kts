@@ -1,4 +1,6 @@
 // Swiftly for Android phones. Mirrors Sources/Shared + Sources/iOS.
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -31,7 +33,7 @@ android {
         // `key.properties` next to this build file (the path Gradle already looks in), which CI
         // writes from the repository's secrets; the file is never committed.
         if (keyProperties.exists()) {
-            val key = java.util.Properties().apply {
+            val key = Properties().apply {
                 keyProperties.inputStream().use { load(it) }
             }
             create("kxvn") {
