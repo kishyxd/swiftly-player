@@ -48,11 +48,15 @@ extension App {
         // **The FTV edition starts with the KXVN request instance**, so a new user only
         // has to sign in. The field stays editable: somebody who runs their own Seerr
         // must be able to point the app at it.
+        //
+        // **The `if` is written twice rather than with an `#if` around the `else`:**
+        // a conditional compilation block between the closing brace and the `else`
+        // is not valid Swift - the parser reads the `else` as a new statement.
         if let z = seerrAccess {
             gtk_editable_set_text(OpaquePointer(address), z.address.absoluteString)
         }
         #if FTV_EDITION
-        else {
+        if seerrAccess == nil {
             gtk_editable_set_text(OpaquePointer(address), FTVEdition.seerrURL)
         }
         #endif
