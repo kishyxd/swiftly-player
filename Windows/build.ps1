@@ -83,9 +83,18 @@ Copy-Item -Path $mittel -Destination $mittelZiel -Recurse
 # The license texts (LICENSES\ in the repo, the single source) go next to the
 # program under Resources\Licenses; the app reads components.json and the full
 # texts there. libVLC is LGPL, so nothing may ship without these files.
+#
+# **The folder is called `Licenses`, not `Lizenzen`.** The app looks for
+# `Resources\Licenses` (`Platform.bundled("Licenses/...")`) and
+# `Install\package.ps1` checks the same name before it packages anything.
+# The old German spelling left the files where nothing could find them, and
+# the build only worked on a machine where a *Linux* build had run before and
+# had left `Linux\Resources\Licenses` behind.
 $lizenzen = Join-Path (Split-Path -Parent $hier) 'LICENSES'
 if (-not (Test-Path (Join-Path $lizenzen 'components.json'))) { throw "LICENSES\components.json fehlt: $lizenzen" }
-Copy-Item -Path $lizenzen -Destination (Join-Path $mittelZiel 'Lizenzen') -Recurse
+$lizenzZiel = Join-Path $mittelZiel 'Licenses'
+if (Test-Path $lizenzZiel) { Remove-Item -Recurse -Force $lizenzZiel }
+Copy-Item -Path $lizenzen -Destination $lizenzZiel -Recurse
 
 # ------------------------------------------------------------- Search paths
 #
