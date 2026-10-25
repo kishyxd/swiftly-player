@@ -230,21 +230,30 @@ jobs:
 
       # An unsigned .ipa is a zip with the app inside a `Payload/` folder. Without
       # a signing identity nothing more is possible here - see the header.
+      #
+      # The product directories are named after the platform
+      # (`Release-iphoneos`, `Release-appletvos`, `Release`), so they are
+      # listed explicitly. A glob would have to be expanded by the shell
+      # before `find` sees it, and a quoted one is taken literally.
       - name: Package the unsigned .ipa files
         run: |
           set -euo pipefail
           cd "$GITHUB_WORKSPACE"
           mkdir -p out
-          for platform in ios tvos; do
-            app=$(find "build/$platform/Build/Products/Release-*" -maxdepth 1 -name '*.app' | head -1)
-            [ -n "$app" ] || { echo "no .app for $platform"; exit 1; }
+          for entry in "ios:build/ios/Build/Products/Release-iphoneos:Swiftly-iOS.app" \
+                       "tvos:build/tvos/Build/Products/Release-appletvos:Swiftly-tvOS.app"; do
+            platform=$(echo "$entry" | cut -d: -f1)
+            dir=$(echo "$entry" | cut -d: -f2)
+            appname=$(echo "$entry" | cut -d: -f3)
+            app="$dir/$appname"
+            [ -d "$app" ] || { echo "no .app for $platform at $app"; exit 1; }
             name=$(basename "$app" .app)
             rm -rf "out/$name.ipa" "out/Payload"
             mkdir -p out/Payload
             cp -R "$app" "out/Payload/"
             (cd out && zip -q -r -X "$name.ipa" Payload)
             rm -rf out/Payload
-            echo "packaged out/$name.ipa"
+            echo "packaged out/$name.ipa ($(du -h "out/$name.ipa" | cut -f1))"
           done
           ls -la out
 
@@ -255,8 +264,8 @@ jobs:
           set -euo pipefail
           cd "$GITHUB_WORKSPACE"
           mkdir -p out/dmg
-          app=$(find "build/macos/Build/Products/Release-*" -maxdepth 1 -name '*.app' | head -1)
-          [ -n "$app" ] || { echo "no .app for macos"; exit 1; }
+          app="build/macos/Build/Products/Release/Swiftly.app"
+          [ -d "$app" ] || { echo "no .app at $app"; exit 1; }
           cp -R "$app" out/dmg/
           ln -s /Applications out/dmg/Applications
           hdiutil create -volname "FTV Player" -srcfolder out/dmg -ov -format UDZO \
@@ -269,7 +278,7 @@ jobs:
           set -euo pipefail
           cd "$GITHUB_WORKSPACE"
           for platform in ios tvos macos; do
-            app=$(find "build/$platform/Build/Products/Release-*" -maxdepth 1 -name '*.app' | head -1)
+            app=$(ls -d build/$platform/Build/Products/*/*.app 2>/dev/null | grep -v TopShelf | head -1)
             echo "=============== $platform: $app ==============="
             [ -n "$app" ] || { echo "MISSING"; continue; }
             du -sh "$app"
@@ -286,6 +295,25 @@ jobs:
             ls -la "$app/Frameworks" 2>/dev/null || true
           done
 
+      # The `.app` bundles are zipped with `ditto` as well: a bundle is a
+      # directory with symlinks and executable bits, and an artifact upload
+      # does not carry those reliably. The `.zip` is what actually survives
+      # the trip; the plain `.app` is there too, for the record.
+      - name: Zip the app bundles
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE"
+          mkdir -p out/zips
+          for entry in "build/ios/Build/Products/Release-iphoneos/Swiftly-iOS.app" \
+                       "build/tvos/Build/Products/Release-appletvos/Swiftly-tvOS.app" \
+                       "build/macos/Build/Products/Release/Swiftly.app"; do
+            [ -d "$entry" ] || { echo "missing $entry"; exit 1; }
+            name=$(basename "$entry" .app)
+            ditto -c -k --sequesterRsrc --keepParent "$entry" "out/zips/$name.zip"
+            echo "zipped out/zips/$name.zip ($(du -h "out/zips/$name.zip" | cut -f1))"
+          done
+          ls -la out/zips
+
       - name: Upload the apps
         uses: actions/upload-artifact@v4
         with:
@@ -293,10 +321,12 @@ jobs:
           path: |
             out/*.ipa
             out/*.dmg
+            out/zips/*.zip
             out/icon-check/Swiftly.icns
-            build/ios/Build/Products/Release-*/**/*.app
-            build/tvos/Build/Products/Release-*/**/*.app
-            build/macos/Build/Products/Release-*/**/*.app
+            build/ios/Build/Products/Release-iphoneos/*.app
+            build/tvos/Build/Products/Release-appletvos/*.app
+            build/macos/Build/Products/Release/*.app
+          include-hidden-files: true
           if-no-files-found: error
 
       # **The icon check.** The owner's artwork is the reference; the built
@@ -322,7 +352,7 @@ jobs:
           echo
           status=0
           for platform in ios tvos macos; do
-            app=$(find "build/$platform/Build/Products/Release-*" -maxdepth 1 -name '*.app' | head -1)
+            app=$(ls -d build/$platform/Build/Products/*/*.app 2>/dev/null | grep -v TopShelf | head -1)
             [ -n "$app" ] || continue
             echo "=== $platform ==="
             case "$platform" in
@@ -351,7 +381,7 @@ jobs:
             echo "## Apple build (FTV edition)"
             echo
             for platform in ios tvos macos; do
-              app=$(find "build/$platform/Build/Products/Release-*" -maxdepth 1 -name '*.app' | head -1)
+              app=$(ls -d build/$platform/Build/Products/*/*.app 2>/dev/null | grep -v TopShelf | head -1)
               if [ -n "$app" ]; then
                 bin=$(plutil -extract CFBundleExecutable raw "$app/Info.plist")
                 echo "* **$platform**: \`$(basename "$app")\` ($(du -sh "$app" | cut -f1)), binary \`$bin\` $(lipo -info "$app/$bin" | sed 's/.*: //')"
