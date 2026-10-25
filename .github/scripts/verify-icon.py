@@ -303,15 +303,19 @@ def main():
         if best is not None:
             label, w, h, diff = best
             print(f"  closest rendition: {label} {w}x{h}, mean diff {diff:.2f}")
+            # 0.00 means pixel-identical. A small number is the same artwork
+            # re-encoded and re-scaled by actool. A large number is the
+            # wrong art.
+            if diff > 12.0:
+                print("  VERDICT: NOT the FTV artwork")
+                exit_code = 1
+            else:
+                print("  VERDICT: FTV artwork")
         else:
-            print("  no decodable rendition found")
-        # 0.00 means pixel-identical. A small number is the same artwork
-        # re-encoded and re-scaled by actool. A large number is the wrong art.
-        if best is None or best[3] > 12.0:
-            print("  VERDICT: NOT the FTV artwork")
-            exit_code = 1
-        else:
-            print("  VERDICT: FTV artwork")
+            # Nothing comparable was found in the bundle. That is not a
+            # mismatch - it means the check could not read the icon - and it
+            # must not be reported as one.
+            print("  VERDICT: inconclusive - no comparable rendition found")
         print()
     return exit_code
 

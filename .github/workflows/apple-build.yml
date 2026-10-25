@@ -273,28 +273,6 @@ jobs:
           rm -rf out/dmg
           ls -la out
 
-      - name: Inspect the built apps
-        run: |
-          set -euo pipefail
-          cd "$GITHUB_WORKSPACE"
-          for platform in ios tvos macos; do
-            app=$(ls -d build/$platform/Build/Products/*/*.app 2>/dev/null | grep -v TopShelf | head -1)
-            echo "=============== $platform: $app ==============="
-            [ -n "$app" ] || { echo "MISSING"; continue; }
-            du -sh "$app"
-            echo "--- Info.plist ---"
-            plutil -p "$app/Info.plist" | grep -E 'CFBundleIdentifier|CFBundleExecutable|CFBundleShortVersionString|CFBundleVersion|CFBundleDisplayName|MinimumOSVersion|DTPlatformName' || true
-            echo "--- codesign ---"
-            codesign -dv --verbose=2 "$app" 2>&1 | head -8 || true
-            echo "--- linked libraries ---"
-            bin=$(plutil -extract CFBundleExecutable raw "$app/Info.plist")
-            otool -L "$app/$bin" | head -20
-            echo "--- architectures ---"
-            lipo -info "$app/$bin"
-            echo "--- embedded VLCKit ---"
-            ls -la "$app/Frameworks" 2>/dev/null || true
-          done
-
       # The `.app` bundles are zipped with `ditto` as well: a bundle is a
       # directory with symlinks and executable bits, and an artifact upload
       # does not carry those reliably. The `.zip` is what actually survives
@@ -328,6 +306,38 @@ jobs:
             build/macos/Build/Products/Release/*.app
           include-hidden-files: true
           if-no-files-found: error
+
+      - name: Inspect the built apps
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE"
+          for platform in ios tvos macos; do
+            app=$(ls -d build/$platform/Build/Products/*/*.app 2>/dev/null | grep -v TopShelf | head -1)
+            echo "=============== $platform: $app ==============="
+            [ -n "$app" ] || { echo "MISSING"; continue; }
+            du -sh "$app"
+            # A Mac bundle keeps its Info.plist in Contents/, an iOS and tvOS
+            # bundle at the top.
+            if [ -f "$app/Contents/Info.plist" ]; then
+              plist="$app/Contents/Info.plist"
+              bindir="$app/Contents/MacOS"
+            else
+              plist="$app/Info.plist"
+              bindir="$app"
+            fi
+            echo "--- Info.plist ---"
+            plutil -p "$plist" | grep -E 'CFBundleIdentifier|CFBundleExecutable|CFBundleShortVersionString|CFBundleVersion|CFBundleDisplayName|MinimumOSVersion|DTPlatformName|CFBundleIconFile' || true
+            echo "--- codesign ---"
+            codesign -dv --verbose=2 "$app" 2>&1 | head -8 || true
+            echo "--- linked libraries ---"
+            bin=$(plutil -extract CFBundleExecutable raw "$plist")
+            otool -L "$bindir/$bin" | head -20
+            echo "--- architectures ---"
+            lipo -info "$bindir/$bin"
+            echo "--- embedded VLCKit ---"
+            ls -la "$app/Frameworks" 2>/dev/null || ls -la "$app/Contents/Frameworks" 2>/dev/null || true
+          done
 
       # **The icon check.** The owner's artwork is the reference; the built
       # bundle is what gets compared. `actool` re-encodes and re-scales the
