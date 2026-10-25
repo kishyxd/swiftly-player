@@ -10,6 +10,8 @@ plugins {
 // repo. The keychain is queried only for release builds; debug builds never need either.
 val uploadKey = file(System.getProperty("user.home") + "/.swiftly-android/swiftly-upload.jks")
 val releaseBuild = gradle.startParameter.taskNames.any { it.contains("Release", ignoreCase = true) }
+/** The KXVN signing key, if CI wrote one. Never committed; see the `kxvn` signing config below. */
+val keyProperties = rootProject.file("key.properties")
 val signingPassword: String? = if (releaseBuild && uploadKey.exists()) runCatching {
     providers.exec { commandLine("security", "find-generic-password", "-s", "swiftly-android-signatur", "-w") }
         .standardOutput.asText.get().trim().ifEmpty { null }
@@ -24,10 +26,28 @@ android {
             keyAlias = "swiftly-upload"
             keyPassword = signingPassword
         }
+        // **The KXVN edition signs with the owner's own key**, so that an update installs over an
+        // earlier FTV build instead of asking to uninstall. The key and its passwords come from
+        // `key.properties` next to this build file (the path Gradle already looks in), which CI
+        // writes from the repository's secrets; the file is never committed.
+        if (keyProperties.exists()) {
+            val key = java.util.Properties().apply {
+                keyProperties.inputStream().use { load(it) }
+            }
+            create("kxvn") {
+                storeFile = file(key.getProperty("storeFile"))
+                storePassword = key.getProperty("storePassword")
+                keyAlias = key.getProperty("keyAlias")
+                keyPassword = key.getProperty("keyPassword")
+            }
+        }
     }
     buildTypes {
         getByName("release") {
             if (signingPassword != null) signingConfig = signingConfigs.getByName("play")
+            // The KXVN key wins over the upstream upload key: it is the one the owner's other FTV
+            // apps are signed with.
+            if (signingConfigs.findByName("kxvn") != null) signingConfig = signingConfigs.getByName("kxvn")
             isMinifyEnabled = false
         }
     }
