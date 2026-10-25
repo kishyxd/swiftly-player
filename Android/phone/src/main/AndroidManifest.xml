@@ -15,8 +15,8 @@
     <application
         android:name=".SwiftlyApplication"
         android:label="FTV Player"
-        android:icon="@mipmap/ftv_launcher"
-        android:roundIcon="@mipmap/ftv_launcher_round"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
         android:banner="@drawable/ftv_tv_banner"
         android:networkSecurityConfig="@xml/network_trust"
         android:allowBackup="false"
@@ -43,8 +43,8 @@
             android:targetActivity=".MainActivity"
             android:exported="true"
             android:enabled="true"
-            android:icon="@mipmap/ftv_launcher"
-            android:roundIcon="@mipmap/ftv_launcher_round">
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -55,8 +55,8 @@
             android:targetActivity=".MainActivity"
             android:exported="true"
             android:enabled="false"
-            android:icon="@mipmap/ftv_launcher"
-            android:roundIcon="@mipmap/ftv_launcher_round">
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -67,8 +67,8 @@
             android:targetActivity=".MainActivity"
             android:exported="true"
             android:enabled="false"
-            android:icon="@mipmap/ftv_launcher"
-            android:roundIcon="@mipmap/ftv_launcher_round">
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -79,8 +79,8 @@
             android:targetActivity=".MainActivity"
             android:exported="true"
             android:enabled="false"
-            android:icon="@mipmap/ftv_launcher"
-            android:roundIcon="@mipmap/ftv_launcher_round">
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -91,8 +91,8 @@
             android:targetActivity=".MainActivity"
             android:exported="true"
             android:enabled="false"
-            android:icon="@mipmap/ftv_launcher"
-            android:roundIcon="@mipmap/ftv_launcher_round">
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -103,8 +103,8 @@
             android:targetActivity=".MainActivity"
             android:exported="true"
             android:enabled="false"
-            android:icon="@mipmap/ftv_launcher"
-            android:roundIcon="@mipmap/ftv_launcher_round">
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -115,8 +115,8 @@
             android:targetActivity=".MainActivity"
             android:exported="true"
             android:enabled="false"
-            android:icon="@mipmap/ftv_launcher"
-            android:roundIcon="@mipmap/ftv_launcher_round">
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -127,8 +127,8 @@
             android:targetActivity=".MainActivity"
             android:exported="true"
             android:enabled="false"
-            android:icon="@mipmap/ftv_launcher"
-            android:roundIcon="@mipmap/ftv_launcher_round">
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -139,8 +139,8 @@
             android:targetActivity=".MainActivity"
             android:exported="true"
             android:enabled="false"
-            android:icon="@mipmap/ftv_launcher"
-            android:roundIcon="@mipmap/ftv_launcher_round">
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -151,8 +151,8 @@
             android:targetActivity=".MainActivity"
             android:exported="true"
             android:enabled="false"
-            android:icon="@mipmap/ftv_launcher"
-            android:roundIcon="@mipmap/ftv_launcher_round">
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -163,8 +163,8 @@
             android:targetActivity=".MainActivity"
             android:exported="true"
             android:enabled="false"
-            android:icon="@mipmap/ftv_launcher"
-            android:roundIcon="@mipmap/ftv_launcher_round">
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -175,8 +175,8 @@
             android:targetActivity=".MainActivity"
             android:exported="true"
             android:enabled="false"
-            android:icon="@mipmap/ftv_launcher"
-            android:roundIcon="@mipmap/ftv_launcher_round">
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -187,8 +187,8 @@
             android:targetActivity=".MainActivity"
             android:exported="true"
             android:enabled="false"
-            android:icon="@mipmap/ftv_launcher"
-            android:roundIcon="@mipmap/ftv_launcher_round">
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -199,8 +199,8 @@
             android:targetActivity=".MainActivity"
             android:exported="true"
             android:enabled="false"
-            android:icon="@mipmap/ftv_launcher"
-            android:roundIcon="@mipmap/ftv_launcher_round">
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -211,8 +211,8 @@
             android:targetActivity=".MainActivity"
             android:exported="true"
             android:enabled="false"
-            android:icon="@mipmap/ftv_launcher"
-            android:roundIcon="@mipmap/ftv_launcher_round">
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

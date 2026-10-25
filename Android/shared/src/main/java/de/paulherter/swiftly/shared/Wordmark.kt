@@ -23,8 +23,8 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun Wordmark(height: Dp = 32.dp, font: Color = Theme.font, accent: Color = Color(MarksPaths.accent),
              gradient: List<Color>? = null) {
-    // The mark is 896 x 492 px, so the width follows from the height.
-    val width = height * (896f / 492f)
+    // The mark is 1024 x 1024 px, so the width follows from the height.
+    val width = height * (1024f / 1024f)
     Image(
         painter = painterResource(R.drawable.ftv_wordmark),
         contentDescription = null,
