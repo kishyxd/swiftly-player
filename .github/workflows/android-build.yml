@@ -17,7 +17,7 @@ name: Android-Build
 on:
   workflow_dispatch:
   push:
-    branches: [ci/android-build, feature/ftv-rebrand]
+    branches: [build/android-ftv, ci/android-build, feature/ftv-rebrand, main]
 
 concurrency:
   # **Never cancel a running build.** A new push must not kill the build that is already
