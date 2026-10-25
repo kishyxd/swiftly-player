@@ -166,8 +166,12 @@ jobs:
       - name: rlottie bauen
         shell: pwsh
         run: |
+          # **`Copy-Item` with a wildcard needs the destination to exist.**
+          # Without it PowerShell copies the *first* match onto the
+          # destination path and then fails on the second with
+          # "Container cannot be copied onto existing leaf item".
+          New-Item -ItemType Directory -Force -Path 'C:\swiftly' | Out-Null
           Copy-Item -Path (Join-Path $env:GITHUB_WORKSPACE '*') -Destination 'C:\swiftly' -Recurse -Force
-          $env:Path = "$env:VSINSTALL\VC\Tools\MSVC\*\bin\Hostx64\x64;$env:Path"
           & 'C:\Program Files\Git\cmd\git.exe' --version
           & 'C:\swiftly\Werkzeuge\rlottie-build.ps1'
           if (-not (Test-Path 'C:\Werkzeuge\rlottie\lib\rlottie.lib')) {

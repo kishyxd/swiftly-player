@@ -13,7 +13,29 @@ param(
     [string]$BuildTools = 'C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools'
 )
 
+# **Where MSVC is, when the build tools are not at the expected path.**
+#
+# The path above is where a separate "Build Tools" installation puts itself.
+# A machine that has a full Visual Studio instead - which every GitHub
+# runner does, and which is what `vcvars64.bat` is actually asked for -
+# has it somewhere else. `vswhere` knows where: it is installed with
+# Visual Studio and answers for every installation it finds.
+#
+# So: try the given path first, and only then ask. A developer with the
+# Build Tools where the script expects it is not affected at all.
 $vcvars = Join-Path $BuildTools 'VC\Auxiliary\Build\vcvars64.bat'
+if (-not (Test-Path $vcvars)) {
+    $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+    if (Test-Path $vswhere) {
+        $gefunden = & $vswhere -latest -products * `
+            -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
+            -property installationPath
+        if ($gefunden) {
+            $kandidat = Join-Path $gefunden 'VC\Auxiliary\Build\vcvars64.bat'
+            if (Test-Path $kandidat) { $vcvars = $kandidat }
+        }
+    }
+}
 if (-not (Test-Path $vcvars)) { throw "vcvars64.bat fehlt: $vcvars" }
 
 # `cmd` runs the batch script and prints the environment afterwards; the lines
