@@ -134,17 +134,19 @@ jobs:
           # which `Android/settings.gradle.kts` resolves from mavenLocal().
           cd Android/core/swift
           ~/.swiftly/bin/swiftly run swift package resolve
+          checkout="$(ls -d .build/checkouts/swift-java)"
           ls -1 .build/checkouts/
           # swift-java's Gradle build needs a JDK 25 toolchain and calls
-          # `swiftc -print-target-info`, so both the JDK and the toolchain's bin
-          # directory go into the environment.
-          export JAVA_HOME="$JAVA_HOME_25_X64"
+          # `swiftc -print-target-info` while configuring, so both the JDK and the
+          # toolchain's bin directory go into the environment.
+          export JAVA_HOME="$(/usr/libexec/java_home -v 25)"
           export PATH="$(ls -d "$HOME"/Library/Developer/Toolchains/*.xctoolchain/usr/bin | head -1):$PATH"
           java -version
           swiftc -print-target-info > /dev/null
-          ./.build/checkouts/swift-java/gradlew \
-            --project-dir .build/checkouts/swift-java \
+          bash "$checkout/gradlew" \
+            --project-dir "$checkout" \
             :SwiftKitCore:publishToMavenLocal \
+            -PswiftkitVersion=1.0.0 \
             -PskipSamples=true
           find "$HOME/.m2/repository/org/swift/swiftkit" \( -name '*.jar' -o -name '*.pom' \) | sort
 
