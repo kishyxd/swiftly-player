@@ -1,0 +1,339 @@
+name: Apple-Build
+
+# Builds the Apple targets (iOS, tvOS, macOS) of the FTV edition of
+# Swiftly Player on a GitHub Actions macOS runner.
+#
+# **What this workflow does.** The `.xcodeproj` is not checked in - it is
+# generated from `project.yml` with XcodeGen - and every app target links
+# `VLCKit`. This workflow therefore answers two questions that upstream's
+# `check.yml` only asks halfway:
+#
+#   1. does `project.yml` still resolve into a project that Xcode can build, and
+#   2. do the Swift sources of all three platforms still compile against the
+#      VLCKit headers?
+#
+# **The VLCKit question.** The shipped app links `Vendor/VLCKit-gepatcht.xcframework`:
+# a self-built VLCKit 4.0.0-a23 plus the patches in `Werkzeuge/vlckit-patches/`.
+# That build is ~2.7 GB, is not in the repository, and takes 15 minutes to over an
+# hour *per platform* to rebuild from the VideoLAN sources (plus the contrib
+# dependencies, several GB more). It is therefore NOT rebuilt here.
+#
+# Instead this workflow downloads VideoLAN's **official, unmodified** VLCKit
+# 4.0-20260805-1123 xcframework (the same upstream release the patched build
+# is based on) and builds against that. It is LGPL, it is public, and the
+# Swiftly patches change libVLC internals only - they do not change a single
+# header, so the compile result is the same. What the patched build
+# additionally fixes is *runtime* behaviour (seeking forward in a Matroska over
+# HTTP, pause latency); that difference is invisible to this build and is
+# documented in `Werkzeuge/vlckit-patches/README.md`.
+#
+# **The result is an unsigned build.** The owner's Apple team (63L6TSM2Y9), the
+# distribution certificate and the provisioning profiles are not in this
+# repository, so code signing is switched off (`CODE_SIGNING_ALLOWED=NO`).
+# What the workflow produces are real, complete `.app` bundles plus unsigned
+# `.ipa` packages (a `Payload/` zip of the app) and an unsigned `.dmg`.
+# Uploading them to the App Store or installing them on a device still needs
+# the owner's signing identity.
+
+on:
+  push:
+    branches: [build/apple]
+  workflow_dispatch:
+
+concurrency:
+  # **Never cancel a running build.** A new push must not kill a build that is
+  # already compiling; two workflows on the same branch would otherwise cancel
+  # each other.
+  group: apple-build-${{ github.run_id }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  apple:
+    name: iOS, tvOS, macOS — build
+    runs-on: macos-26
+    timeout-minutes: 120
+    env:
+      # VideoLAN's official build of VLCKit 4.0.0-a23 (the "unstable" channel
+      # snapshot of 2026-08-05). Same upstream release the patched build in
+      # `Werkzeuge/vlckit-build/` is based on, minus the Swiftly patches.
+      VLCKIT_URL: "https://download.videolan.org/cocoapods/unstable/VLCKit-4.0-20260805-1123.zip"
+      VLCKIT_SHA256: "c0c3ae1665053db5898581efc8ee920f526643526297f7fc643599532dc2ccf5"
+      # XcodeGen, pinned. `brew install xcodegen` would work too, but a pinned
+      # release makes the generated project reproducible.
+      XCODEGEN_VERSION: "2.46.0"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: |
+          set -euo pipefail
+          xcodebuild -version
+          xcode-select -p
+          swift --version
+          echo "--- available SDKs ---"
+          xcodebuild -showsdks | sed -n '1,40p'
+          echo "--- disk ---"
+          df -h / /Users/runner 2>/dev/null || df -h /
+
+      - name: Install XcodeGen
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          curl -sSL --retry 3 -o xcodegen.zip \
+            "https://github.com/yonaskolb/XcodeGen/releases/download/${XCODEGEN_VERSION}/xcodegen.zip"
+          unzip -q -o xcodegen.zip
+          sudo mv xcodegen/bin/xcodegen /usr/local/bin/xcodegen
+          xcodegen --version
+
+      # The official VLCKit xcframework carries slices for watchOS and visionOS
+      # and the debug symbols of every slice - together more than half of the
+      # 2.9 GB. The app needs three device slices (iOS, tvOS, macOS). The
+      # unused ones and the dSYMs are dropped here, together with their
+      # entries in the xcframework's Info.plist, so the build fits on the
+      # runner's disk and the download stays quick.
+      - name: Fetch VideoLAN's official VLCKit
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE"
+          python3 .github/scripts/fetch-vlckit.py
+
+      # `project.yml` points at the patched, self-built framework. For this
+      # build the official upstream one takes its place - same headers, same
+      # module name, same umbrella header, so the Swift code does not notice
+      # the difference. Only the path changes.
+      - name: Point the project at the official VLCKit
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE"
+          grep -n 'VLCKit-gepatcht' project.yml
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("project.yml")
+          text = p.read_text()
+          text = text.replace("Vendor/VLCKit-gepatcht.xcframework",
+                              "Vendor/VLCKit.xcframework")
+          p.write_text(text)
+          print("--- after ---")
+          for i, line in enumerate(text.splitlines(), 1):
+              if "VLCKit" in line and "framework" in line:
+                  print(f"{i}: {line.strip()}")
+          PY
+
+      # **The macOS `.icns` is stale.** `Sources/macOS/Swiftly.icns` is the
+      # `CFBundleIconFile` - the icon the Dock and Finder show - and it still
+      # holds the old Swiftly artwork: it was never touched by the rebrand,
+      # while the asset catalog next to it was. `actool` therefore compiles
+      # the FTV artwork into `AppIcon.icns` (from the catalog), but the file
+      # the app actually points at is the old one.
+      #
+      # It is rebuilt here from the catalog's own images with `iconutil`, the
+      # way `Assets/SupporterIcons/build-icons.py` builds the supporter
+      # icons. No new artwork: every pixel comes from the owner's
+      # `ftv-mac-*.png` files. The result is uploaded so it can be committed.
+      - name: Rebuild the macOS .icns from the FTV artwork
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE"
+          set=Sources/macOS/Assets.xcassets/AppIcon.appiconset
+          rm -rf /tmp/Swiftly.iconset
+          mkdir -p /tmp/Swiftly.iconset
+          cp "$set/ftv-mac-16x16@1x.png"   /tmp/Swiftly.iconset/icon_16x16.png
+          cp "$set/ftv-mac-16x16@2x.png"   /tmp/Swiftly.iconset/icon_16x16@2x.png
+          cp "$set/ftv-mac-32x32@1x.png"   /tmp/Swiftly.iconset/icon_32x32.png
+          cp "$set/ftv-mac-32x32@2x.png"   /tmp/Swiftly.iconset/icon_32x32@2x.png
+          cp "$set/ftv-mac-128x128@1x.png" /tmp/Swiftly.iconset/icon_128x128.png
+          cp "$set/ftv-mac-128x128@2x.png" /tmp/Swiftly.iconset/icon_128x128@2x.png
+          cp "$set/ftv-mac-256x256@1x.png" /tmp/Swiftly.iconset/icon_256x256.png
+          cp "$set/ftv-mac-256x256@2x.png" /tmp/Swiftly.iconset/icon_256x256@2x.png
+          cp "$set/ftv-mac-512x512@1x.png" /tmp/Swiftly.iconset/icon_512x512.png
+          cp "$set/ftv-mac-512x512@2x.png" /tmp/Swiftly.iconset/icon_512x512@2x.png
+          iconutil -c icns /tmp/Swiftly.iconset -o Sources/macOS/Swiftly.icns
+          echo "--- rebuilt ---"
+          ls -la Sources/macOS/Swiftly.icns
+          mkdir -p out/icon-check
+          cp Sources/macOS/Swiftly.icns out/icon-check/Swiftly.icns
+
+      - name: Generate the Xcode project
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE"
+          xcodegen generate
+          xcodebuild -project Swiftly.xcodeproj -list
+
+      - name: Build iOS (device, arm64)
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE"
+          set -o pipefail
+          xcodebuild -project Swiftly.xcodeproj -scheme Swiftly-iOS \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build/ios \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build 2>&1 | tee build-ios.log
+
+      - name: Build tvOS (device, arm64)
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE"
+          set -o pipefail
+          xcodebuild -project Swiftly.xcodeproj -scheme Swiftly-tvOS \
+            -configuration Release \
+            -destination 'generic/platform=tvOS' \
+            -derivedDataPath build/tvos \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build 2>&1 | tee build-tvos.log
+
+      - name: Build macOS
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE"
+          set -o pipefail
+          xcodebuild -project Swiftly.xcodeproj -scheme Swiftly-macOS \
+            -configuration Release \
+            -destination 'platform=macOS' \
+            -derivedDataPath build/macos \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build 2>&1 | tee build-macos.log
+
+      # An unsigned .ipa is a zip with the app inside a `Payload/` folder. Without
+      # a signing identity nothing more is possible here - see the header.
+      - name: Package the unsigned .ipa files
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE"
+          mkdir -p out
+          for platform in ios tvos; do
+            app=$(find "build/$platform/Build/Products/Release-*" -maxdepth 1 -name '*.app' | head -1)
+            [ -n "$app" ] || { echo "no .app for $platform"; exit 1; }
+            name=$(basename "$app" .app)
+            rm -rf "out/$name.ipa" "out/Payload"
+            mkdir -p out/Payload
+            cp -R "$app" "out/Payload/"
+            (cd out && zip -q -r -X "$name.ipa" Payload)
+            rm -rf out/Payload
+            echo "packaged out/$name.ipa"
+          done
+          ls -la out
+
+      # The macOS build gets a .dmg so the artifact is a double-clickable disk
+      # image, the way a Mac build is normally handed out.
+      - name: Package the unsigned macOS .dmg
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE"
+          mkdir -p out/dmg
+          app=$(find "build/macos/Build/Products/Release-*" -maxdepth 1 -name '*.app' | head -1)
+          [ -n "$app" ] || { echo "no .app for macos"; exit 1; }
+          cp -R "$app" out/dmg/
+          ln -s /Applications out/dmg/Applications
+          hdiutil create -volname "FTV Player" -srcfolder out/dmg -ov -format UDZO \
+            out/"$(basename "$app" .app).dmg"
+          rm -rf out/dmg
+          ls -la out
+
+      - name: Inspect the built apps
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE"
+          for platform in ios tvos macos; do
+            app=$(find "build/$platform/Build/Products/Release-*" -maxdepth 1 -name '*.app' | head -1)
+            echo "=============== $platform: $app ==============="
+            [ -n "$app" ] || { echo "MISSING"; continue; }
+            du -sh "$app"
+            echo "--- Info.plist ---"
+            plutil -p "$app/Info.plist" | grep -E 'CFBundleIdentifier|CFBundleExecutable|CFBundleShortVersionString|CFBundleVersion|CFBundleDisplayName|MinimumOSVersion|DTPlatformName' || true
+            echo "--- codesign ---"
+            codesign -dv --verbose=2 "$app" 2>&1 | head -8 || true
+            echo "--- linked libraries ---"
+            bin=$(plutil -extract CFBundleExecutable raw "$app/Info.plist")
+            otool -L "$app/$bin" | head -20
+            echo "--- architectures ---"
+            lipo -info "$app/$bin"
+            echo "--- embedded VLCKit ---"
+            ls -la "$app/Frameworks" 2>/dev/null || true
+          done
+
+      - name: Upload the apps
+        uses: actions/upload-artifact@v4
+        with:
+          name: ftv-apple-build
+          path: |
+            out/*.ipa
+            out/*.dmg
+            out/icon-check/Swiftly.icns
+            build/ios/Build/Products/Release-*/**/*.app
+            build/tvos/Build/Products/Release-*/**/*.app
+            build/macos/Build/Products/Release-*/**/*.app
+          if-no-files-found: error
+
+      # **The icon check.** The owner's artwork is the reference; the built
+      # bundle is what gets compared. `actool` re-encodes and re-scales the
+      # icon on the way into the bundle, so the comparison is pixel-wise
+      # (mean absolute difference per channel) and not a hash of the file.
+      #
+      # The iOS and macOS references are the owner's own 1024x1024 file
+      # (byte-identical to `ftv_icon.png` in the owner's own folder); the tvOS
+      # one is the wordmark layer of the layered Apple TV icon.
+      - name: Verify the icon in the built apps is the FTV artwork
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE"
+          mkdir -p out/icon-check
+          cp Sources/iOS/Assets.xcassets/AppIcon.appiconset/ftv-icon.png \
+             out/icon-check/ftv-icon-1024.png
+          cp Sources/macOS/Assets.xcassets/AppIcon.appiconset/ftv-mac-512x512@2x.png \
+             out/icon-check/ftv-mac-1024.png
+          cp "Sources/tvOS/Assets.xcassets/AppIcon.brandassets/App Icon.imagestack/Wordmark.imagestacklayer/Content.imageset/mark-800x480.png" \
+             out/icon-check/ftv-tvos-wordmark-800x480.png
+          shasum -a 256 out/icon-check/*.png
+          echo
+          status=0
+          for platform in ios tvos macos; do
+            app=$(find "build/$platform/Build/Products/Release-*" -maxdepth 1 -name '*.app' | head -1)
+            [ -n "$app" ] || continue
+            echo "=== $platform ==="
+            case "$platform" in
+              ios)   ref=out/icon-check/ftv-icon-1024.png ;;
+              tvos)  ref=out/icon-check/ftv-tvos-wordmark-800x480.png ;;
+              macos) ref=out/icon-check/ftv-mac-1024.png ;;
+            esac
+            python3 .github/scripts/verify-icon.py "$ref" "$app" || status=1
+          done
+          exit $status
+
+      - name: Upload the build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ftv-apple-build-logs
+          path: |
+            build-ios.log
+            build-tvos.log
+            build-macos.log
+          if-no-files-found: warn
+
+      - name: Summary
+        run: |
+          {
+            echo "## Apple build (FTV edition)"
+            echo
+            for platform in ios tvos macos; do
+              app=$(find "build/$platform/Build/Products/Release-*" -maxdepth 1 -name '*.app' | head -1)
+              if [ -n "$app" ]; then
+                bin=$(plutil -extract CFBundleExecutable raw "$app/Info.plist")
+                echo "* **$platform**: \`$(basename "$app")\` ($(du -sh "$app" | cut -f1)), binary \`$bin\` $(lipo -info "$app/$bin" | sed 's/.*: //')"
+              else
+                echo "* **$platform**: no .app"
+              fi
+            done
+            echo
+            echo "Artifacts: \`out/*.ipa\` (unsigned), \`out/*.dmg\` (unsigned)."
+            echo
+            echo "Unsigned: \`CODE_SIGNING_ALLOWED=NO\`. Uploading to the App Store needs the owner's team and certificate."
+            echo
+            echo "VLCKit: VideoLAN's official 4.0-20260805-1123, trimmed to the three device slices. The patched build is not rebuilt here."
+          } >> "$GITHUB_STEP_SUMMARY"
