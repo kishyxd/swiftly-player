@@ -113,7 +113,8 @@ jobs:
           echo "JAVA_HOME=$JAVA_HOME"
           java -version
           ./gradlew :phone:tasks --all --console=plain | grep -iE '^assembleDirect' || true
-          ./gradlew :phone:assembleDirectRelease --console=plain --stacktrace
+          # The FTV edition: the server the app signs in to is fixed at build time.
+          ./gradlew :phone:assembleDirectRelease --console=plain --stacktrace -PftvServer="https://ftv.kxvn.io"
 
       - name: Upload the APK
         uses: actions/upload-artifact@v4
