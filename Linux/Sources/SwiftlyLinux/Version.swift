@@ -3,7 +3,7 @@ import Foundation
 /// Which version runs here, **in one place, not three.**
 ///
 /// **Why this has its own file.** The profile and the settings each had a
-/// hand-typed "Swiftly 1.0". It is what a tester writes into a bug report, and
+/// hand-typed "FTV 1.0". It is what a tester writes into a bug report, and
 /// a wrong number there costs time searching the wrong version.
 ///
 /// **On Apple it comes from the bundle** (`CFBundleShortVersionString` and
@@ -18,7 +18,7 @@ enum Version {
     /// fix was included.
     static let build = "1"
 
-    /// "Swiftly Player 1.0.0 (Build 10)": the full name, as the other platforms
+    /// "FTV Player 1.0.0 (Build 10)": the full name, as the other platforms
     /// show it in the profile.
-    static var full: String { "Swiftly Player \(number) (Build \(build))" }
+    static var full: String { "FTV Player \(number) (Build \(build))" }
 }

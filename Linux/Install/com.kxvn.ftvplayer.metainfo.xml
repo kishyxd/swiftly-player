@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>de.paulherter.swiftly</id>
+  <id>com.kxvn.ftvplayer</id>
   <name>Swiftly</name>
   <summary>Jellyfin client that never transcodes</summary>
   <summary xml:lang="de">Jellyfin-Client, der niemals transkodiert</summary>
@@ -21,7 +21,7 @@
       und die Kiste bleibt leise.
     </p>
   </description>
-  <launchable type="desktop-id">de.paulherter.swiftly.desktop</launchable>
+  <launchable type="desktop-id">com.kxvn.ftvplayer.desktop</launchable>
   <categories>
     <category>AudioVideo</category>
     <category>Player</category>

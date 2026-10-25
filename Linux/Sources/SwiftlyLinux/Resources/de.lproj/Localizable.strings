@@ -104,7 +104,7 @@
 "Start" = "Start";
 "Suche" = "Suche";
 "Suchen" = "Suchen";
-"Swiftly auf %@" = "Swiftly auf %@";
+"FTV auf %@" = "FTV auf %@";
 "Tempo" = "Tempo";
 "Ton" = "Ton";
 "Ton und Untertitel" = "Ton und Untertitel";
@@ -170,7 +170,7 @@
 "Das ist keine gültige Adresse." = "Das ist keine gültige Adresse.";
 "Seerr" = "Seerr";
 "Benutzername und Passwort fehlen" = "Benutzername und Passwort fehlen";
-"Swiftly speichert dein Passwort nicht, nur die Anmeldung bei Seerr." = "Swiftly speichert dein Passwort nicht, nur die Anmeldung bei Seerr.";
+"FTV speichert dein Passwort nicht, nur die Anmeldung bei Seerr." = "FTV speichert dein Passwort nicht, nur die Anmeldung bei Seerr.";
 "Getrennt" = "Getrennt";
 "Jellyseerr oder Overseerr. Dann zeigt die Suche auch Titel, die noch nicht auf deinem Server sind, und du kannst sie anfragen." = "Jellyseerr oder Overseerr. Dann zeigt die Suche auch Titel, die noch nicht auf deinem Server sind, und du kannst sie anfragen.";
 "Keine Verbindung" = "Keine Verbindung";
@@ -314,7 +314,7 @@
 "Nichts in diesem Genre" = "Nichts in diesem Genre";
 "In diesem Genre gibt es auf deinem Server gerade keine Filme und Serien." = "In diesem Genre gibt es auf deinem Server gerade keine Filme und Serien.";
 "Danach frei" = "Danach frei";
-"Swiftly lädt die Originaldatei, in derselben Qualität wie beim Streamen." = "Swiftly lädt die Originaldatei, in derselben Qualität wie beim Streamen.";
+"FTV lädt die Originaldatei, in derselben Qualität wie beim Streamen." = "FTV lädt die Originaldatei, in derselben Qualität wie beim Streamen.";
 "Film" = "Film";
 "Serie" = "Serie";
 "Wirklich anfragen?" = "Wirklich anfragen?";
@@ -342,15 +342,15 @@
 
 /* Aktualisierung (nur Windows) */
 "Nach Updates suchen" = "Nach Updates suchen";
-"Swiftly fragt bei GitHub, ob es eine neuere Version gibt" = "Swiftly fragt bei GitHub, ob es eine neuere Version gibt";
+"FTV fragt bei GitHub, ob es eine neuere Version gibt" = "FTV fragt bei GitHub, ob es eine neuere Version gibt";
 "Wird gesucht …" = "Wird gesucht …";
-"Swiftly ist aktuell" = "Swiftly ist aktuell";
-"Swiftly %@ ist da" = "Swiftly %@ ist da";
-"Lädt den Installer und startet ihn. Swiftly beendet sich dabei." = "Lädt den Installer und startet ihn. Swiftly beendet sich dabei.";
+"FTV ist aktuell" = "FTV ist aktuell";
+"FTV %@ ist da" = "FTV %@ ist da";
+"Lädt den Installer und startet ihn. FTV beendet sich dabei." = "Lädt den Installer und startet ihn. FTV beendet sich dabei.";
 "Was sich ändert" = "Was sich ändert";
 "Auf GitHub nachlesen" = "Auf GitHub nachlesen";
 "Wird geladen …" = "Wird geladen …";
-"Das dauert einen Moment. Swiftly startet den Installer von selbst." = "Das dauert einen Moment. Swiftly startet den Installer von selbst.";
+"Das dauert einen Moment. FTV startet den Installer von selbst." = "Das dauert einen Moment. FTV startet den Installer von selbst.";
 "Hat nicht geklappt" = "Hat nicht geklappt";
 "GitHub antwortet nicht." = "GitHub antwortet nicht.";
 "Der Installer ließ sich nicht starten." = "Der Installer ließ sich nicht starten.";
@@ -383,7 +383,7 @@
 
 /* Trakt */
 "Trägt ein, was du schaust" = "Trägt ein, was du schaust";
-"Swiftly meldet an Trakt, was du schaust. Ab 80 Prozent steht der Titel dort als gesehen." = "Swiftly meldet an Trakt, was du schaust. Ab 80 Prozent steht der Titel dort als gesehen.";
+"FTV meldet an Trakt, was du schaust. Ab 80 Prozent steht der Titel dort als gesehen." = "FTV meldet an Trakt, was du schaust. Ab 80 Prozent steht der Titel dort als gesehen.";
 "Hat dein Server das Trakt-Plugin, brauchst du das hier nicht. Sonst landet alles doppelt bei Trakt." = "Hat dein Server das Trakt-Plugin, brauchst du das hier nicht. Sonst landet alles doppelt bei Trakt.";
 "Mit Trakt verbinden" = "Mit Trakt verbinden";
 "Hole Code…" = "Hole Code…";
@@ -400,9 +400,9 @@
 "Header-Name" = "Header-Name";
 "Wert" = "Wert";
 "Header hinzufügen" = "Header hinzufügen";
-"Den setzt Swiftly selbst." = "Den setzt Swiftly selbst.";
+"Den setzt FTV selbst." = "Den setzt FTV selbst.";
 "Sichern" = "Sichern";
-"Für einen Dienst vor deinem Server, etwa Cloudflare Access, Authelia oder Pangolin. Swiftly schickt die Header nur an diese Adresse." = "Für einen Dienst vor deinem Server, etwa Cloudflare Access, Authelia oder Pangolin. Swiftly schickt die Header nur an diese Adresse.";
+"Für einen Dienst vor deinem Server, etwa Cloudflare Access, Authelia oder Pangolin. FTV schickt die Header nur an diese Adresse." = "Für einen Dienst vor deinem Server, etwa Cloudflare Access, Authelia oder Pangolin. FTV schickt die Header nur an diese Adresse.";
 "Die letzte Stunde, ohne Zugangsdaten" = "Die letzte Stunde, ohne Zugangsdaten";
 "Protokoll teilen" = "Protokoll teilen";
 "%lld Filme" = "%lld Filme";
@@ -423,7 +423,7 @@
 /* Downloads: Ladeauswahl und Serienseite (Mac 89299260, cc4e6e75) */
 "%@ von %@" = "%@ von %@";
 "Download entfernen" = "Download entfernen";
-"Swiftly hat einen Discord" = "Swiftly hat einen Discord";
+"FTV hat einen Discord" = "FTV hat einen Discord";
 "Da kannst du Fragen stellen und Fehler melden. Neue Builds stehen da auch zuerst." = "Da kannst du Fragen stellen und Fehler melden. Neue Builds stehen da auch zuerst.";
 
 "Kleinere Fassungen gibt der Server für dieses Konto nicht frei." = "Kleinere Fassungen gibt der Server für dieses Konto nicht frei.";
@@ -490,7 +490,7 @@
 "Alle Bibliotheken und Sammlungen stehen schon auf der Startseite." = "Alle Bibliotheken und Sammlungen stehen schon auf der Startseite.";
 "Auf deinem Server gibt es keine Bibliotheken." = "Auf deinem Server gibt es keine Bibliotheken.";
 "Open-Source-Lizenzen" = "Open-Source-Lizenzen";
-"Was in Swiftly steckt und woher der Quelltext kommt" = "Was in Swiftly steckt und woher der Quelltext kommt";
+"Was in FTV steckt und woher der Quelltext kommt" = "Was in FTV steckt und woher der Quelltext kommt";
 "Die Lizenzliste fehlt in dieser Fassung. Du findest sie auf GitHub in THIRD-PARTY-NOTICES.md." = "Die Lizenzliste fehlt in dieser Fassung. Du findest sie auf GitHub in THIRD-PARTY-NOTICES.md.";
 "Swiftly Player nutzt libVLC von VideoLAN unter der LGPL 2.1 oder später" = "Swiftly Player nutzt libVLC von VideoLAN unter der LGPL 2.1 oder später";
 "Quelltext" = "Quelltext";
@@ -504,17 +504,17 @@
 "Der Lizenztext fehlt in dieser Fassung. Du findest ihn auf GitHub im Ordner LICENSES." = "Der Lizenztext fehlt in dieser Fassung. Du findest ihn auf GitHub im Ordner LICENSES.";
 "Größe der Oberfläche" = "Größe der Oberfläche";
 "Kommt zur Skalierung des Systems dazu" = "Kommt zur Skalierung des Systems dazu";
-"Swiftly unterstützen" = "Swiftly unterstützen";
-"Wir bauen Swiftly ohne Werbung und ohne Tracking. Wenn es deine Abende besser macht, hilft uns ein Kaffee, weiterzumachen." = "Wir bauen Swiftly ohne Werbung und ohne Tracking. Wenn es deine Abende besser macht, hilft uns ein Kaffee, weiterzumachen.";
+"FTV unterstützen" = "FTV unterstützen";
+"Wir bauen FTV ohne Werbung und ohne Tracking. Wenn es deine Abende besser macht, hilft uns ein Kaffee, weiterzumachen." = "Wir bauen FTV ohne Werbung und ohne Tracking. Wenn es deine Abende besser macht, hilft uns ein Kaffee, weiterzumachen.";
 "Alles bleibt für alle kostenlos." = "Alles bleibt für alle kostenlos.";
 "Ein Kaffee" = "Ein Kaffee";
 "Kaffee und Kuchen" = "Kaffee und Kuchen";
 "Danke. Du bist dabei." = "Danke. Du bist dabei.";
-"Dein Kaffee hilft uns, Swiftly für alle kostenlos zu halten. Das ist neu für dich." = "Dein Kaffee hilft uns, Swiftly für alle kostenlos zu halten. Das ist neu für dich.";
+"Dein Kaffee hilft uns, FTV für alle kostenlos zu halten. Das ist neu für dich." = "Dein Kaffee hilft uns, FTV für alle kostenlos zu halten. Das ist neu für dich.";
 "Ein Herz in „Über“" = "Ein Herz in „Über“";
 "Neben deiner Versionsnummer" = "Neben deiner Versionsnummer";
 "Fertig" = "Fertig";
-"Du hast mit Swiftly %lld Stunden geschaut." = "Du hast mit Swiftly %lld Stunden geschaut.";
+"Du hast mit FTV %lld Stunden geschaut." = "Du hast mit FTV %lld Stunden geschaut.";
 "Wenn es dir einen Kaffee wert ist, freuen wir uns sehr." = "Wenn es dir einen Kaffee wert ist, freuen wir uns sehr.";
 "Unterstützen" = "Unterstützen";
 "Nicht jetzt" = "Nicht jetzt";
@@ -537,7 +537,7 @@
 "Einfach Danke ☕" = "Einfach Danke ☕";
 "Für immer" = "Für immer";
 "Guter Deal" = "Guter Deal";
-"Hilf Swiftly zu wachsen" = "Hilf Swiftly zu wachsen";
+"Hilf FTV zu wachsen" = "Hilf FTV zu wachsen";
 "Kräftig" = "Kräftig";
 "Look ausprobieren" = "Look ausprobieren";
 "Looks" = "Looks";
@@ -571,10 +571,10 @@
 "Violett" = "Violett";
 "Koralle" = "Koralle";
 "Türkis" = "Türkis";
-"Looks für alle, die Swiftly am Laufen halten." = "Looks für alle, die Swiftly am Laufen halten.";
+"Looks für alle, die FTV am Laufen halten." = "Looks für alle, die FTV am Laufen halten.";
 "Unterstützer für immer" = "Unterstützer für immer";
 "Seit %@. Nichts verlängert sich, deine Extras bleiben." = "Seit %@. Nichts verlängert sich, deine Extras bleiben.";
-"Dein Beitrag hält Swiftly am Laufen." = "Dein Beitrag hält Swiftly am Laufen.";
+"Dein Beitrag hält FTV am Laufen." = "Dein Beitrag hält FTV am Laufen.";
 "Open Source, keine Werbung, alles zum Schauen bleibt kostenlos." = "Open Source, keine Werbung, alles zum Schauen bleibt kostenlos.";
 "Wähl eine Option" = "Wähl eine Option";
 "Für %@ im Monat unterstützen" = "Für %@ im Monat unterstützen";
@@ -582,7 +582,7 @@
 "Mit %@ Danke sagen" = "Mit %@ Danke sagen";
 "Danke 🫶" = "Danke 🫶";
 "Zeig mir meine Startseite" = "Zeig mir meine Startseite";
-"Du hast Swiftly gerade beim Weitermachen geholfen. Die Looks gehören jetzt dir. Schau dich um." = "Du hast Swiftly gerade beim Weitermachen geholfen. Die Looks gehören jetzt dir. Schau dich um.";
+"Du hast FTV gerade beim Weitermachen geholfen. Die Looks gehören jetzt dir. Schau dich um." = "Du hast FTV gerade beim Weitermachen geholfen. Die Looks gehören jetzt dir. Schau dich um.";
 "Dieser Schlüssel ist abgelaufen. Mit dem Monatsabo auf der Website bekommst du einen neuen." = "Dieser Schlüssel ist abgelaufen. Mit dem Monatsabo auf der Website bekommst du einen neuen.";
 "Der Schlüssel ist unvollständig. Kopier ihn noch einmal ganz, er beginnt mit SS2-." = "Der Schlüssel ist unvollständig. Kopier ihn noch einmal ganz, er beginnt mit SS2-.";
 "Das ist ein Schlüssel aus dem Testmodus. Er zählt hier nicht." = "Das ist ein Schlüssel aus dem Testmodus. Er zählt hier nicht.";

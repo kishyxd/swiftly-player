@@ -13,7 +13,7 @@ import WinSDK
 /// **Check for a newer version and install it; Windows only.**
 ///
 /// On Linux the package repository does this: anyone who set up via
-/// `swiftly-install.sh` gets Swiftly with the other system updates. On
+/// `swiftly-install.sh` gets FTV with the other system updates. On
 /// Windows there is no equivalent; users download the installer by hand from
 /// the release page and do not remember to.
 ///
@@ -52,7 +52,7 @@ enum Update {
     static func searching() async throws -> Snapshot? {
         var petition = URLRequest(url: inquiry)
         // GitHub requires a user agent and otherwise returns 403.
-        petition.setValue("Swiftly/\(Version.number)", forHTTPHeaderField: "User-Agent")
+        petition.setValue("FTV/\(Version.number)", forHTTPHeaderField: "User-Agent")
         petition.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
         petition.timeoutInterval = 20
         let (data, answer) = try await URLSession.shared.data(for: petition)
@@ -104,7 +104,7 @@ enum Update {
     /// more convenient brings the warning back.
     static func fetch(_ state: Snapshot) async throws -> URL {
         var petition = URLRequest(url: state.address)
-        petition.setValue("Swiftly/\(Version.number)", forHTTPHeaderField: "User-Agent")
+        petition.setValue("FTV/\(Version.number)", forHTTPHeaderField: "User-Agent")
         petition.timeoutInterval = 600
         let (data, answer) = try await URLSession.shared.data(for: petition)
         // **Only start what really is the installer.** Every response used to be
@@ -117,14 +117,14 @@ enum Update {
         guard state.size <= 0 || data.count == state.size
         else { throw Failure.incomplete }
         let target = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("Swiftly-\(state.version)-Setup.exe")
+            .appendingPathComponent("FTV-\(state.version)-Setup.exe")
         try? FileManager.default.removeItem(at: target)
         try data.write(to: target)
         return target
     }
 
     /// Start the installer and quit the app; it cannot replace a running
-    /// `Swiftly.exe`.
+    /// `FTV.exe`.
     static func inPlay(_ file: URL) throws {
         #if os(Windows)
         // Release the run marks first: the installer checks them at startup

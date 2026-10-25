@@ -101,7 +101,7 @@
 "Start" = "Home";
 "Suche" = "Search";
 "Suchen" = "Search";
-"Swiftly auf %@" = "Swiftly on %@";
+"FTV auf %@" = "FTV on %@";
 "Tempo" = "Speed";
 "Ton" = "Audio";
 "Ton und Untertitel" = "Audio and subtitles";
@@ -167,7 +167,7 @@
 "Das ist keine gültige Adresse." = "That isn’t a valid address.";
 "Seerr" = "Seerr";
 "Benutzername und Passwort fehlen" = "Username and password are missing";
-"Swiftly speichert dein Passwort nicht, nur die Anmeldung bei Seerr." = "Swiftly doesn’t save your password, only the Seerr sign-in.";
+"FTV speichert dein Passwort nicht, nur die Anmeldung bei Seerr." = "FTV doesn’t save your password, only the Seerr sign-in.";
 "Getrennt" = "Disconnected";
 "Jellyseerr oder Overseerr. Dann zeigt die Suche auch Titel, die noch nicht auf deinem Server sind, und du kannst sie anfragen." = "Jellyseerr or Overseerr. Search then also shows titles that aren’t on your server yet, and you can request them.";
 "Keine Verbindung" = "No connection";
@@ -311,7 +311,7 @@
 "Nichts in diesem Genre" = "Nothing in this genre";
 "In diesem Genre gibt es auf deinem Server gerade keine Filme und Serien." = "Your server has no films or shows in this genre right now.";
 "Danach frei" = "Free afterwards";
-"Swiftly lädt die Originaldatei, in derselben Qualität wie beim Streamen." = "Swiftly downloads the original file, in the same quality as streaming.";
+"FTV lädt die Originaldatei, in derselben Qualität wie beim Streamen." = "FTV downloads the original file, in the same quality as streaming.";
 "Film" = "Movie";
 "Serie" = "Series";
 "Wirklich anfragen?" = "Really request it?";
@@ -339,15 +339,15 @@
 
 /* Aktualisierung (nur Windows) */
 "Nach Updates suchen" = "Check for updates";
-"Swiftly fragt bei GitHub, ob es eine neuere Version gibt" = "Swiftly asks GitHub whether a newer version is available";
+"FTV fragt bei GitHub, ob es eine neuere Version gibt" = "FTV asks GitHub whether a newer version is available";
 "Wird gesucht …" = "Checking …";
-"Swiftly ist aktuell" = "Swiftly is up to date";
-"Swiftly %@ ist da" = "Swiftly %@ is available";
-"Lädt den Installer und startet ihn. Swiftly beendet sich dabei." = "Downloads the installer and starts it. Swiftly closes while it runs.";
+"FTV ist aktuell" = "FTV is up to date";
+"FTV %@ ist da" = "FTV %@ is available";
+"Lädt den Installer und startet ihn. FTV beendet sich dabei." = "Downloads the installer and starts it. FTV closes while it runs.";
 "Was sich ändert" = "What's new";
 "Auf GitHub nachlesen" = "Read it on GitHub";
 "Wird geladen …" = "Downloading …";
-"Das dauert einen Moment. Swiftly startet den Installer von selbst." = "This takes a moment. Swiftly starts the installer on its own.";
+"Das dauert einen Moment. FTV startet den Installer von selbst." = "This takes a moment. FTV starts the installer on its own.";
 "Hat nicht geklappt" = "That didn't work";
 "GitHub antwortet nicht." = "GitHub could not be reached.";
 "Der Installer ließ sich nicht starten." = "The installer could not be started.";
@@ -380,7 +380,7 @@
 
 /* Trakt */
 "Trägt ein, was du schaust" = "Logs what you watch";
-"Swiftly meldet an Trakt, was du schaust. Ab 80 Prozent steht der Titel dort als gesehen." = "Swiftly tells Trakt what you watch. From 80 percent on, the title shows up there as watched.";
+"FTV meldet an Trakt, was du schaust. Ab 80 Prozent steht der Titel dort als gesehen." = "FTV tells Trakt what you watch. From 80 percent on, the title shows up there as watched.";
 "Hat dein Server das Trakt-Plugin, brauchst du das hier nicht. Sonst landet alles doppelt bei Trakt." = "If your server has the Trakt plugin, you don't need this. Otherwise everything lands on Trakt twice.";
 "Mit Trakt verbinden" = "Connect Trakt";
 "Hole Code…" = "Getting code…";
@@ -397,9 +397,9 @@
 "Header-Name" = "Header name";
 "Wert" = "Value";
 "Header hinzufügen" = "Add header";
-"Den setzt Swiftly selbst." = "Swiftly sets this one itself.";
+"Den setzt FTV selbst." = "FTV sets this one itself.";
 "Sichern" = "Save";
-"Für einen Dienst vor deinem Server, etwa Cloudflare Access, Authelia oder Pangolin. Swiftly schickt die Header nur an diese Adresse." = "For a service in front of your server, like Cloudflare Access, Authelia or Pangolin. Swiftly only sends these headers to this address.";
+"Für einen Dienst vor deinem Server, etwa Cloudflare Access, Authelia oder Pangolin. FTV schickt die Header nur an diese Adresse." = "For a service in front of your server, like Cloudflare Access, Authelia or Pangolin. FTV only sends these headers to this address.";
 "Die letzte Stunde, ohne Zugangsdaten" = "The last hour, without sign-in details";
 "Protokoll teilen" = "Share Log";
 "%lld Filme" = "%lld movies";
@@ -420,7 +420,7 @@
 /* Downloads: Ladeauswahl und Serienseite (Mac 89299260, cc4e6e75) */
 "%@ von %@" = "%@ of %@";
 "Download entfernen" = "Remove download";
-"Swiftly hat einen Discord" = "Swiftly has a Discord";
+"FTV hat einen Discord" = "FTV has a Discord";
 "Da kannst du Fragen stellen und Fehler melden. Neue Builds stehen da auch zuerst." = "Ask questions and report bugs there. New builds show up there first, too.";
 
 "Kleinere Fassungen gibt der Server für dieses Konto nicht frei." = "The server doesn’t allow smaller versions for this account.";
@@ -487,7 +487,7 @@
 "Alle Bibliotheken und Sammlungen stehen schon auf der Startseite." = "All libraries and collections are already on the home screen.";
 "Auf deinem Server gibt es keine Bibliotheken." = "Your server has no libraries.";
 "Open-Source-Lizenzen" = "Open-source licenses";
-"Was in Swiftly steckt und woher der Quelltext kommt" = "What is inside Swiftly and where the source code comes from";
+"Was in FTV steckt und woher der Quelltext kommt" = "What is inside FTV and where the source code comes from";
 "Die Lizenzliste fehlt in dieser Fassung. Du findest sie auf GitHub in THIRD-PARTY-NOTICES.md." = "The license list is missing from this version. You can find it on GitHub in THIRD-PARTY-NOTICES.md.";
 "Swiftly Player nutzt libVLC von VideoLAN unter der LGPL 2.1 oder später" = "Swiftly Player uses libVLC by VideoLAN under the LGPL 2.1 or later";
 "Quelltext" = "Source code";
@@ -501,17 +501,17 @@
 "Der Lizenztext fehlt in dieser Fassung. Du findest ihn auf GitHub im Ordner LICENSES." = "The license text is missing from this version. You can find it on GitHub in the LICENSES folder.";
 "Größe der Oberfläche" = "Interface size";
 "Kommt zur Skalierung des Systems dazu" = "On top of your system's display scaling";
-"Swiftly unterstützen" = "Support Swiftly";
-"Wir bauen Swiftly ohne Werbung und ohne Tracking. Wenn es deine Abende besser macht, hilft uns ein Kaffee, weiterzumachen." = "We build Swiftly without ads or tracking. If it makes your evenings better, a coffee helps us keep going.";
+"FTV unterstützen" = "Support FTV";
+"Wir bauen FTV ohne Werbung und ohne Tracking. Wenn es deine Abende besser macht, hilft uns ein Kaffee, weiterzumachen." = "We build FTV without ads or tracking. If it makes your evenings better, a coffee helps us keep going.";
 "Alles bleibt für alle kostenlos." = "Everything stays free for everyone.";
 "Ein Kaffee" = "A coffee";
 "Kaffee und Kuchen" = "Coffee and cake";
 "Danke. Du bist dabei." = "Thank you. You are in.";
-"Dein Kaffee hilft uns, Swiftly für alle kostenlos zu halten. Das ist neu für dich." = "Your coffee helps us keep Swiftly free for everyone. Here is what is new for you.";
+"Dein Kaffee hilft uns, FTV für alle kostenlos zu halten. Das ist neu für dich." = "Your coffee helps us keep FTV free for everyone. Here is what is new for you.";
 "Ein Herz in „Über“" = "A heart in About";
 "Neben deiner Versionsnummer" = "Next to your version number";
 "Fertig" = "Done";
-"Du hast mit Swiftly %lld Stunden geschaut." = "You have watched %lld hours with Swiftly.";
+"Du hast mit FTV %lld Stunden geschaut." = "You have watched %lld hours with FTV.";
 "Wenn es dir einen Kaffee wert ist, freuen wir uns sehr." = "If it earns a coffee, we would love that.";
 "Unterstützen" = "Support";
 "Nicht jetzt" = "Not now";
@@ -534,7 +534,7 @@
 "Einfach Danke ☕" = "Just a thank-you ☕";
 "Für immer" = "Lifetime";
 "Guter Deal" = "Great deal";
-"Hilf Swiftly zu wachsen" = "Help Swiftly grow";
+"Hilf FTV zu wachsen" = "Help FTV grow";
 "Kräftig" = "Bright";
 "Look ausprobieren" = "Try a look";
 "Looks" = "Looks";
@@ -568,10 +568,10 @@
 "Violett" = "Violet";
 "Koralle" = "Coral";
 "Türkis" = "Turquoise";
-"Looks für alle, die Swiftly am Laufen halten." = "Looks for everyone who helps keep Swiftly going.";
+"Looks für alle, die FTV am Laufen halten." = "Looks for everyone who helps keep FTV going.";
 "Unterstützer für immer" = "Supporter for life";
 "Seit %@. Nichts verlängert sich, deine Extras bleiben." = "Since %@. Nothing renews, your extras stay.";
-"Dein Beitrag hält Swiftly am Laufen." = "Your support keeps Swiftly going.";
+"Dein Beitrag hält FTV am Laufen." = "Your support keeps FTV going.";
 "Open Source, keine Werbung, alles zum Schauen bleibt kostenlos." = "Open source, no ads, and watching stays free.";
 "Wähl eine Option" = "Choose an option";
 "Für %@ im Monat unterstützen" = "Support for %@ a month";
@@ -579,7 +579,7 @@
 "Mit %@ Danke sagen" = "Say thanks with %@";
 "Danke 🫶" = "Thank you 🫶";
 "Zeig mir meine Startseite" = "Show me my Home";
-"Du hast Swiftly gerade beim Weitermachen geholfen. Die Looks gehören jetzt dir. Schau dich um." = "You just helped Swiftly keep going. The looks are yours now. Have a look around.";
+"Du hast FTV gerade beim Weitermachen geholfen. Die Looks gehören jetzt dir. Schau dich um." = "You just helped FTV keep going. The looks are yours now. Have a look around.";
 "Dieser Schlüssel ist abgelaufen. Mit dem Monatsabo auf der Website bekommst du einen neuen." = "This key has expired. The monthly plan on the website gets you a new one.";
 "Der Schlüssel ist unvollständig. Kopier ihn noch einmal ganz, er beginnt mit SS2-." = "The key is incomplete. Copy it again in full, it starts with SS2-.";
 "Das ist ein Schlüssel aus dem Testmodus. Er zählt hier nicht." = "This key comes from test mode. It does not count here.";

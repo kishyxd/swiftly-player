@@ -67,7 +67,7 @@ enum Region: CaseIterable {
 
     /// **The keyboard shortcut, as shown in the hint.**
     ///
-    /// The same as on the Mac (`Sources/macOS/SwiftlyApp.swift`), with Ctrl
+    /// The same as on the Mac (`Sources/macOS/FTVApp.swift`), with Ctrl
     /// instead of Cmd. They already worked here, but could be read nowhere
     /// because a Wayland window has no menu bar.
     var abbreviation: String? {

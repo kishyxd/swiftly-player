@@ -16,7 +16,7 @@ enum CharacterItem {
     static let identifier = "de.paulherter.swiftly"
 
     /// Location of the bundled images, derived from the binary path:
-    /// `Linux/.build/<target>/debug/SwiftlyLinux`; four levels up is `Linux/`,
+    /// `Linux/.build/<target>/debug/FTVLinux`; four levels up is `Linux/`,
     /// and `Resources` is there.
     private static var bundled: URL? {
         Platform.bundled("icons").map { URL(fileURLWithPath: $0) }
@@ -54,7 +54,7 @@ enum CharacterItem {
         let entryRecord = """
         [Desktop Entry]
         Type=Application
-        Name=Swiftly
+        Name=FTV
         GenericName=for Jellyfin
         Comment=Jellyfin-Client, der niemals transkodiert
         Exec=\(realpath("/proc/self/exe"))

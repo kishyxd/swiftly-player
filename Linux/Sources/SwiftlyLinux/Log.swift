@@ -151,7 +151,7 @@ enum LogFile {
             ? ["(no lines in the last hour — reproduce the problem first, then share without closing the app)"]
             : excerpt
         let url = FileManager.default.temporaryDirectory
-            .appendingPathComponent("Swiftly-Protokoll.txt")
+            .appendingPathComponent("FTV-Protokoll.txt")
         do {
             try Data(rows.joined(separator: "\n").utf8).write(to: url, options: .atomic)
         } catch {

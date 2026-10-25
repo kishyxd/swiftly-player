@@ -267,7 +267,7 @@ extension App {
         append(g4.space, rowsLine())
         append(g4.space, valuesRow(symbol: "text-x-generic-symbolic",
                                       title: translated("Open-Source-Lizenzen"),
-                                      under: translated("Was in Swiftly steckt und woher der Quelltext kommt"),
+                                      under: translated("Was in FTV steckt und woher der Quelltext kommt"),
                                       arrow: true) { [weak self] in
             self?.subpageOpen(.licenses)
         })
@@ -632,7 +632,7 @@ extension App {
         append(right, s.outer)
         append(right, ownHeadersBuild())
 
-        // "Support Swiftly" under the server group, in its own card.
+        // "Support FTV" under the server group, in its own card.
         let support = rowsGroup()
         append(support.space, supportRow())
         gtk_widget_set_margin_top(support.outer, 26)
@@ -1685,7 +1685,7 @@ extension App {
         case .unknown:
             append(space, valuesRow(symbol: "software-update-available-symbolic",
                                        title: translated("Nach Updates suchen"),
-                                       under: translated("Swiftly fragt bei GitHub, ob es eine neuere Version gibt")) {
+                                       under: translated("FTV fragt bei GitHub, ob es eine neuere Version gibt")) {
                 [weak self] in self?.updateSearch()
             })
 
@@ -1695,15 +1695,15 @@ extension App {
 
         case .current:
             append(space, valuesRow(symbol: "object-select-symbolic",
-                                       title: translated("Swiftly ist aktuell"),
+                                       title: translated("FTV ist aktuell"),
                                        under: Version.full) {
                 [weak self] in self?.updateSearch()
             })
 
         case .new(let state):
             append(space, valuesRow(symbol: "software-update-available-symbolic",
-                                       title: String(format: translated("Swiftly %@ ist da"), state.version),
-                                       under: translated("Lädt den Installer und startet ihn. Swiftly beendet sich dabei."),
+                                       title: String(format: translated("FTV %@ ist da"), state.version),
+                                       under: translated("Lädt den Installer und startet ihn. FTV beendet sich dabei."),
                                        accent: true) {
                 [weak self] in self?.updateInPlay(state)
             })
@@ -1717,7 +1717,7 @@ extension App {
         case .loads:
             append(space, valuesRow(symbol: "content-loading-symbolic",
                                        title: translated("Wird geladen …"),
-                                       under: translated("Das dauert einen Moment. Swiftly startet den Installer von selbst.")))
+                                       under: translated("Das dauert einen Moment. FTV startet den Installer von selbst.")))
 
         case .wentWrong(let reason):
             append(space, valuesRow(symbol: "dialog-warning-symbolic",
@@ -1778,8 +1778,8 @@ extension App {
                 onMainThread {
                     do {
                         try Update.inPlay(file)
-                        AppLog.writeOut("[Update] Installer gestartet, Swiftly beendet sich")
-                        // The installer cannot replace a running `Swiftly.exe`, so make room.
+                        AppLog.writeOut("[Update] Installer gestartet, FTV beendet sich")
+                        // The installer cannot replace a running `FTV.exe`, so make room.
                         exit(0)
                     } catch {
                         self.updateStatus = .wentWrong(translated("Der Installer ließ sich nicht starten."))

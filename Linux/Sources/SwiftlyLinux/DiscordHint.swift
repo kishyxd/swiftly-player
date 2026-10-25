@@ -2,7 +2,7 @@ import CGtk
 import Foundation
 import JellyfinKit
 
-/// **Once per installation: Swiftly has a Discord.**
+/// **Once per installation: FTV has a Discord.**
 ///
 /// Ported from `Sources/macOS/RootView.swift` (`Discordhinweis`): after the
 /// fifth finished title, once the player is closed, with a 1.5 s delay. A card

@@ -139,7 +139,7 @@ extension App {
         gtk_widget_set_margin_top(text, 10)
         gtk_widget_set_margin_bottom(text, 18)
         append(text, supportText(translated("Wähl deinen Look"), "swiftly-s20-fett", centred: true))
-        append(text, supportText(translated("Looks für alle, die Swiftly am Laufen halten."),
+        append(text, supportText(translated("Looks für alle, die FTV am Laufen halten."),
                                  "swiftly-s13-leise", wrap: true, centred: true))
         let pill = glassPill(translated("Look ausprobieren"))
         gtk_widget_set_margin_top(pill, 10)
@@ -202,7 +202,7 @@ extension App {
         let heart = symbolPaint(.heart, size: 17, box: 24, style: isSupporter ? "swiftly-akzentfarbe" : "swiftly-herzfarbe")
         gtk_button_set_child(asButton(button), heart)
         gtk_widget_set_size_request(button, 44, 44)
-        caption(button, translated(SupportCopy.supportSwiftly.key))
+        caption(button, translated(SupportCopy.supportFTV.key))
         gtk_widget_set_valign(button, GTK_ALIGN_CENTER)
         signal(button, "clicked") { [weak self] in self?.supportOpen() }
         return button
@@ -433,7 +433,7 @@ extension App {
         let words = stack(GTK_ORIENTATION_VERTICAL, spacing: 0)
         gtk_widget_set_margin_start(words, 26)
         gtk_widget_set_margin_end(words, 26)
-        append(words, supportText(translated("Du hast Swiftly gerade beim Weitermachen geholfen. Die Looks gehören jetzt dir. Schau dich um."),
+        append(words, supportText(translated("Du hast FTV gerade beim Weitermachen geholfen. Die Looks gehören jetzt dir. Schau dich um."),
                                   "swiftly-s15-leise", wrap: true, centred: true))
         let hint = supportText(translated("Looks kannst du jederzeit im Profil wechseln."),
                                "swiftly-s13-sehrleise", wrap: true, centred: true)

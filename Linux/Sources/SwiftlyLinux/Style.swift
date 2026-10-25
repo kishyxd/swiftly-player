@@ -3,7 +3,7 @@ import CFonts
 import Foundation
 import JellyfinKit
 
-/// **Swiftly's look, translated into GTK terms.**
+/// **FTV's look, translated into GTK terms.**
 ///
 /// The numbers and colors here are not new decisions. They come from
 /// `Sources/Shared/Colors.swift` and `Sources/macOS/Style.swift` and apply on
@@ -17,8 +17,8 @@ import JellyfinKit
 /// source instead of guessing.
 ///
 /// **Why plain GTK4 and not libadwaita.** libadwaita is GNOME's design library and
-/// makes an app look like a GNOME app. That works against the goal: Swiftly should
-/// look like Swiftly on every system, not like the system. Also, libadwaita is
+/// makes an app look like a GNOME app. That works against the goal: FTV should
+/// look like FTV on every system, not like the system. Also, libadwaita is
 /// barely supported on Windows, which is a target. Everything below is therefore
 /// plain GTK4 with its own stylesheet.
 enum Theme {
@@ -1838,7 +1838,7 @@ enum Theme {
             border-radius: 8px;
         }
 
-        /* MARK: Swiftly unterstuetzen (Direkt-Fassung)
+        /* MARK: FTV unterstuetzen (Direkt-Fassung)
 
            Blatt und Karte folgen dem Entwurf: Flaeche `area`, Ecke 16, drei
            Stufen als `raised`-Kacheln, der Knopf weiss wie jeder Hauptknopf.

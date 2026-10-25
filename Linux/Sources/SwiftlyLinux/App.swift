@@ -5,7 +5,7 @@ import CVLC
 import JellyfinKit
 import SupportKeyKit
 
-/// **Swiftly on Linux.**
+/// **FTV on Linux.**
 ///
 /// Sign-in, remembered session and a home screen with real posters, all on
 /// the same `JellyfinClient` that iPhone, iPad, Apple TV and Mac use.
@@ -261,8 +261,8 @@ final class App: @unchecked Sendable {
 
     func buildUp(hostApp: UnsafeMutablePointer<GtkApplication>!) {
         window = gtk_application_window_new(hostApp)
-        // **What the pointer hover shows.** The panel used to read "SwiftlyLinux
-        // Swiftly": the first part is the program name GLib takes from the binary,
+        // **What the pointer hover shows.** The panel used to read "FTVLinux
+        // FTV": the first part is the program name GLib takes from the binary,
         // the second the window title. The application name now matches the app and
         // the title carries the suffix.
         CharacterItem.setUp()
@@ -276,7 +276,7 @@ final class App: @unchecked Sendable {
         g_set_prgname("swiftly")
         gtk_window_set_title(asWindow(window), "for Jellyfin")
         gtk_window_set_icon_name(asWindow(window), CharacterItem.identifier)
-        // 1440 x 900, as in `Sources/macOS/SwiftlyApp.swift`. The minimum size below
+        // 1440 x 900, as in `Sources/macOS/FTVApp.swift`. The minimum size below
         // is correct and stays.
         //
         // **Closing the window quits the app here, unlike on the Mac.** The Mac stays
@@ -1258,7 +1258,7 @@ final class App: @unchecked Sendable {
         let username = session.userName
         // **With version.** Without `clientVersion` the default
         // `Fassungsnummer.outBundle` applies; there is no bundle here, and the
-        // Jellyfin dashboard showed "Swiftly Player unbekannt". This is the path on
+        // Jellyfin dashboard showed "FTV Player unbekannt". This is the path on
         // every start with a stored session.
         let c = JellyfinClient(baseURL: serverURL,
                                deviceID: Device.identifier,
@@ -2226,7 +2226,7 @@ final class App: @unchecked Sendable {
 
     /// **The same shortcuts as on the Mac**, with Ctrl instead of Cmd: 1 Home,
     /// 2 Movies, 3 Series, F Search. They are defined in
-    /// `Sources/macOS/SwiftlyApp.swift` as `CommandButton`.
+    /// `Sources/macOS/FTVApp.swift` as `CommandButton`.
     ///
     /// On the Mac they hang in the menu bar; there is none here, so the window
     /// listens itself. `GtkShortcutController` would be the proper way but needs
@@ -2353,7 +2353,7 @@ final class App: @unchecked Sendable {
             gtk_widget_grab_focus(searchField)
         case 0x05B:                                        // [
             // **Back**: the Mac has it as Cmd+[ in the "Gehe zu" menu
-            // (`SwiftlyApp.swift`). Without it, the arrow is the only way back from a
+            // (`FTVApp.swift`). Without it, the arrow is the only way back from a
             // subpage.
             back()
         // **The two shortcuts every desktop app has** (GNOME HIG): Ctrl+, opens the
@@ -2452,7 +2452,7 @@ final class App: @unchecked Sendable {
         // **The shortcut sits on the tooltip.**
         //
         // On the Mac all five are visible in the menu bar under "Gehe zu"
-        // (`SwiftlyApp.swift`). That does not exist here (a Wayland window has none),
+        // (`FTVApp.swift`). That does not exist here (a Wayland window has none),
         // and the shortcuts worked but could be read nowhere. A tooltip is where a UI
         // without a menu says such things.
         if let abbreviation = fall.abbreviation {
@@ -3289,7 +3289,7 @@ final class App: @unchecked Sendable {
         let title = label(translated("Startseite"), style: "swiftly-titel-gross")
         gtk_label_set_xalign(OpaquePointer(title), 0)
         gtk_widget_set_hexpand(title, 1)
-        // The heart sits at the right end of the title row ("Support Swiftly").
+        // The heart sits at the right end of the title row ("Support FTV").
         let titleRow = stack(GTK_ORIENTATION_HORIZONTAL, spacing: 8)
         gtk_widget_set_margin_start(titleRow, Int32(Theme.edgeSpacing))
         gtk_widget_set_margin_end(titleRow, Int32(Theme.edgeSpacing))
@@ -5284,7 +5284,7 @@ enum Device {
 
     static let name: String = {
         let computer = ProcessInfo.processInfo.hostName
-        return String(format: translated("Swiftly auf %@"), computer)
+        return String(format: translated("FTV auf %@"), computer)
     }()
 
     static let identifier: String = {

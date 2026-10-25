@@ -104,13 +104,13 @@ nonisolated(unsafe) private let start: @convention(c) (UnsafeMutableRawPointer?,
 // has always carried (the sixth bit).
 #if os(Windows)
 let traits = GApplicationFlags(rawValue: 32)
-// **The installer must see that Swiftly is running.** `Swiftly.iss` names the
+// **The installer must see that FTV is running.** `FTV.iss` names the
 // same names under `AppMutex`; if one exists, setup warns instead of failing on
 // a locked EXE. Once per session and once global, as Inno Setup recommends, so
 // an installer from another login also sees the running app. The handles stay
 // open until the process ends; Windows then cleans them up. If the global one
 // fails, the local one suffices.
-nonisolated(unsafe) let runMarks: [HANDLE?] = ["SwiftlyPlayer", "Global\\SwiftlyPlayer"].map {
+nonisolated(unsafe) let runMarks: [HANDLE?] = ["FTVPlayer", "Global\\FTVPlayer"].map {
     $0.withCString(encodedAs: UTF16.self) { CreateMutexW(nil, false, $0) }
 }
 #else

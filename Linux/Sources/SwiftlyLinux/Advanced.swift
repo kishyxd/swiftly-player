@@ -84,7 +84,7 @@ func advancedBuild(available: [OwnHeader], expanded: Bool = false,
         append(fields, value)
         append(fields, distance)
         append(rail, fields)
-        // Swiftly sets this one itself; the row says so instead of silently doing
+        // FTV sets this one itself; the row says so instead of silently doing
         // nothing.
         let hint = label(translated("Den setzt FTV selbst."), style: "swiftly-zweitzeile")
         gtk_widget_add_css_class(hint, "swiftly-warnung")

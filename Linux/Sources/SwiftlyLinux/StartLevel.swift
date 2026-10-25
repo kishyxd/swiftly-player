@@ -3,7 +3,7 @@ import Foundation
 /// **How far startup has got: one log line per stage.**
 ///
 /// On Windows the launcher (`Windows/Launcher`) reads these lines: it
-/// redirects the app's stdout to `%APPDATA%\Swiftly\swiftly.log` and shows the
+/// redirects the app's stdout to `%APPDATA%\FTV\swiftly.log` and shows the
 /// latest stage in the loading window. The name after `[Level]` is therefore an
 /// interface; renaming one means renaming it in the launcher's `levels` table.
 /// An unknown stage is shown raw; nothing breaks.

@@ -3,7 +3,7 @@ import Foundation
 import JellyfinKit
 import SupportKeyKit
 
-/// **"Support Swiftly" in the direct builds (Linux and Windows).**
+/// **"Support FTV" in the direct builds (Linux and Windows).**
 ///
 /// There is no store here, so the app may point to the website: the sheet explains the
 /// three tiers, "Support on the website" opens the page in the system browser, and a key
@@ -182,10 +182,10 @@ extension App {
 
 extension App {
 
-    /// The row "Support Swiftly" for Settings and the profile page.
+    /// The row "Support FTV" for Settings and the profile page.
     func supportRow() -> Widget! {
         valuesRow(symbol: "emblem-favorite-symbolic",
-                  title: translated(SupportCopy.supportSwiftly.key),
+                  title: translated(SupportCopy.supportFTV.key),
                   under: isSupporter ? nil : translated(SupportCopy.freeForEveryone.key),
                   value: isSupporter ? translated(SupportCopy.supporterBadge.key) : nil,
                   arrow: !isSupporter) { [weak self] in
