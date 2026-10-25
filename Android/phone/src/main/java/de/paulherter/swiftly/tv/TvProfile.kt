@@ -305,7 +305,7 @@ fun TvProfile(app: SwiftlyApplication, open: (Destination) -> Unit) {
                             TvDisplay(translated("Adresse"), server?.first?.ifEmpty { null } ?: app.serverName.value ?: host.ifEmpty { "—" })
                             SeparatorLine()
                             TvDisplay(translated("Fassung"), server?.second?.let { "Jellyfin $it" } ?: "—")
-                            TvVersionDisplay(app, SwiftlyApplication.VersionRow.removePrefix("Swiftly Player "))
+                            TvVersionDisplay(app, SwiftlyApplication.VersionRow.removePrefix("FTV Player "))
                             SeparatorLine()
                             // Multiple servers; formerly the bundle held exactly one.
                             TvAction(translated("Server hinzufügen")) { open(Destination("serveraufnahme", translated("Server hinzufügen"), "ServerAufnahme")) }

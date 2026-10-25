@@ -123,7 +123,7 @@ public actor JellyfinClient {
         deviceID: String,
         deviceName: String,
         clientVersion: String = VersionNumber.outBundle,
-        program: String = "Swiftly Player",
+        program: String = "FTV Player",
         session: Session? = nil,
         urlSession: URLSession = .localNetworkCapable
     ) {

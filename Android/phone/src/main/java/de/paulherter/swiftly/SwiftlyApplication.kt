@@ -406,7 +406,7 @@ class SwiftlyApplication : Application(), coil3.SingletonImageLoader.Factory {
         Kern.packageLanguageSet(packageLanguageUnpack().absolutePath, language)
         // "Android" in the program name lets other devices recognise a phone (or the TV).
         kern = Kern.init(store.devicesIdentifier(), Build.MODEL ?: "Android", BuildConfigVersion,
-                         if (isTv) "Swiftly Player Android TV" else "Swiftly Player Android", SwiftArena.ofAuto())
+                         if (isTv) "FTV Player Android TV" else "FTV Player Android", SwiftArena.ofAuto())
         qualityReport()
         sharedListen(run)
         support = de.paulherter.swiftly.support.Support(this)
@@ -630,7 +630,7 @@ class SwiftlyApplication : Application(), coil3.SingletonImageLoader.Factory {
         val BuildConfigVersion: String = BuildConfig.VERSION_NAME
         /** `Version.row` on iOS. */
         val VersionRow: String =
-            "Swiftly Player ${BuildConfig.VERSION_NAME} (Build ${BuildConfig.VERSION_CODE})"
+            "FTV Player ${BuildConfig.VERSION_NAME} (Build ${BuildConfig.VERSION_CODE})"
         /** Same key as in `UserDefaults` on iOS. */
         const val PendingReports = "nachmeldungen"
         const val MESSAGE_RIGHT_ASKED = "meldungsrechtGefragt"

@@ -44,7 +44,7 @@ enum Version {
         // must not carry another developer's product brand. The store listing is
         // therefore "Swiftly Player", and this line is shown in the profile of the
         // same app, so it must say the same.
-        return "Swiftly Player \(version) (Build \(build))"
+        return "FTV Player \(version) (Build \(build))"
     }
 
     /// The same line plus the underlying components. **In settings**, because
