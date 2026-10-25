@@ -596,6 +596,10 @@ final class AppModel {
 
     init() {
         let store = UserDefaults.standard
+        // **The FTV edition's starting settings, before the first one is read.**
+        // They are written into the store on the first launch, so every install
+        // begins the same way; afterwards the user can change any of them.
+        FTVDefaults.applyOnFirstLaunch(store)
         // `object(forKey:)` distinguishes "never set" from "off"; with
         // `bool(forKey:)` the default would always be false.
         alwaysDirectPlay = store.object(forKey: "immerDirectPlay") as? Bool ?? true

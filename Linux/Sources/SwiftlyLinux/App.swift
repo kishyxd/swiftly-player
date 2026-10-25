@@ -501,6 +501,13 @@ final class App: @unchecked Sendable {
         gtk_widget_set_margin_top(serverField, 24)
         append(center, serverField)
 
+        // **The FTV edition starts on the KXVN server** (`FTVEdition.serverURL`), like
+        // on the other platforms. The field stays editable: somebody who runs their own
+        // Jellyfin must be able to point the app at it.
+        if !FTVEdition.serverURL.isEmpty {
+            gtk_editable_set_text(OpaquePointer(serverField), FTVEdition.serverURL)
+        }
+
         let (advanced, reader) = advancedBuild(available: [])
         gtk_widget_set_size_request(advanced, Int32(Theme.loginWidth), -1)
         gtk_widget_set_halign(advanced, GTK_ALIGN_CENTER)
@@ -512,7 +519,10 @@ final class App: @unchecked Sendable {
 
         connectButton = primaryButton(translated("Verbinden"))
         gtk_widget_set_margin_top(connectButton, 24)
-        gtk_widget_set_sensitive(connectButton, 0)
+        // **A field that already has the FTV server in it can be connected right
+        // away**; otherwise the button waits for the first character (the `changed`
+        // signal below).
+        gtk_widget_set_sensitive(connectButton, self.text(serverField).isEmpty ? 0 : 1)
         append(center, connectButton)
 
         signal(connectButton, "clicked") { [weak self] in self?.linkUp() }

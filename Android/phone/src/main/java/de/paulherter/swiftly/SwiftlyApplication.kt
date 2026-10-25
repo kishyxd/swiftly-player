@@ -391,6 +391,10 @@ class SwiftlyApplication : Application(), coil3.SingletonImageLoader.Factory {
     override fun onCreate() {
         super.onCreate()
         store = Store(this)
+        // **The FTV edition's starting settings, before the first one is read.** They
+        // are written into the store on the first launch, so every install begins the
+        // same way; afterwards the user can change any of them.
+        FTVDefaults.applyOnFirstLaunch(store)
         settings = Settings(store)
         settings.serverKey = { activeServer().orEmpty().lowercase().trimEnd('/') }
         Texts.load(this)

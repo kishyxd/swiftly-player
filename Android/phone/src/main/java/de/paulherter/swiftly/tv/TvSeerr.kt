@@ -81,7 +81,10 @@ fun SeerrTile(hit: SeerrHit, modifier: Modifier = Modifier, perform: () -> Unit)
  */
 @Composable
 fun TvSeerrPage(app: SwiftlyApplication, back: () -> Unit) {
-    var address by remember { mutableStateOf("") }
+    // **The FTV edition starts with the KXVN request instance**, so a new user only
+    // has to sign in. The field stays editable: somebody who runs their own Seerr
+    // must be able to point the app at it.
+    var address by remember { mutableStateOf(de.paulherter.swiftly.BuildConfig.FTV_SEERR_URL) }
     var user by remember { mutableStateOf(app.username().takeIf { it != "?" }.orEmpty()) }
     var password by remember { mutableStateOf("") }
     var leftUp by remember { mutableStateOf(false) }

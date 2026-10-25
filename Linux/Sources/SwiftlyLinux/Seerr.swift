@@ -45,7 +45,14 @@ extension App {
 
         let address: Widget! = gtk_entry_new()
         gtk_entry_set_placeholder_text(asField(address), "seerr.example.com")
-        if let z = seerrAccess { gtk_editable_set_text(OpaquePointer(address), z.address.absoluteString) }
+        // **The FTV edition starts with the KXVN request instance**, so a new user only
+        // has to sign in. The field stays editable: somebody who runs their own Seerr
+        // must be able to point the app at it.
+        if let z = seerrAccess {
+            gtk_editable_set_text(OpaquePointer(address), z.address.absoluteString)
+        } else if !FTVEdition.seerrURL.isEmpty {
+            gtk_editable_set_text(OpaquePointer(address), FTVEdition.seerrURL)
+        }
         append(block, fieldRow(translated("Adresse"), address))
 
         let user: Widget! = gtk_entry_new()

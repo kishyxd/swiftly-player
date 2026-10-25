@@ -146,6 +146,10 @@ struct ConnectView: View {
                     .foregroundStyle(Theme.fontQuiet)
                     .padding(.top, 44)
 
+                // **The FTV edition.** The build carries the address of the KXVN
+                // server (`FTVEdition.serverURL`); the field starts with it and
+                // stays editable, so somebody who runs their own Jellyfin can
+                // still point the app at it.
                 InputField(text: $address, symbol: "globe",
                             placeholder: "tv.beispiel.de", keyboard: .address,
                             completion: linkUp)
@@ -196,7 +200,15 @@ struct ConnectView: View {
         }
         .scrollBounceBehavior(.basedOnSize)
         .scrollDismissesKeyboard(.interactively)
-        .onAppear { if address.isEmpty { address = model.lastServer?.address ?? "" } }
+        .onAppear {
+            if address.isEmpty {
+                // **The FTV edition starts on the KXVN server**; a remembered
+                // server of another app comes second.
+                address = FTVEdition.serverURL.isEmpty
+                    ? (model.lastServer?.address ?? "")
+                    : FTVEdition.serverURL
+            }
+        }
         // Changing the address during the check cancels it.
         .onChange(of: address) { _, new in model.addressChanged(new) }
     }

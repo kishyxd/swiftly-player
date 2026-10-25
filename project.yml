@@ -42,6 +42,12 @@ settings:
     DEVELOPMENT_TEAM: 63L6TSM2Y9
     CODE_SIGN_STYLE: Automatic
     SWIFT_STRICT_CONCURRENCY: complete
+    # **The FTV edition.** This build is the FTV app: it starts on the KXVN server
+    # (`ftv.kxvn.io`), the Seerr address field comes pre-filled with the KXVN request
+    # instance (`request.kxvn.io`), and every new install begins with the same
+    # settings. The flag is what `FTVEdition` in the package reads; without it the
+    # build behaves like upstream Swiftly.
+    SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) FTV_EDITION"
 
 fileGroups:
   - Sources/Shared/Localizable.xcstrings
@@ -217,6 +223,11 @@ targets:
       - path: Sources/Shared/PrivacyInfo.xcprivacy
         buildPhase: resources
       - path: Sources/Shared/AppModel.swift
+      # **The FTV edition's starting settings.** The tvOS and macOS targets list the
+      # shared files one by one (the iOS target takes the whole folder), so a file that
+      # is not listed here is not compiled. Without it these two platforms would keep
+      # the upstream defaults while the phone starts with the FTV ones.
+      - path: Sources/Shared/FTVDefaults.swift
       # **Only the management, not the views.** Downloads exist only on iPhone
       # and iPad, but `AppModel` holds them and `AppModel` is shared. The class
       # sits idle here: `downloadsAn` is off, so neither the network watcher nor
@@ -516,6 +527,11 @@ targets:
       - path: Sources/Shared/PrivacyInfo.xcprivacy
         buildPhase: resources
       - path: Sources/Shared/AppModel.swift
+      # **The FTV edition's starting settings.** The tvOS and macOS targets list the
+      # shared files one by one (the iOS target takes the whole folder), so a file that
+      # is not listed here is not compiled. Without it these two platforms would keep
+      # the upstream defaults while the phone starts with the FTV ones.
+      - path: Sources/Shared/FTVDefaults.swift
       # **Only the management, not the views.** Downloads exist only on iPhone
       # and iPad, but `AppModel` holds them and `AppModel` is shared. The class
       # sits idle here: `downloadsAn` is off, so neither the network watcher nor

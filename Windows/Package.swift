@@ -54,7 +54,16 @@ let package = Package(
                 // builds never link this module.
                 .product(name: "SupportKeyKit", package: "JellyfinKit")
             ],
-            resources: [.process("Resources")]
+            resources: [.process("Resources")],
+            // **The FTV edition.** This build is the FTV app: it starts on the KXVN
+            // server (`ftv.kxvn.io`), the Seerr address field comes pre-filled with the
+            // KXVN request instance (`request.kxvn.io`), and every new install begins
+            // with the same settings. The flag is what `FTVEdition` in the package
+            // reads; without it the build behaves like upstream Swiftly.
+            //
+            // **The same flag the Linux build uses** — the two share the sources, so
+            // they must agree on what the FTV edition is.
+            swiftSettings: [.define("FTV_EDITION")]
         )
     ]
 )

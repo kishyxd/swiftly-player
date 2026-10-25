@@ -81,7 +81,13 @@ let package = Package(
             // bundle only finds what is inside it. Without this line the UI would be in
             // German while runtimes and error messages are translated, and a mix is
             // worse than one language.
-            resources: [.process("Resources")]
+            resources: [.process("Resources")],
+            // **The FTV edition.** This build is the FTV app: it starts on the KXVN
+            // server (`ftv.kxvn.io`), the Seerr address field comes pre-filled with the
+            // KXVN request instance (`request.kxvn.io`), and every new install begins
+            // with the same settings. The flag is what `FTVEdition` in the package
+            // reads; without it the build behaves like upstream Swiftly.
+            swiftSettings: [.define("FTV_EDITION")]
         )
     ]
 )

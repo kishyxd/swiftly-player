@@ -94,6 +94,13 @@ android {
         val ftvServer = (findProperty("ftvServer") as String?)?.trim().orEmpty()
         buildConfigField("String", "FTV_SERVER", "\"$ftvServer\"")
         buildConfigField("boolean", "FTV_MODE", ftvServer.isNotEmpty().toString())
+        // **The request instance the FTV edition starts with.** The Seerr address field
+        // is filled with it, so a new user only has to sign in. It stays editable: somebody
+        // who runs their own Seerr must be able to point the app at it. The same value the
+        // FTV Plezy build carries as `--dart-define=FTV_SEERR_URL=https://request.kxvn.io`.
+        val ftvSeerr = (findProperty("ftvSeerr") as String?)?.trim()
+            ?: if (ftvServer.isNotEmpty()) "https://request.kxvn.io" else ""
+        buildConfigField("String", "FTV_SEERR_URL", "\"$ftvSeerr\"")
         // **Only the ABIs the Swift core is built for** (`core/build.gradle`); on any other the app
         // crashed at startup. libVLC shipped four ABIs, x86 never worked.
         // armeabi-v7a for TVs with 32-bit Android: without it the app was invisible in the store there.
