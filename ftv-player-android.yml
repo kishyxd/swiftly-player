@@ -1,0 +1,127 @@
+name: FTV-Player-Android
+
+# Builds and SIGNS the FTV edition of Swiftly Player (Android) with the KXVN key.
+#
+# **Why here and not in the Swiftly fork.** The signing key lives in this repository's secrets
+# (`ANDROID_KEYSTORE_BASE64` and friends) and GitHub secrets cannot be read back, so they cannot
+# be copied to another repository. The build itself lives in the fork
+# (github.com/kishyxd/swiftly-player, branch `feature/ftv-rebrand`); this workflow only checks
+# that branch out, builds it and signs the result with the same key as the other FTV apps, so a
+# later update installs over an earlier one instead of asking to uninstall.
+#
+# The FTV edition is locked to the KXVN server at build time (`-PftvServer`).
+
+on:
+  # **A push on a dedicated branch, not `workflow_dispatch`.** GitHub refuses a dispatch on this
+  # fork ("Actions has been disabled for this repository"), and a push always works. Pushing the
+  # branch `build/ftv-player` starts the build; the inputs are the defaults below.
+  push:
+    branches: [build/ftv-player]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch of kishyxd/swiftly-player to build
+        required: false
+        default: feature/ftv-rebrand
+      server:
+        description: The server the app signs in to
+        required: false
+        default: https://ftv.kxvn.io
+
+concurrency:
+  group: ftv-player-android-${{ github.ref }}-${{ github.run_id }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: FTV Player APK
+    runs-on: macos-26
+    env:
+      SWIFT_VERSION: "6.3.3"
+      SDK_BUNDLE: "swift-6.3.3-RELEASE_android.artifactbundle"
+      SDK_URL: "https://download.swift.org/swift-6.3.3-release/android-sdk/swift-6.3.3-RELEASE/swift-6.3.3-RELEASE_android.artifactbundle.tar.gz"
+      SDK_SHA256: "d160cc3206dd1886dae3fef2337af5e25ec034692cd0ec225721c56cc69da7f5"
+    steps:
+      - name: Check out the FTV edition
+        uses: actions/checkout@v4
+        with:
+          repository: kishyxd/swiftly-player
+          ref: ${{ inputs.ref }}
+
+      - name: Install swiftly
+        run: |
+          set -euo pipefail
+          curl -L -O --retry 3 "https://download.swift.org/swiftly/darwin/swiftly.pkg"
+          installer -pkg swiftly.pkg -target CurrentUserHomeDirectory
+          ~/.swiftly/bin/swiftly init --quiet-shell-followup
+          ~/.swiftly/bin/swiftly install "${SWIFT_VERSION}"
+          ~/.swiftly/bin/swiftly use "${SWIFT_VERSION}"
+          ~/.swiftly/bin/swiftly run swift --version
+
+      - name: Install the Swift SDK for Android
+        run: |
+          set -euo pipefail
+          SDKS="$HOME/Library/org.swift.swiftpm/swift-sdks"
+          mkdir -p "$SDKS"
+          curl -L --retry 3 -o sdk.tgz "$SDK_URL"
+          echo "${SDK_SHA256}  sdk.tgz" | shasum -a 256 -c -
+          tar xzf sdk.tgz -C "$SDKS"
+          export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/27.3.13750724"
+          bash "$SDKS/$SDK_BUNDLE/swift-android/scripts/setup-android-sdk.sh"
+
+      - name: Publish swiftkit-core to the local Maven repository
+        run: |
+          set -euo pipefail
+          git clone --depth 1 https://github.com/swiftlang/swift-java swift-java
+          cd swift-java
+          export JAVA_HOME="$(/usr/libexec/java_home -v 25)"
+          ./gradlew :SwiftKitCore:publishToMavenLocal -PswiftkitVersion="1.0.0" --no-daemon
+          ls -R "$HOME/.m2/repository/org/swift/swiftkit/swiftkit-core" | head -20
+
+      # The keystore from the repository's secrets, in the shape Gradle wants.
+      - name: Configure the signing key
+        run: |
+          set -euo pipefail
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > upload-keystore.jks
+          cat > key.properties << EOF
+          storePassword=${{ secrets.ANDROID_STORE_PASSWORD }}
+          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+          storeFile=$GITHUB_WORKSPACE/upload-keystore.jks
+          EOF
+
+      - name: Build the signed APK
+        working-directory: Android
+        run: |
+          set -euo pipefail
+          export JAVA_HOME="$(/usr/libexec/java_home -v 21)"
+          export PATH="$JAVA_HOME/bin:$HOME/.swiftly/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
+          export ANDROID_HOME
+          export ANDROID_SDK_ROOT="$ANDROID_HOME"
+          # `key.properties` in the parent directory is read by the signing config.
+          cp "$GITHUB_WORKSPACE/key.properties" .
+          ./gradlew :phone:assembleDirectRelease --console=plain --stacktrace \
+            -PftvServer="${{ inputs.server }}"
+
+      - name: Inspect the APK
+        run: |
+          set -euo pipefail
+          APK=$(find Android/phone/build/outputs/apk/direct/release -name '*.apk' | head -1)
+          echo "APK=$APK"
+          ls -la "$APK"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump badging "$APK" | head -20
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs "$APK" | head -5
+
+      - name: Upload the signed APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ftv-player-apk
+          path: Android/phone/build/outputs/apk/direct/release/*.apk
+          if-no-files-found: error
+
+      - name: Clean up the keystore
+        if: always()
+        run: rm -f "$GITHUB_WORKSPACE/upload-keystore.jks" "$GITHUB_WORKSPACE/key.properties" Android/key.properties
