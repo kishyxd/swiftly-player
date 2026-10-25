@@ -151,7 +151,7 @@ class Support(private val app: SwiftlyApplication) {
         const val HISTORY = "support.promptHistory"
         const val PLAN = "support.plan"
 
-        fun log(text: String) = android.util.Log.i("Swiftly", "Unterstuetzen: $text")
+        fun log(text: String) = android.util.Log.i("FTV", "Unterstuetzen: $text")
     }
 }
 

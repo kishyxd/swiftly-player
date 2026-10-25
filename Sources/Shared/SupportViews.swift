@@ -117,12 +117,12 @@ struct SupporterAvatarBadge: ViewModifier {
     }
 }
 
-/// **The settings group "Swiftly".** Support is always here, from the first launch
+/// **The settings group "FTV".** Support is always here, from the first launch
 /// on: it is the entry App Review is pointed to.
 struct SupportSettingsGroup: View {
     var body: some View {
         let support = SupportModel.shared
-        SettingGroup(title: "Swiftly") {
+        SettingGroup(title: "FTV") {
             ValueRow(symbol: "heart.fill",
                      title: Text(SupportCopy.supportSwiftly.localized),
                      under: Text(SupportCopy.sayThanks.localized),

@@ -333,7 +333,7 @@ nonisolated(unsafe) private let mprisRead: @convention(c) (
     guard let data, let name else { return nil }
     let bar = Unmanaged<MediaBar>.fromOpaque(data).takeUnretainedValue()
     switch String(cString: name) {
-    case "Identity":            return g_variant_new_string("Swiftly")
+    case "Identity":            return g_variant_new_string("FTV")
     case "DesktopEntry":        return g_variant_new_string("de.paulherter.swiftly")
     case "CanQuit", "CanRaise": return g_variant_new_boolean(1)
     case "HasTrackList":        return g_variant_new_boolean(0)

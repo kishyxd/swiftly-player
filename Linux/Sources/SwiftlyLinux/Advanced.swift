@@ -59,7 +59,7 @@ func advancedBuild(available: [OwnHeader], expanded: Bool = false,
     }
     gtk_widget_set_visible(content, opened ? 1 : 0)
 
-    let sentence = label(translated("Für einen Dienst vor deinem Server, etwa Cloudflare Access, Authelia oder Pangolin. Swiftly schickt die Header nur an diese Adresse."),
+    let sentence = label(translated("Für einen Dienst vor deinem Server, etwa Cloudflare Access, Authelia oder Pangolin. FTV schickt die Header nur an diese Adresse."),
                             style: "swiftly-zweitzeile", wrap: true)
     gtk_widget_add_css_class(sentence, "dim-label")
     gtk_label_set_xalign(OpaquePointer(sentence), 0)
@@ -86,7 +86,7 @@ func advancedBuild(available: [OwnHeader], expanded: Bool = false,
         append(rail, fields)
         // Swiftly sets this one itself; the row says so instead of silently doing
         // nothing.
-        let hint = label(translated("Den setzt Swiftly selbst."), style: "swiftly-zweitzeile")
+        let hint = label(translated("Den setzt FTV selbst."), style: "swiftly-zweitzeile")
         gtk_widget_add_css_class(hint, "swiftly-warnung")
         gtk_label_set_xalign(OpaquePointer(hint), 0)
         let hk = PointerBox(hint), nk = PointerBox(name)

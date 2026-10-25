@@ -272,7 +272,7 @@ final class App: @unchecked Sendable {
         // needs the custom headers (issue #4).
         Cache.headersLoad()
         seerrLoad()
-        g_set_application_name("Swiftly")
+        g_set_application_name("FTV")
         g_set_prgname("swiftly")
         gtk_window_set_title(asWindow(window), "for Jellyfin")
         gtk_window_set_icon_name(asWindow(window), CharacterItem.identifier)
@@ -2636,7 +2636,7 @@ final class App: @unchecked Sendable {
         let episode = lastStartRail.first
         takeoverOfferings = ["Probe-Telefon", "Probe-Fernseher"].enumerated().map { i, name in
             RemoteSession(id: "probe-\(i)", devicesIdentifier: "probe-\(i)", deviceName: name,
-                         program: "Swiftly", takesCommands: true, running: episode,
+                         program: "FTV", takesCommands: true, running: episode,
                          state: nil)
         }
         takeoverErrorUntil = .distantPast

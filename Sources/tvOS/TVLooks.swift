@@ -608,7 +608,7 @@ struct TVLookEntryRow: View {
                     LookTile(look: saved, size: 52)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Wähl deinen Look")
-                        Text("Looks und Icons für alle, die Swiftly am Laufen halten.")
+                        Text("Looks und Icons für alle, die FTV am Laufen halten.")
                             .font(Theme.small)
                             .foregroundStyle(Theme.fontQuiet)
                             .lineLimit(1)

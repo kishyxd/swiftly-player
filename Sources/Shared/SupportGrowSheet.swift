@@ -84,7 +84,7 @@ struct SupportGrowSheet: View {
                     VStack(alignment: .leading, spacing: 8) {
                         // The sprout at the size of the text beside it, not of the heading.
                         HStack(alignment: .firstTextBaseline, spacing: 8) {
-                            Text("Hilf Swiftly zu wachsen")
+                            Text("Hilf FTV zu wachsen")
                                 .growing(28, .bold)
                                 .tracking(-0.56)
                                 .foregroundStyle(Theme.font)
@@ -93,7 +93,7 @@ struct SupportGrowSheet: View {
                                 .growing(17)
                                 .accessibilityHidden(true)
                         }
-                        Text("Dein Beitrag hält Swiftly am Laufen.")
+                        Text("Dein Beitrag hält FTV am Laufen.")
                             .growing(17)
                             .foregroundStyle(Theme.font.opacity(0.9))
                             .fixedSize(horizontal: false, vertical: true)
@@ -445,7 +445,7 @@ private struct PricesUnavailableCard: View {
                 Text("Preise sind gerade nicht verfügbar")
                     .growing(15, .semibold)
                     .foregroundStyle(Theme.font)
-                Text("Der App Store hat nicht geantwortet. Das passiert ohne Internet oder wenn Käufe in der Bildschirmzeit aus sind. Nichts geht verloren, und Swiftly läuft wie immer.")
+                Text("Der App Store hat nicht geantwortet. Das passiert ohne Internet oder wenn Käufe in der Bildschirmzeit aus sind. Nichts geht verloren, und FTV läuft wie immer.")
                     .growing(13)
                     .foregroundStyle(Theme.fontQuiet)
                     .fixedSize(horizontal: false, vertical: true)
@@ -700,7 +700,7 @@ struct SupportGrowThanks: View {
         if let keptLook {
             String(localized: "Du hast Swiftly gerade beim Weitermachen geholfen. \(keptLook.name) ist an, dein Icon und Logo auch. Schau dich um.")
         } else {
-            String(localized: "Du hast Swiftly gerade beim Weitermachen geholfen. Looks und Icons gehören jetzt dir. Schau dich um.")
+            String(localized: "Du hast FTV gerade beim Weitermachen geholfen. Looks und Icons gehören jetzt dir. Schau dich um.")
         }
     }
 }

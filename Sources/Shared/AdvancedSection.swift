@@ -53,7 +53,7 @@ struct AdvancedSection: View {
 
     private var content: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Für einen Dienst vor deinem Server, etwa Cloudflare Access, Authelia oder Pangolin. Swiftly schickt die Header nur an diese Adresse.")
+            Text("Für einen Dienst vor deinem Server, etwa Cloudflare Access, Authelia oder Pangolin. FTV schickt die Header nur an diese Adresse.")
                 .font(Theme.small)
                 .foregroundStyle(Theme.fontVeryQuiet)
                 .fixedSize(horizontal: false, vertical: true)
@@ -79,7 +79,7 @@ struct AdvancedSection: View {
                                 secret: true)
                         .padding(.trailing, 52)
                     if row.locked {
-                        Text("Den setzt Swiftly selbst.")
+                        Text("Den setzt FTV selbst.")
                             .font(Theme.small)
                             .foregroundStyle(Theme.warning)
                     }

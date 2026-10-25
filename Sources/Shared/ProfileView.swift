@@ -138,7 +138,7 @@ struct ProfileView: View {
                     // **Rate, Discord, report a bug: at the very bottom.** In settings these were
                     // at the bottom and hardly seen.
                     group {
-                        ProfileRow(symbol: "star", title: "Swiftly bewerten",
+                        ProfileRow(symbol: "star", title: "FTV bewerten",
                                     under: "Im App Store") {
                             open(Community.appStoreRating)
                         }

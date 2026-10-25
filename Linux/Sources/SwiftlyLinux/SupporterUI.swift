@@ -260,12 +260,12 @@ extension App {
         gtk_widget_set_margin_end(words, 20)
         let titleRow = stack(GTK_ORIENTATION_HORIZONTAL, spacing: 6)
         gtk_widget_set_halign(titleRow, GTK_ALIGN_CENTER)
-        append(titleRow, label(translated("Hilf Swiftly zu wachsen"), style: "swiftly-s28-titel"))
+        append(titleRow, label(translated("Hilf FTV zu wachsen"), style: "swiftly-s28-titel"))
         let sprout = label("🌱", style: "swiftly-s17")
         gtk_widget_set_valign(sprout, GTK_ALIGN_CENTER)
         append(titleRow, sprout)
         append(words, titleRow)
-        append(words, supportText(translated("Dein Beitrag hält Swiftly am Laufen."), "swiftly-s17-hell",
+        append(words, supportText(translated("Dein Beitrag hält FTV am Laufen."), "swiftly-s17-hell",
                                   wrap: true, centred: true))
         append(words, supportText(translated("Open Source, keine Werbung, alles zum Schauen bleibt kostenlos."),
                                   "swiftly-s13-sehrleise", wrap: true, centred: true))

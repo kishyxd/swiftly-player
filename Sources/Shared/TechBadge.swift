@@ -483,7 +483,7 @@ struct TechBadge: View {
                 fits = false
             case .inSwiftlyOut:
                 // Not a defect but a choice, hence not orange.
-                word = String(localized: "in Swiftly aus")
+                word = String(localized: "in FTV aus")
                 fits = true
             case .unreachable:
                 word = String(localized: "Anzeige stumm")

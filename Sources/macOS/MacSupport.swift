@@ -122,12 +122,12 @@ struct MacSupporterAvatarBadge: ViewModifier {
     }
 }
 
-/// **The settings group "Swiftly"**: always here from the first launch on, it is the
+/// **The settings group "FTV"**: always here from the first launch on, it is the
 /// entry App Review is pointed to. The icon picker sits right under the row.
 struct MacSupportSettingsGroup: View {
     var body: some View {
         let support = SupportModel.shared
-        SettingGroup(title: "Swiftly") {
+        SettingGroup(title: "FTV") {
             ValuesRow(symbol: "heart.fill",
                       title: Text(SupportCopy.supportSwiftly.localized),
                       under: Text(SupportCopy.sayThanks.localized),

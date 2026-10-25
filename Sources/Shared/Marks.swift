@@ -65,7 +65,7 @@ struct Wordmark: View {
                 .fill(logo ?? accent.map(AnyShapeStyle.init) ?? LookStore.shared.palette.logoStyle)
         }
         .frame(width: width, height: height)
-        .accessibilityLabel("Swiftly")
+        .accessibilityLabel("FTV")
     }
 }
 
@@ -90,6 +90,6 @@ struct Emblem: View {
                                                y: (270 + 744) / 2 / 1024))
         }
         .frame(width: size, height: size)
-        .accessibilityLabel("Swiftly")
+        .accessibilityLabel("FTV")
     }
 }

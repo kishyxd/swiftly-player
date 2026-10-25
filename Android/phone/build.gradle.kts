@@ -46,7 +46,11 @@ android {
     }
     compileSdk = 36
     defaultConfig {
-        applicationId = "de.paulherter.swiftly"
+        // **KXVN FTV edition.** The application id is the owner's `com.kxvn.*` family; the Kotlin
+        // namespace stays `de.paulherter.swiftly` so the package directories and the Swift core's
+        // generated Java wrappers keep matching. Same trick as the Plezy/FTV fork: only the id the
+        // system sees changes, not the code layout.
+        applicationId = "com.kxvn.ftvplayer"
         minSdk = 28
         targetSdk = 36
         versionCode = 30
@@ -54,6 +58,13 @@ android {
         // **Switch-to-Play-Store build for the current beta testers** (`-PbetaRedirect=true`, never set
         // permanently): the app shows only a notice page (`BetaRedirectPage`). Off by default.
         buildConfigField("boolean", "BETA_REDIRECT", (findProperty("betaRedirect") == "true").toString())
+        // **The server the FTV edition is locked to.** Empty by default, so a plain build of this
+        // fork still behaves like upstream Swiftly. The FTV build passes
+        // `-PftvServer=https://ftv.kxvn.io`, and the app then offers a single "Sign in to FTV"
+        // button that connects to that address and hides the free server field.
+        val ftvServer = (findProperty("ftvServer") as String?)?.trim().orEmpty()
+        buildConfigField("String", "FTV_SERVER", "\"$ftvServer\"")
+        buildConfigField("boolean", "FTV_MODE", ftvServer.isNotEmpty().toString())
         // **Only the ABIs the Swift core is built for** (`core/build.gradle`); on any other the app
         // crashed at startup. libVLC shipped four ABIs, x86 never worked.
         // armeabi-v7a for TVs with 32-bit Android: without it the app was invisible in the store there.

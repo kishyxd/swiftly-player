@@ -147,7 +147,7 @@ struct ProfileView: View {
                 // **Rate, Discord, report a bug: at the very bottom.** They used to be in
                 // Settings, where they were rarely seen.
                 RowsGroup {
-                    ValuesRow(symbol: "star", title: Text("Swiftly bewerten"),
+                    ValuesRow(symbol: "star", title: Text("FTV bewerten"),
                                under: Text("Im App Store"),
                                action: { open(Community.appStoreRating) })
                     SheetLine().padding(.leading, Theme.separatorInsetCard)

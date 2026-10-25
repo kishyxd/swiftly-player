@@ -140,7 +140,7 @@ public actor RemoteControl {
         // when they were there a completely different runtime stood next to them. There
         // were **two** sessions of the same device, the channel on one and the progress
         // reports on the other. It only became visible when the client name changed
-        // from "Swiftly" to "Swiftly Player"; the trap was there before.
+        // from "FTV" to "Swiftly Player"; the trap was there before.
         //
         // The query values stay as well: older servers read the channel's login from
         // there, newer ones from the header.

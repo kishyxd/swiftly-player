@@ -72,9 +72,9 @@ import kotlinx.coroutines.delay
 
 /** The ask, as a sheet from below (`app.sheet`): mark, intro, then what this build offers. */
 fun supportSheetShow(app: SwiftlyApplication, fromLooks: Boolean = false) {
-    // The Play build's sheet is iOS's "Hilf Swiftly zu wachsen": full height, in the look's glow, its own X.
+    // The Play build's sheet is iOS's "Hilf FTV zu wachsen": full height, in the look's glow, its own X.
     val grow = de.paulherter.swiftly.BuildConfig.FLAVOR == "play" && !app.isTv
-    app.sheet.value = SheetRequest(translated("Swiftly unterstützen"), emptyList(), null, heading = !grow, full = grow,
+    app.sheet.value = SheetRequest(translated("FTV unterstützen"), emptyList(), null, heading = !grow, full = grow,
         backdrop = if (grow) ({ GrowBackdrop(app) }) else null, content = { close ->
         if (fromLooks) {
             // Closing without a purchase ends the preview that led here (`LookTryOn`).
@@ -178,7 +178,7 @@ fun TipChoice(emoji: String, title: String, price: String, chosen: Boolean, owne
 @Composable
 private fun ThanksBody(app: SwiftlyApplication, close: () -> Unit, open: (Destination) -> Unit) {
     SupportMark(filled = true)
-    SheetText(translated("Dein Kaffee hilft uns, Swiftly für alle kostenlos zu halten. Das ist neu für dich."))
+    SheetText(translated("Dein Kaffee hilft uns, FTV für alle kostenlos zu halten. Das ist neu für dich."))
     Spacer(Modifier.height(16.dp))
     Column(Modifier.fillMaxWidth().padding(horizontal = Theme.edgeSpacing).clip(RoundedCornerShape(Theme.cornerCard))
                .background(Theme.groupsArea)) {
@@ -242,7 +242,7 @@ fun SupportHeaderHeart(app: SwiftlyApplication) {
     }
     Box(Modifier.size(44.dp).tapOn { if (support.isSupporter) supportThanksShow(app, support.openPage) else supportSheetShow(app) },
         contentAlignment = Alignment.Center) {
-        Symbol(Glyph.HeartFilled, 20.dp, color = Theme.font, description = translated("Swiftly unterstützen"),
+        Symbol(Glyph.HeartFilled, 20.dp, color = Theme.font, description = translated("FTV unterstützen"),
                modifier = Modifier.graphicsLayer { scaleX = scale.value; scaleY = scale.value })
     }
 }
@@ -267,7 +267,7 @@ fun SupportHomeCard(app: SwiftlyApplication) {
     CardView {
         Box(Modifier.fillMaxWidth()) {
             Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(translated("Du hast mit Swiftly %lld Stunden geschaut.", now.watchedHours),
+                Text(translated("Du hast mit FTV %lld Stunden geschaut.", now.watchedHours),
                      style = Theme.categoryLarge, color = Theme.font, modifier = Modifier.padding(end = 30.dp))
                 Text(translated("Wenn es dir einen Kaffee wert ist, freuen wir uns sehr."), style = Theme.body, color = Theme.fontQuiet)
                 Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -276,7 +276,7 @@ fun SupportHomeCard(app: SwiftlyApplication) {
                 }
             }
             Box(Modifier.align(Alignment.TopEnd).size(44.dp).tapOn {
-                app.sheet.value = SheetRequest(translated("Swiftly unterstützen"), listOf(Choice("weg", translated("Nicht mehr zeigen"))), null,
+                app.sheet.value = SheetRequest(translated("FTV unterstützen"), listOf(Choice("weg", translated("Nicht mehr zeigen"))), null,
                     icons = mapOf("weg" to Glyph.CrossCircle)) { support.answer("dismiss") }
             }, contentAlignment = Alignment.Center) {
                 Symbol(Glyph.More, 17.dp, color = Theme.fontVeryQuiet, description = translated("Mehr"))
@@ -287,13 +287,13 @@ fun SupportHomeCard(app: SwiftlyApplication) {
 
 // MARK: - Settings, About
 
-/** The "Swiftly" group in Settings: support, and the app icon on the phone. */
+/** The "FTV" group in Settings: support, and the app icon on the phone. */
 @Composable
 fun SupportSettingsGroup(app: SwiftlyApplication, open: (Destination) -> Unit) {
     val support = app.support
     if (!support.available && !support.isSupporter) return
-    SettingGroup("Swiftly") {
-        ValueRow(Glyph.Heart, translated("Swiftly unterstützen"), translated("Mit einem Kaffee Danke sagen"),
+    SettingGroup("FTV") {
+        ValueRow(Glyph.Heart, translated("FTV unterstützen"), translated("Mit einem Kaffee Danke sagen"),
                  value = if (support.isSupporter) translated("Danke") else null) {
             if (support.isSupporter) supportThanksShow(app, open) else supportSheetShow(app)
         }
@@ -364,7 +364,7 @@ fun AppIconPage(app: SwiftlyApplication, back: () -> Unit) {
         }
         if (!support.isSupporter && support.available) {
             Footer(translated("Als Dankeschön bekommst du ein Herz in „Über“ und zusätzliche App-Icons."))
-            PrimaryButton(translated("Swiftly unterstützen"), modifier = Modifier.padding(horizontal = Theme.edgeSpacing).padding(top = 20.dp)) {
+            PrimaryButton(translated("FTV unterstützen"), modifier = Modifier.padding(horizontal = Theme.edgeSpacing).padding(top = 20.dp)) {
                 supportSheetShow(app)
             }
         }

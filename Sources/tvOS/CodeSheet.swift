@@ -9,8 +9,8 @@ enum CommunityTarget: String, Identifiable {
 
     var title: LocalizedStringKey {
         switch self {
-        case .rate: "Swiftly bewerten"
-        case .discord:  "Swiftly hat einen Discord"
+        case .rate: "FTV bewerten"
+        case .discord:  "FTV hat einen Discord"
         case .error:   "Fehler melden"
         }
     }

@@ -85,7 +85,7 @@ struct LoadSheet: View {
             if converted {
                 hint("Der Server wandelt die Datei beim Laden um. Die Größe ist geschätzt, Untertitel kommen als eigene Dateien mit.")
             } else {
-                hint("Swiftly lädt die Originaldatei, in derselben Qualität wie beim Streamen.")
+                hint("FTV lädt die Originaldatei, in derselben Qualität wie beim Streamen.")
             }
         }
     }

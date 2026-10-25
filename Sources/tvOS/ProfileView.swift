@@ -109,7 +109,7 @@ struct ProfileView: View {
             case .integration: "Integration"
             case .server:      "Server"
             case .account:       "Konto"
-            case .community: "Swiftly"
+            case .community: "FTV"
             }
         }
     }
@@ -573,7 +573,7 @@ struct ProfileView: View {
             SeparatorLine()
             TVAppIconRow { supportStart = .icons }
             SeparatorLine()
-            ActionRow(title: "Swiftly bewerten") { communityTarget = .rate }
+            ActionRow(title: "FTV bewerten") { communityTarget = .rate }
             SeparatorLine()
             ActionRow(title: "Discord beitreten") { communityTarget = .discord }
             SeparatorLine()

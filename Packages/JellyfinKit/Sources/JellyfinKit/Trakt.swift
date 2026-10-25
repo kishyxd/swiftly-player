@@ -517,7 +517,7 @@ public struct TraktClient: Sendable {
         petition.setValue(access.clientID, forHTTPHeaderField: "trakt-api-key")
         // Trakt sits behind Cloudflare, which occasionally rejects requests without
         // a sender.
-        petition.setValue("Swiftly", forHTTPHeaderField: "User-Agent")
+        petition.setValue("FTV", forHTTPHeaderField: "User-Agent")
         if let token { petition.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
         return try await conduit(petition)
     }

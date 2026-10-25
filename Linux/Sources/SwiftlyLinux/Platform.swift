@@ -69,7 +69,7 @@ enum Platform {
         let base = ProcessInfo.processInfo.environment["APPDATA"]
             .map { URL(fileURLWithPath: $0) }
             ?? URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("AppData/Roaming")
-        return base.appendingPathComponent("Swiftly")
+        return base.appendingPathComponent("FTV")
         #else
         let base = ProcessInfo.processInfo.environment["XDG_CONFIG_HOME"]
             .map { URL(fileURLWithPath: $0) }
@@ -89,7 +89,7 @@ enum Platform {
         let base = ProcessInfo.processInfo.environment["LOCALAPPDATA"]
             .map { URL(fileURLWithPath: $0) }
             ?? URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("AppData/Local")
-        return base.appendingPathComponent("Swiftly")
+        return base.appendingPathComponent("FTV")
         #else
         let base = ProcessInfo.processInfo.environment["XDG_CACHE_HOME"]
             .map { URL(fileURLWithPath: $0) }

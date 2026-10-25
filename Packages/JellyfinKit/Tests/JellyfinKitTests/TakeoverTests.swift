@@ -20,7 +20,7 @@ struct TakeoverTests {
                          forwardSeconds: TimeInterval? = 5) -> RemoteSession {
         RemoteSession(id: id, userIdentifier: user,
                      devicesIdentifier: device, deviceName: "iPhone im Wohnzimmer",
-                     program: "Swiftly", takesCommands: takesCommands,
+                     program: "FTV", takesCommands: takesCommands,
                      running: running, state: .init(halted: false, spot: 812),
                      lastActivity: forwardSeconds.map { now.addingTimeInterval(-$0) })
     }

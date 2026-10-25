@@ -15,7 +15,7 @@ struct TraktConnectView: View {
                     .font(Theme.titleLarge)
                     .foregroundStyle(Theme.font)
 
-                Text("Swiftly meldet an Trakt, was du schaust. Ab 80 Prozent steht der Titel dort als gesehen.")
+                Text("FTV meldet an Trakt, was du schaust. Ab 80 Prozent steht der Titel dort als gesehen.")
                     .font(Theme.body)
                     .foregroundStyle(Theme.fontQuiet)
                     .multilineTextAlignment(.center)

@@ -106,7 +106,7 @@ struct DiscordHint: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
-                Text("Swiftly hat einen Discord")
+                Text("FTV hat einen Discord")
                     .font(Theme.listTitle)
                     .foregroundStyle(Theme.font)
                 Spacer(minLength: 8)

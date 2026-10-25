@@ -17,13 +17,13 @@ import java.time.Instant
 import kotlin.concurrent.thread
 
 /**
- * The app log: logcat under "Swiftly" plus the buffer the user shares from (`LogRing` in
+ * The app log: logcat under "FTV" plus the buffer the user shares from (`LogRing` in
  * the package, mirrors iOS). Every line that used to go only to logcat goes through here;
  * redaction happens in the core when a line is added.
  */
 object AppLog {
     fun writeOut(text: String) {
-        Log.i("Swiftly", text)
+        Log.i("FTV", text)
         runCatching { Kern.logAppend(text) }
     }
 }

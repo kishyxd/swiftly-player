@@ -142,7 +142,7 @@ extension App {
         }
 
         let text = label(
-            translated("Swiftly meldet an Trakt, was du schaust. Ab 80 Prozent steht der Titel dort als gesehen."),
+            translated("FTV meldet an Trakt, was du schaust. Ab 80 Prozent steht der Titel dort als gesehen."),
             style: "swiftly-koerper", wrap: true)
         gtk_widget_add_css_class(text, "dim-label")
         gtk_label_set_xalign(OpaquePointer(text), 0)

@@ -2932,23 +2932,6 @@
         }
       }
     },
-    "Der Server war nicht erreichbar. Hat Swiftly die Erlaubnis, Geräte im heimischen Netz zu suchen? Sie steht in den Systemeinstellungen unter „Swiftly · Lokales Netzwerk\".": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Der Server war nicht erreichbar. Hat Swiftly die Erlaubnis, Geräte im heimischen Netz zu suchen? Sie steht in den Systemeinstellungen unter „Swiftly · Lokales Netzwerk\"."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The server could not be reached. Does Swiftly have permission to find devices on your home network? It is in Settings under \"Swiftly · Local Network\"."
-          }
-        }
-      }
-    },
     "Die Adresse eines weiteren Jellyfin-Servers. Du bleibst bei beiden angemeldet und wechselst auf der Profilseite zwischen ihnen.": {
       "extractionState": "manual",
       "localizations": {
@@ -7514,23 +7497,6 @@
         }
       }
     },
-    "Swiftly": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Swiftly"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Swiftly"
-          }
-        }
-      }
-    },
     "Swiftly 1.0 · VLCKit 4.0.0-a23": {
       "extractionState": "manual",
       "localizations": {
@@ -7544,73 +7510,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Swiftly 1.0 · VLCKit 4.0.0-a23"
-          }
-        }
-      }
-    },
-    "Swiftly bewerten": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Swiftly bewerten"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rate Swiftly"
-          }
-        }
-      }
-    },
-    "Swiftly hat einen Discord": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Swiftly hat einen Discord"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Swiftly has a Discord"
-          }
-        }
-      }
-    },
-    "Swiftly lädt die Originaldatei, in derselben Qualität wie beim Streamen.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Swiftly lädt die Originaldatei, in derselben Qualität wie beim Streamen."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Swiftly downloads the original file, in the same quality as streaming."
-          }
-        }
-      }
-    },
-    "Swiftly speichert dein Passwort nicht, nur die Anmeldung bei Seerr.": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Swiftly speichert dein Passwort nicht, nur die Anmeldung bei Seerr."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Swiftly doesn’t save your password, only the Seerr sign-in."
           }
         }
       }
@@ -9340,23 +9239,6 @@
         }
       }
     },
-    "fps · in Swiftly aus": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "fps · in Swiftly aus"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "fps · off in Swiftly"
-          }
-        }
-      }
-    },
     "fps · laut Server": {
       "extractionState": "manual",
       "localizations": {
@@ -9454,23 +9336,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "You can leave out https://."
-          }
-        }
-      }
-    },
-    "in Swiftly aus": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "in Swiftly aus"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "off in Swiftly"
           }
         }
       }
@@ -10089,23 +9954,6 @@
         }
       }
     },
-    "Den setzt Swiftly selbst.": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Den setzt Swiftly selbst."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Swiftly sets this one itself."
-          }
-        }
-      }
-    },
     "Eigene Header": {
       "extractionState": "manual",
       "localizations": {
@@ -10157,23 +10005,6 @@
         }
       }
     },
-    "Für einen Dienst vor deinem Server, etwa Cloudflare Access, Authelia oder Pangolin. Swiftly schickt die Header nur an diese Adresse.": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Für einen Dienst vor deinem Server, etwa Cloudflare Access, Authelia oder Pangolin. Swiftly schickt die Header nur an diese Adresse."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "For a service in front of your server, like Cloudflare Access, Authelia or Pangolin. Swiftly only sends these headers to this address."
-          }
-        }
-      }
-    },
     "Trakt": {
       "extractionState": "manual",
       "localizations": {
@@ -10204,23 +10035,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Logs what you watch"
-          }
-        }
-      }
-    },
-    "Swiftly meldet an Trakt, was du schaust. Ab 80 Prozent steht der Titel dort als gesehen.": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Swiftly meldet an Trakt, was du schaust. Ab 80 Prozent steht der Titel dort als gesehen."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Swiftly tells Trakt what you watch. From 80 percent on, the title shows up there as watched."
           }
         }
       }
@@ -11674,23 +11488,6 @@
         }
       }
     },
-    "Swiftly unterstützen": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Swiftly unterstützen"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Support Swiftly"
-          }
-        }
-      }
-    },
     "Mit einem Kaffee Danke sagen": {
       "extractionState": "manual",
       "localizations": {
@@ -11721,23 +11518,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Say thanks with a coffee. Everything stays free for everyone."
-          }
-        }
-      }
-    },
-    "Wir bauen Swiftly ohne Werbung und ohne Tracking. Wenn es deine Abende besser macht, hilft uns ein Kaffee, weiterzumachen.": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wir bauen Swiftly ohne Werbung und ohne Tracking. Wenn es deine Abende besser macht, hilft uns ein Kaffee, weiterzumachen."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "We build Swiftly without ads or tracking. If it makes your evenings better, a coffee helps us keep going."
           }
         }
       }
@@ -11912,23 +11692,6 @@
         }
       }
     },
-    "Dein Kaffee hilft uns, Swiftly für alle kostenlos zu halten. Das ist neu für dich.": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dein Kaffee hilft uns, Swiftly für alle kostenlos zu halten. Das ist neu für dich."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your coffee helps us keep Swiftly free for everyone. Here is what is new for you."
-          }
-        }
-      }
-    },
     "Unterstützer-App-Icons": {
       "extractionState": "manual",
       "localizations": {
@@ -12010,23 +11773,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Choose an app icon"
-          }
-        }
-      }
-    },
-    "Du hast mit Swiftly %lld Stunden geschaut.": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Du hast mit Swiftly %lld Stunden geschaut."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You have watched %lld hours with Swiftly."
           }
         }
       }
@@ -12541,74 +12287,6 @@
         }
       }
     },
-    "Der App Store hat nicht geantwortet. Das passiert ohne Internet oder wenn Käufe in der Bildschirmzeit aus sind. Nichts geht verloren, und Swiftly läuft wie immer.": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Der App Store hat nicht geantwortet. Das passiert ohne Internet oder wenn Käufe in der Bildschirmzeit aus sind. Nichts geht verloren, und Swiftly läuft wie immer."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The App Store didn’t answer. That happens without internet, or when purchases are turned off in Screen Time. Nothing is lost, and Swiftly works as always."
-          }
-        }
-      }
-    },
-    "Du hast Swiftly gerade beim Weitermachen geholfen. %@ ist an, dein Icon und Logo auch. Schau dich um.": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Du hast Swiftly gerade beim Weitermachen geholfen. %@ ist an, dein Icon und Logo auch. Schau dich um."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You just helped Swiftly keep going. %@ is on, your icon and logo too. Have a look around."
-          }
-        }
-      }
-    },
-    "Du hast Swiftly gerade beim Weitermachen geholfen. Freigeschaltet wird dafür nichts, es ist einfach nur Danke.": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Du hast Swiftly gerade beim Weitermachen geholfen. Freigeschaltet wird dafür nichts, es ist einfach nur Danke."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You just helped Swiftly keep going. Nothing is unlocked for it, it is simply a thank-you."
-          }
-        }
-      }
-    },
-    "Du hast Swiftly gerade beim Weitermachen geholfen. Looks und Icons gehören jetzt dir. Schau dich um.": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Du hast Swiftly gerade beim Weitermachen geholfen. Looks und Icons gehören jetzt dir. Schau dich um."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You just helped Swiftly keep going. Looks and icons are yours now. Have a look around."
-          }
-        }
-      }
-    },
     "Einfach Danke ☕": {
       "extractionState": "manual",
       "localizations": {
@@ -12694,23 +12372,6 @@
         }
       }
     },
-    "Keine Werbung, kein Tracking, kein Konto bei uns. Swiftly entsteht offen, und wer es mag, legt etwas dazu, damit es weiterwachsen kann.": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keine Werbung, kein Tracking, kein Konto bei uns. Swiftly entsteht offen, und wer es mag, legt etwas dazu, damit es weiterwachsen kann."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No ads, no tracking, no account with us. Swiftly is built in the open, and the people who enjoy it chip in so it can keep growing."
-          }
-        }
-      }
-    },
     "Koralle": {
       "extractionState": "manual",
       "localizations": {
@@ -12792,23 +12453,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Looks are a thank-you for supporters. Try them all."
-          }
-        }
-      }
-    },
-    "Looks und Icons für alle, die Swiftly am Laufen halten.": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Looks und Icons für alle, die Swiftly am Laufen halten."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Looks and icons for everyone who helps keep Swiftly going."
           }
         }
       }
@@ -13081,23 +12725,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Emerald"
-          }
-        }
-      }
-    },
-    "Swiftly ist kostenlos.\nSo bleibt es dabei.": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Swiftly ist kostenlos.\nSo bleibt es dabei."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Swiftly is free.\nIt stays that way."
           }
         }
       }
@@ -13680,40 +13307,6 @@
         }
       }
     },
-    "Hilf Swiftly zu wachsen": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hilf Swiftly zu wachsen"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Help Swiftly grow"
-          }
-        }
-      }
-    },
-    "Dein Beitrag hält Swiftly am Laufen.": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dein Beitrag hält Swiftly am Laufen."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your support keeps Swiftly going."
-          }
-        }
-      }
-    },
     "Open Source, keine Werbung, alles zum Schauen bleibt kostenlos.": {
       "extractionState": "manual",
       "localizations": {
@@ -13727,23 +13320,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Open source, no ads, and watching stays free."
-          }
-        }
-      }
-    },
-    "Danke, dass du Swiftly benutzt. %@ ist ein Geschenk an alle.": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Danke, dass du Swiftly benutzt. %@ ist ein Geschenk an alle."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Thanks for using Swiftly. %@ is a gift to everyone."
           }
         }
       }
@@ -13918,40 +13494,6 @@
         }
       }
     },
-    "Swiftly gibt es jetzt im App Store": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Swiftly gibt es jetzt im App Store"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Swiftly is now in the App Store"
-          }
-        }
-      }
-    },
-    "Diese Testversion wird nicht mehr aktualisiert. Lade Swiftly bitte aus dem App Store und lösche vorher diese Testversion. Bald öffnen wir ein neues TestFlight für alle, die wirklich Beta-Versionen testen wollen.": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Diese Testversion wird nicht mehr aktualisiert. Lade Swiftly bitte aus dem App Store und lösche vorher diese Testversion. Bald öffnen wir ein neues TestFlight für alle, die wirklich Beta-Versionen testen wollen."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This test version no longer gets updates. Please download Swiftly from the App Store and delete this test version first. We will open a new TestFlight soon for everyone who really wants to test beta versions."
-          }
-        }
-      }
-    },
     "App Store öffnen": {
       "extractionState": "manual",
       "localizations": {
@@ -13975,16 +13517,36 @@
         "de": {
           "variations": {
             "plural": {
-              "one": { "stringUnit": { "state": "translated", "value": "%lld Wiedergabeliste" } },
-              "other": { "stringUnit": { "state": "translated", "value": "%lld Wiedergabelisten" } }
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Wiedergabeliste"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Wiedergabelisten"
+                }
+              }
             }
           }
         },
         "en": {
           "variations": {
             "plural": {
-              "one": { "stringUnit": { "state": "translated", "value": "%lld playlist" } },
-              "other": { "stringUnit": { "state": "translated", "value": "%lld playlists" } }
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld playlist"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld playlists"
+                }
+              }
             }
           }
         }
@@ -14054,6 +13616,464 @@
           "stringUnit": {
             "state": "translated",
             "value": "As soon as there is something in this playlist, it shows up here."
+          }
+        }
+      }
+    },
+    "Der Server war nicht erreichbar. Hat FTV die Erlaubnis, Geräte im heimischen Netz zu suchen? Sie steht in den Systemeinstellungen unter „FTV · Lokales Netzwerk\".": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server war nicht erreichbar. Hat FTV die Erlaubnis, Geräte im heimischen Netz zu suchen? Sie steht in den Systemeinstellungen unter „FTV · Lokales Netzwerk\"."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server could not be reached. Does FTV have permission to find devices on your home network? It is in Settings under \"FTV · Local Network\"."
+          }
+        }
+      }
+    },
+    "FTV": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FTV"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FTV"
+          }
+        }
+      }
+    },
+    "FTV bewerten": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FTV bewerten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rate FTV"
+          }
+        }
+      }
+    },
+    "FTV hat einen Discord": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FTV hat einen Discord"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FTV has a Discord"
+          }
+        }
+      }
+    },
+    "FTV lädt die Originaldatei, in derselben Qualität wie beim Streamen.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FTV lädt die Originaldatei, in derselben Qualität wie beim Streamen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FTV downloads the original file, in the same quality as streaming."
+          }
+        }
+      }
+    },
+    "FTV speichert dein Passwort nicht, nur die Anmeldung bei Seerr.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FTV speichert dein Passwort nicht, nur die Anmeldung bei Seerr."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FTV doesn’t save your password, only the Seerr sign-in."
+          }
+        }
+      }
+    },
+    "fps · in FTV aus": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "fps · in FTV aus"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "fps · off in FTV"
+          }
+        }
+      }
+    },
+    "in FTV aus": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "in FTV aus"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "off in FTV"
+          }
+        }
+      }
+    },
+    "Den setzt FTV selbst.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den setzt FTV selbst."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FTV sets this one itself."
+          }
+        }
+      }
+    },
+    "Für einen Dienst vor deinem Server, etwa Cloudflare Access, Authelia oder Pangolin. FTV schickt die Header nur an diese Adresse.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für einen Dienst vor deinem Server, etwa Cloudflare Access, Authelia oder Pangolin. FTV schickt die Header nur an diese Adresse."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For a service in front of your server, like Cloudflare Access, Authelia or Pangolin. FTV only sends these headers to this address."
+          }
+        }
+      }
+    },
+    "FTV meldet an Trakt, was du schaust. Ab 80 Prozent steht der Titel dort als gesehen.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FTV meldet an Trakt, was du schaust. Ab 80 Prozent steht der Titel dort als gesehen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FTV tells Trakt what you watch. From 80 percent on, the title shows up there as watched."
+          }
+        }
+      }
+    },
+    "FTV unterstützen": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FTV unterstützen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Support FTV"
+          }
+        }
+      }
+    },
+    "Wir bauen FTV ohne Werbung und ohne Tracking. Wenn es deine Abende besser macht, hilft uns ein Kaffee, weiterzumachen.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wir bauen FTV ohne Werbung und ohne Tracking. Wenn es deine Abende besser macht, hilft uns ein Kaffee, weiterzumachen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We build FTV without ads or tracking. If it makes your evenings better, a coffee helps us keep going."
+          }
+        }
+      }
+    },
+    "Dein Kaffee hilft uns, FTV für alle kostenlos zu halten. Das ist neu für dich.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein Kaffee hilft uns, FTV für alle kostenlos zu halten. Das ist neu für dich."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your coffee helps us keep FTV free for everyone. Here is what is new for you."
+          }
+        }
+      }
+    },
+    "Du hast mit FTV %lld Stunden geschaut.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du hast mit FTV %lld Stunden geschaut."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You have watched %lld hours with FTV."
+          }
+        }
+      }
+    },
+    "Der App Store hat nicht geantwortet. Das passiert ohne Internet oder wenn Käufe in der Bildschirmzeit aus sind. Nichts geht verloren, und FTV läuft wie immer.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der App Store hat nicht geantwortet. Das passiert ohne Internet oder wenn Käufe in der Bildschirmzeit aus sind. Nichts geht verloren, und FTV läuft wie immer."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The App Store didn’t answer. That happens without internet, or when purchases are turned off in Screen Time. Nothing is lost, and FTV works as always."
+          }
+        }
+      }
+    },
+    "Du hast FTV gerade beim Weitermachen geholfen. %@ ist an, dein Icon und Logo auch. Schau dich um.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du hast FTV gerade beim Weitermachen geholfen. %@ ist an, dein Icon und Logo auch. Schau dich um."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You just helped FTV keep going. %@ is on, your icon and logo too. Have a look around."
+          }
+        }
+      }
+    },
+    "Du hast FTV gerade beim Weitermachen geholfen. Freigeschaltet wird dafür nichts, es ist einfach nur Danke.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du hast FTV gerade beim Weitermachen geholfen. Freigeschaltet wird dafür nichts, es ist einfach nur Danke."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You just helped FTV keep going. Nothing is unlocked for it, it is simply a thank-you."
+          }
+        }
+      }
+    },
+    "Du hast FTV gerade beim Weitermachen geholfen. Looks und Icons gehören jetzt dir. Schau dich um.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du hast FTV gerade beim Weitermachen geholfen. Looks und Icons gehören jetzt dir. Schau dich um."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You just helped FTV keep going. Looks and icons are yours now. Have a look around."
+          }
+        }
+      }
+    },
+    "Keine Werbung, kein Tracking, kein Konto bei uns. FTV entsteht offen, und wer es mag, legt etwas dazu, damit es weiterwachsen kann.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Werbung, kein Tracking, kein Konto bei uns. FTV entsteht offen, und wer es mag, legt etwas dazu, damit es weiterwachsen kann."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No ads, no tracking, no account with us. FTV is built in the open, and the people who enjoy it chip in so it can keep growing."
+          }
+        }
+      }
+    },
+    "Looks und Icons für alle, die FTV am Laufen halten.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Looks und Icons für alle, die FTV am Laufen halten."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Looks and icons for everyone who helps keep FTV going."
+          }
+        }
+      }
+    },
+    "FTV ist kostenlos.\nSo bleibt es dabei.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FTV ist kostenlos.\nSo bleibt es dabei."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FTV is free.\nIt stays that way."
+          }
+        }
+      }
+    },
+    "Hilf FTV zu wachsen": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hilf FTV zu wachsen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Help FTV grow"
+          }
+        }
+      }
+    },
+    "Dein Beitrag hält FTV am Laufen.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein Beitrag hält FTV am Laufen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your support keeps FTV going."
+          }
+        }
+      }
+    },
+    "Danke, dass du FTV benutzt. %@ ist ein Geschenk an alle.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Danke, dass du FTV benutzt. %@ ist ein Geschenk an alle."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thanks for using FTV. %@ is a gift to everyone."
+          }
+        }
+      }
+    },
+    "FTV gibt es jetzt im App Store": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FTV gibt es jetzt im App Store"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FTV is now in the App Store"
+          }
+        }
+      }
+    },
+    "Diese Testversion wird nicht mehr aktualisiert. Lade FTV bitte aus dem App Store und lösche vorher diese Testversion. Bald öffnen wir ein neues TestFlight für alle, die wirklich Beta-Versionen testen wollen.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Testversion wird nicht mehr aktualisiert. Lade FTV bitte aus dem App Store und lösche vorher diese Testversion. Bald öffnen wir ein neues TestFlight für alle, die wirklich Beta-Versionen testen wollen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This test version no longer gets updates. Please download FTV from the App Store and delete this test version first. We will open a new TestFlight soon for everyone who really wants to test beta versions."
           }
         }
       }

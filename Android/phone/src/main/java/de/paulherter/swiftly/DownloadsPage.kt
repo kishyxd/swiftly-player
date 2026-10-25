@@ -247,7 +247,7 @@ private fun LoadContent(app: SwiftlyApplication, original: List<DownloadItem>, i
                 SheetRow(translated("Danach frei"), size(slot.getLong("freiDanach")))
                 ButtonRail { PlayButton(Glyph.ArrowDown, translated("Laden"), true, main = true) { close(); load() } }
                 if (converted) SheetHint(translated("Der Server wandelt die Datei beim Laden um. Die Größe ist geschätzt."))
-                else SheetHint(translated("Swiftly lädt die Originaldatei, in derselben Qualität wie beim Streamen."))
+                else SheetHint(translated("FTV lädt die Originaldatei, in derselben Qualität wie beim Streamen."))
             }
         }
     }

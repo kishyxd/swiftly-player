@@ -51,7 +51,7 @@ fun TvAdvanced(rows: SnapshotStateList<HeaderRow>, expanded: Boolean = false, mo
                     symbolToText = true) { opened = !opened }
         }
         if (opened || expanded) {
-            Text(translated("Für einen Dienst vor deinem Server, etwa Cloudflare Access, Authelia oder Pangolin. Swiftly schickt die Header nur an diese Adresse."),
+            Text(translated("Für einen Dienst vor deinem Server, etwa Cloudflare Access, Authelia oder Pangolin. FTV schickt die Header nur an diese Adresse."),
                  style = TvTheme.small, color = Theme.fontVeryQuiet)
             rows.forEach { row ->
                 androidx.compose.runtime.key(row.id) {
@@ -61,7 +61,7 @@ fun TvAdvanced(rows: SnapshotStateList<HeaderRow>, expanded: Boolean = false, mo
                             TvField(row.value, { row.value = it }, translated("Wert"), Modifier.weight(1f), secret = true)
                             TvButton(null, Glyph.Minus, description = translated("Entfernen")) { rows.removeAll { it.id == row.id } }
                         }
-                        if (row.locked) Text(translated("Den setzt Swiftly selbst."), style = TvTheme.small, color = Theme.warning)
+                        if (row.locked) Text(translated("Den setzt FTV selbst."), style = TvTheme.small, color = Theme.warning)
                     }
                 }
             }

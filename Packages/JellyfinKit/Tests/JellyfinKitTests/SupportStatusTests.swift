@@ -87,7 +87,7 @@ struct SupportCopyTests {
         #expect(Set(keys).count == keys.count)
         for text in SupportCopy.all {
             #expect(!text.de.isEmpty && !text.en.isEmpty)
-            #expect(text.de != text.en || text.de == "Swiftly")
+            #expect(text.de != text.en || text.de == "FTV")
         }
     }
 

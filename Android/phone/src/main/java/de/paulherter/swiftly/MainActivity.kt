@@ -30,7 +30,7 @@ sealed interface Phase {
  * before it draws anything. Action, categories, URI and extras travel along.
  */
 internal fun ComponentActivity.entrySwitch(target: Class<*>) {
-    android.util.Log.i("Swiftly", "Einstieg: ${javaClass.simpleName} -> ${target.simpleName}")
+    android.util.Log.i("FTV", "Einstieg: ${javaClass.simpleName} -> ${target.simpleName}")
     startActivity(android.content.Intent(intent).setClass(this, target)
         .addFlags(android.content.Intent.FLAG_ACTIVITY_NO_ANIMATION))
     finish()

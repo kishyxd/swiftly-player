@@ -698,7 +698,7 @@ fun TvDiscordHint(invitation: String, close: () -> Unit) {
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
     Box(Modifier.fillMaxSize().background(Theme.reason), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(translated("Swiftly hat einen Discord"), style = TvTheme.titleLarge, color = Theme.font)
+            Text(translated("FTV hat einen Discord"), style = TvTheme.titleLarge, color = Theme.font)
             Text(translated("Da kannst du Fragen stellen und Fehler melden. Neue Builds stehen da auch zuerst."),
                  style = TvTheme.body.copy(textAlign = TextAlign.Center), color = Theme.fontQuiet,
                  modifier = Modifier.widthIn(max = 550.dp).padding(top = 8.dp))

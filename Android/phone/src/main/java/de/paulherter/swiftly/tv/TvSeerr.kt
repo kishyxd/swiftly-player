@@ -134,7 +134,7 @@ fun TvSeerrPage(app: SwiftlyApplication, back: () -> Unit) {
                 error?.let {
                     Text(it, style = TvTheme.small, color = Theme.warning, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 12.dp))
                 }
-                Text(translated("Swiftly speichert dein Passwort nicht, nur die Anmeldung bei Seerr."),
+                Text(translated("FTV speichert dein Passwort nicht, nur die Anmeldung bei Seerr."),
                      style = TvTheme.small, color = Theme.fontVeryQuiet, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 14.dp))
             }
         }

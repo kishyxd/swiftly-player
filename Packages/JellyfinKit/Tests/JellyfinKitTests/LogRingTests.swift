@@ -7,7 +7,7 @@ import Testing
     @Test func blacksOutQueryValuesHeadersAndAddressData() {
         let raw = """
         http://10.0.0.5:8096/Videos/abc/stream?static=true&ApiKey=0123456789abcdef&mediaSourceId=x \
-        Authorization: MediaBrowser Client="Swiftly", Token="geheim123" \
+        Authorization: MediaBrowser Client="FTV", Token="geheim123" \
         X-Emby-Token: geheim456 https://nutzer:passwort@server.example/
         """
         let clean = LogRedaction.text(raw)

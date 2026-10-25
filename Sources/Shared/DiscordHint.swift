@@ -15,7 +15,7 @@ struct DiscordHint: View {
         Color.clear
             .allowsHitTesting(false)
             .sheet(opened: $opened) {
-                SheetCategory(text: Text("Swiftly hat einen Discord"))
+                SheetCategory(text: Text("FTV hat einen Discord"))
                 Text("Da kannst du Fragen stellen und Fehler melden. Neue Builds stehen da auch zuerst.")
                     // Body text from the type scale instead of a one-off size.
                     .font(Theme.body)

@@ -29,7 +29,7 @@ import de.paulherter.swiftly.shared.translated
  * swiping it away is enough, and it never comes back. The row in the profile stays.
  */
 fun discordHintShow(app: SwiftlyApplication, context: android.content.Context) {
-    app.sheet.value = SheetRequest(translated("Swiftly hat einen Discord"), emptyList(), null,
+    app.sheet.value = SheetRequest(translated("FTV hat einen Discord"), emptyList(), null,
         content = { close ->
             Text(translated("Da kannst du Fragen stellen und Fehler melden. Neue Builds stehen da auch zuerst."),
                  style = Theme.body, color = Theme.fontQuiet,

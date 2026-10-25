@@ -120,7 +120,7 @@ fun AdvancedSection(rows: SnapshotStateList<HeaderRow>, expanded: Boolean = fals
         AnimatedVisibility(opened || expanded, enter = fadeIn(Motion.reveal()) + expandVertically(Motion.reveal()),
                            exit = fadeOut(Motion.reveal()) + shrinkVertically(Motion.reveal())) {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(translated("Für einen Dienst vor deinem Server, etwa Cloudflare Access, Authelia oder Pangolin. Swiftly schickt die Header nur an diese Adresse."),
+                Text(translated("Für einen Dienst vor deinem Server, etwa Cloudflare Access, Authelia oder Pangolin. FTV schickt die Header nur an diese Adresse."),
                      style = Theme.small, color = Theme.fontVeryQuiet)
                 rows.forEach { row ->
                     androidx.compose.runtime.key(row.id) {
@@ -138,7 +138,7 @@ fun AdvancedSection(rows: SnapshotStateList<HeaderRow>, expanded: Boolean = fals
                                 InputField(row.value, { row.value = it }, Glyph.Keys, translated("Wert"), secret = true)
                             }
                             if (row.locked) {
-                                Text(translated("Den setzt Swiftly selbst."), style = Theme.small, color = Theme.warning)
+                                Text(translated("Den setzt FTV selbst."), style = Theme.small, color = Theme.warning)
                             }
                         }
                     }

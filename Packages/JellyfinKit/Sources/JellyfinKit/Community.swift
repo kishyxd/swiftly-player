@@ -12,7 +12,7 @@ import Foundation
 public enum Community {
 
     /// The invite, same as on the website.
-    public static let discord = URL(string: "https://discord.gg/MeGwfv3UwN")!
+    public static let discord = URL(string: "https://discord.gg/MeGwfv3UwN")!  // FTV: upstream, kept for credit
 
     /// For typing in by hand where there is no browser (TV).
     public static let discordShort = "discord.gg/MeGwfv3UwN"
@@ -23,16 +23,19 @@ public enum Community {
     /// The Play Store listing; rating takes one more tap there.
     public static let playStore = URL(string: "https://play.google.com/store/apps/details?id=de.paulherter.swiftly")!
 
-    public static let errorShort = "github.com/paulherter/swiftly-player/issues"
+    /// **The FTV edition has no Play listing**; the row points at the KXVN download page instead.
+    public static let ftvDownload = URL(string: "https://kxvn.io/download")!
+
+    public static let errorShort = "github.com/kishyxd/swiftly-player/issues"
 
     /// A new GitHub issue, with version and platform already in the text.
     ///
     /// Only these two details: no server name, no address, nothing a person
     /// would not write into a public issue themselves.
     public static func errorReport(version: String, platform: String) -> URL {
-        var parts = URLComponents(string: "https://github.com/paulherter/swiftly-player/issues/new")!
+        var parts = URLComponents(string: "https://github.com/kishyxd/swiftly-player/issues/new")!
         parts.queryItems = [URLQueryItem(name: "body",
-                                         value: "\n\n---\nSwiftly \(version) · \(platform)")]
+                                         value: "\n\n---\nFTV \(version) · \(platform)")]
         return parts.url!
     }
 

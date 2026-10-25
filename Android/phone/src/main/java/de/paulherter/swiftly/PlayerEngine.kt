@@ -235,7 +235,7 @@ class PlayerEngine(private val context: Context, val vlc: LibVLC, private val is
         val factory = DefaultRenderersFactory(context)
             .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF)
             .setEnableDecoderFallback(true)
-        val sources = DefaultDataSource.Factory(context, DefaultHttpDataSource.Factory().setUserAgent("Swiftly")
+        val sources = DefaultDataSource.Factory(context, DefaultHttpDataSource.Factory().setUserAgent("FTV")
             .setAllowCrossProtocolRedirects(true)).setTransferListener(byteCounter)
         return ExoPlayer.Builder(context, factory)
             .setMediaSourceFactory(DefaultMediaSourceFactory(sources))

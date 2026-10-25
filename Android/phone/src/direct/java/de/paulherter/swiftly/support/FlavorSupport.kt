@@ -49,10 +49,17 @@ import kotlinx.coroutines.withContext
  * `SupporterKeyCheckTest` compares them.
  */
 object FlavorSupport {
-    /** `DirectSupport.websiteURL` (with the trailing slash the website serves). */
-    const val WEBSITE = "https://swiftlyplayer.com/supporter/"
+    /**
+     * **The FTV edition does not take donations.**
+     *
+     * The direct build normally points at the upstream author's supporter page and accepts a
+     * supporter key from it. In the FTV edition that would collect money for somebody else under
+     * the FTV name, so the support channel is switched off entirely (see `available`), and these
+     * two addresses are only kept so the code still compiles and shows nothing.
+     */
+    const val WEBSITE = "https://kxvn.io/"
     /** `DirectSupport.contactEmail`. */
-    const val CONTACT = "info@swiftlyplayer.com"
+    const val CONTACT = "info@kxvn.io"
 
     fun channel(app: SwiftlyApplication, support: Support): SupportChannel = DirectChannel(keeper(app, support))
 
@@ -90,7 +97,7 @@ object FlavorSupport {
         Column {
             SupportMark()
             if (!entering) {
-                SheetText(translated("Wir bauen Swiftly ohne Werbung und ohne Tracking. Wenn es deine Abende besser macht, hilft uns ein Kaffee, weiterzumachen."))
+                SheetText(translated("Wir bauen FTV ohne Werbung und ohne Tracking. Wenn es deine Abende besser macht, hilft uns ein Kaffee, weiterzumachen."))
                 SheetText(translated("Alles bleibt für alle kostenlos."), quiet = false, top = 14.dp)
                 SheetText(translated("Mit deinem Unterstützer-Schlüssel bekommst du ein Herz in „Über“ und zusätzliche App-Icons."), small = true, top = 4.dp)
                 Column(Modifier.fillMaxWidth().padding(horizontal = Theme.edgeSpacing).padding(top = 18.dp),
@@ -146,7 +153,7 @@ object FlavorSupport {
     @Composable
     fun TvAskBody(app: SwiftlyApplication, close: () -> Unit, first: FocusRequester) {
         var entering by remember { mutableStateOf(false) }
-        Text(translated("Swiftly unterstützen"), style = TvTheme.titleLarge, color = Theme.font)
+        Text(translated("FTV unterstützen"), style = TvTheme.titleLarge, color = Theme.font)
         if (!entering) {
             Text(translated("Mit deinem Unterstützer-Schlüssel bekommst du ein Herz in „Über“ und zusätzliche App-Icons."),
                  style = TvTheme.body, color = Theme.fontQuiet, modifier = Modifier.padding(top = 12.dp).widthIn(max = 620.dp))
@@ -187,7 +194,11 @@ object FlavorSupport {
 private class DirectChannel(val keeper: SupporterKeyKeeper) : SupportChannel {
     private val yes = mutableStateOf(true)
     private val none = mutableStateOf<List<TipOffer>>(emptyList())
-    override val available: State<Boolean> get() = yes
+    // **The FTV edition has no support channel**: no donations, no supporter key, no looks.
+    // The upstream author's supporter page and licence server stay untouched in the code, but the
+    // channel never offers them, so an FTV build cannot collect money for somebody else.
+    private val off = mutableStateOf(false)
+    override val available: State<Boolean> get() = if (de.paulherter.swiftly.BuildConfig.FTV_MODE) off else yes
     override val offers: State<List<TipOffer>> get() = none
     override val plans: State<List<PlanOffer>> = androidx.compose.runtime.mutableStateOf(emptyList())
     private val main = android.os.Handler(android.os.Looper.getMainLooper())

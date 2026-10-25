@@ -60,7 +60,7 @@ import org.json.JSONObject
  *  ("PLAYBACK" etc.) are the same wording, not a second label. */
 private enum class Compartment(val title: String) {
     Playback("Wiedergabe"), Languages("Sprachen"), Presentation("Darstellung"),
-    Integration("Integration"), Server("Server"), Account("Konto"), Swiftly("Swiftly"),
+    Integration("Integration"), Server("Server"), Account("Konto"), Swiftly("FTV"),
 }
 
 @Composable
@@ -147,7 +147,7 @@ fun TvProfile(app: SwiftlyApplication, open: (Destination) -> Unit) {
             // `left` now attaches to the selected row.
             //
             // **Scrollable**, like the right column: the account card and seven sections are taller than a
-            // 1080 frame. Without scrolling, "Swiftly" got height 0 and focus landed on an invisible row below
+            // 1080 frame. Without scrolling, "FTV" got height 0 and focus landed on an invisible row below
             // the screen edge.
             Column(Modifier.width(230.dp).focusProperties { enter = { left } }
                     .verticalScroll(rememberScrollState()).focusGroup()) {
@@ -336,7 +336,7 @@ fun TvProfile(app: SwiftlyApplication, open: (Destination) -> Unit) {
                             TvAction(translated("Abmelden")) { app.signOff() }
                         }
                         Compartment.Swiftly -> {
-                            // Mirrors the "Swiftly" section on tvOS. There QR codes; here the addresses to type in, since a QR
+                            // Mirrors the "FTV" section on tvOS. There QR codes; here the addresses to type in, since a QR
                             // image would need a library of its own. Rating opens the Play Store, which Android TV has; the rest
                             // needs a browser, which is usually missing.
                             // "Support Swiftly" first: the one row of this section that is always worth a look.
@@ -345,7 +345,7 @@ fun TvProfile(app: SwiftlyApplication, open: (Destination) -> Unit) {
                                 TvSupportEntryRow(app, first)
                                 SeparatorLine()
                             }
-                            TvAction(translated("Swiftly bewerten"), modifier = if (supportShown) Modifier else first) {
+                            TvAction(translated("FTV bewerten"), modifier = if (supportShown) Modifier else first) {
                                 app.addressOpen(context, app.communityAddress("play"))
                             }
                             SeparatorLine()
@@ -394,7 +394,7 @@ private fun SectionRow(title: String, selected: Boolean, modifier: Modifier = Mo
 private fun TvVersionDisplay(app: SwiftlyApplication, version: String) {
     Row(Modifier.fillMaxWidth().height(TvTheme.rowsHeight).padding(horizontal = 13.dp),
         verticalAlignment = Alignment.CenterVertically) {
-        Text("Swiftly", style = TvTheme.body, color = Theme.font, maxLines = 1, modifier = Modifier.weight(1f))
+        Text("FTV", style = TvTheme.body, color = Theme.font, maxLines = 1, modifier = Modifier.weight(1f))
         if (app.support.isSupporter) {
             Symbol(Glyph.HeartFilled, 11.dp, color = Theme.accent)
             Text(translated("Unterstützer"), style = TvTheme.tile, color = Theme.accent, maxLines = 1,

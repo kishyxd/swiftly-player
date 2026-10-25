@@ -1842,7 +1842,7 @@ public final class Kern: @unchecked Sendable {
         LogRedaction.text(text)
     }
 
-    /// The report lines since the last pickup; Kotlin writes them to logcat under "Swiftly".
+    /// The report lines since the last pickup; Kotlin writes them to logcat under "FTV".
     /// Swift itself cannot reach `liblog`.
     public func logFetch() -> String {
         logRows.pickUp().joined(separator: "\n")
@@ -2311,7 +2311,7 @@ public final class Kern: @unchecked Sendable {
         switch art {
         case "discord": Community.discord.absoluteString
         case "discordKurz": Community.discordShort
-        case "play": Community.playStore.absoluteString
+        case "play": Community.ftvDownload.absoluteString
         case "fehlerKurz": Community.errorShort
         default: Community.errorReport(version: version, platform: platform).absoluteString
         }

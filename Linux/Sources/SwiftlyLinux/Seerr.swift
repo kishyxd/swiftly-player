@@ -67,7 +67,7 @@ extension App {
         // promise as the Apple version, and it is shown on the page, not only in the
         // source.
         let commitment = label(
-            translated("Swiftly speichert dein Passwort nicht, nur die Anmeldung bei Seerr."),
+            translated("FTV speichert dein Passwort nicht, nur die Anmeldung bei Seerr."),
             style: "swiftly-zweitzeile", wrap: true)
         gtk_label_set_xalign(OpaquePointer(commitment), 0)
         gtk_widget_add_css_class(commitment, "dim-label")

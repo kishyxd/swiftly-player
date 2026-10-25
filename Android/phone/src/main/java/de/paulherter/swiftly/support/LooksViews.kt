@@ -258,7 +258,7 @@ private fun GiftOffer(app: SwiftlyApplication, look: Looks.LookInfo, close: () -
             LookTileView(looks.tileIcon(look), 76.dp, Modifier.padding(top = 36.dp - HandleSpace))
             Text(translated("Ein Look für dich 🎃"), style = giftFont(24f, FontWeight.SemiBold), color = Theme.font,
                  modifier = Modifier.padding(top = 20.dp).semantics { heading() })
-            Text(translated("Danke, dass du Swiftly benutzt. %@ ist ein Geschenk an alle.", look.name),
+            Text(translated("Danke, dass du FTV benutzt. %@ ist ein Geschenk an alle.", look.name),
                  style = giftFont(15f).copy(lineHeight = 21.sp), color = Theme.fontQuiet, modifier = Modifier.padding(top = 8.dp))
             Text(translated("Bleibt für immer in deiner Sammlung."), style = giftFont(13f), color = Theme.fontVeryQuiet,
                  modifier = Modifier.padding(top = 6.dp))

@@ -243,7 +243,7 @@ class SwiftlyApplication : Application(), coil3.SingletonImageLoader.Factory {
         downloads.watchStateAdopt((0 until a.length()).map { DownloadItem.read(a.getJSONObject(it)) })
     }
 
-    /** The core's log lines (start, stopped, switch) go to logcat under "Swiftly". */
+    /** The core's log lines (start, stopped, switch) go to logcat under "FTV". */
     fun logWrite() {
         kern.logFetch().takeIf { it.isNotEmpty() }?.lines()?.forEach { AppLog.writeOut("[Melden] $it") }
     }

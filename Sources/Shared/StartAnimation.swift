@@ -241,7 +241,7 @@ struct StartCurtain: View {
                 // `accessibilityElement`, then the same name that `Wordmark` and `Emblem` in
                 // `Marks.swift` already carry.
                 .accessibilityElement()
-                .accessibilityLabel(Text("Swiftly"))
+                .accessibilityLabel(Text("FTV"))
         }
         .ignoresSafeArea()
         .transition(.opacity)

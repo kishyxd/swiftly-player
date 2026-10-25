@@ -314,7 +314,7 @@ class PlayItem(
         listOfNotNull(Certificates.folder?.let { "--gnutls-dir-trust=$it" })))
     /** VLC for everything, Media3 for Dolby Vision (`PlayerEngine`). */
     val player = PlayerEngine(context, vlc, app.isTv)
-    val session = MediaSession(context, "Swiftly")
+    val session = MediaSession(context, "FTV")
 
     // MARK: VLC thread: `stop`, `setMedia`, `play` and `release` do not run on the main thread.
     //

@@ -425,7 +425,7 @@ fun SupportLooksCard(app: SwiftlyApplication) {
         IconFan()
         Column(Modifier.padding(horizontal = 18.dp).padding(top = 10.dp, bottom = 18.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(translated("Wähl deinen Look"), style = giftFont(20f, FontWeight.SemiBold).copy(letterSpacing = (-0.2).sp), color = Theme.font)
-            Text(translated("Looks und Icons für alle, die Swiftly am Laufen halten."), style = giftFont(13f).copy(lineHeight = 18.sp),
+            Text(translated("Looks und Icons für alle, die FTV am Laufen halten."), style = giftFont(13f).copy(lineHeight = 18.sp),
                  color = Theme.fontQuiet)
             LookTryPill(14f, 34.dp, Modifier.padding(top = 10.dp))
         }

@@ -45,13 +45,13 @@ struct TVSupportGrowView: View {
         ScrollView {
             VStack(spacing: 0) {
                 HStack(spacing: 14) {
-                    Text("Hilf Swiftly zu wachsen")
+                    Text("Hilf FTV zu wachsen")
                         .font(Theme.titleLarge)
                         .foregroundStyle(Theme.font)
                         .accessibilityAddTraits(.isHeader)
                     Text(verbatim: "🌱").font(Theme.titleLarge)
                 }
-                Text("Dein Beitrag hält Swiftly am Laufen.")
+                Text("Dein Beitrag hält FTV am Laufen.")
                     .font(Theme.body)
                     .foregroundStyle(Theme.fontQuiet)
                     .padding(.top, 10)
@@ -193,7 +193,7 @@ struct TVSupportGrowView: View {
             Text("Preise sind gerade nicht verfügbar")
                 .font(Theme.button)
                 .foregroundStyle(Theme.font)
-            Text("Der App Store hat nicht geantwortet. Das passiert ohne Internet oder wenn Käufe in der Bildschirmzeit aus sind. Nichts geht verloren, und Swiftly läuft wie immer.")
+            Text("Der App Store hat nicht geantwortet. Das passiert ohne Internet oder wenn Käufe in der Bildschirmzeit aus sind. Nichts geht verloren, und FTV läuft wie immer.")
                 .font(Theme.small)
                 .foregroundStyle(Theme.fontQuiet)
                 .multilineTextAlignment(.center)
@@ -269,7 +269,7 @@ struct TVSupportGrowView: View {
         if let kept {
             String(localized: "Du hast Swiftly gerade beim Weitermachen geholfen. \(kept.name) ist an, dein Icon und Logo auch. Schau dich um.")
         } else {
-            String(localized: "Du hast Swiftly gerade beim Weitermachen geholfen. Looks und Icons gehören jetzt dir. Schau dich um.")
+            String(localized: "Du hast FTV gerade beim Weitermachen geholfen. Looks und Icons gehören jetzt dir. Schau dich um.")
         }
     }
 

@@ -64,10 +64,11 @@ import de.paulherter.swiftly.shared.translated
 import android.os.Handler
 import android.os.Looper
 
-// MARK: - "Hilf Swiftly zu wachsen"
+// MARK: - "Hilf FTV zu wachsen"
 
 private const val TERMS_URL = "https://play.google.com/about/play-terms/"
-private const val PRIVACY_URL = "https://swiftlyplayer.com/privacy.html"
+// **The FTV edition**: the KXVN privacy page, not the upstream one.
+private const val PRIVACY_URL = "https://kxvn.io/ftv-privacy.html"
 
 /** Android's sheet handle takes 13 dp; iOS lays its grabber over the content. */
 private val Handle = 13.dp
@@ -106,12 +107,12 @@ fun GrowSheetBody(app: SwiftlyApplication, close: () -> Unit) {
                 }
                 Column(Modifier.padding(horizontal = 20.dp).padding(top = 22.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(buildAnnotatedString {
-                        append(translated("Hilf Swiftly zu wachsen"))
+                        append(translated("Hilf FTV zu wachsen"))
                         append("  ")
                         withStyle(SpanStyle(fontSize = 17.sp, fontWeight = FontWeight.Normal, letterSpacing = 0.sp)) { append("🌱") }
                     }, style = giftFont(28f, FontWeight.Bold).copy(letterSpacing = (-0.56).sp), color = Theme.font,
                          modifier = Modifier.semantics { heading() })
-                    Text(translated("Dein Beitrag hält Swiftly am Laufen."), style = giftFont(17f), color = Theme.font.copy(alpha = 0.9f))
+                    Text(translated("Dein Beitrag hält FTV am Laufen."), style = giftFont(17f), color = Theme.font.copy(alpha = 0.9f))
                     Text(translated("Open Source, keine Werbung, alles zum Schauen bleibt kostenlos."), style = giftFont(13f),
                          color = Theme.fontVeryQuiet)
                 }
@@ -183,7 +184,7 @@ private fun PricesUnavailableCard(onRetry: () -> Unit) {
                .clip(RoundedCornerShape(Theme.cornerField)).background(Theme.raised).padding(14.dp),
            verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(translated("Preise sind gerade nicht verfügbar"), style = giftFont(15f, FontWeight.SemiBold), color = Theme.font)
-        Text(translated("Google Play hat nicht geantwortet. Das passiert ohne Internet oder wenn Käufe auf deinem Konto eingeschränkt sind. Nichts geht verloren, und Swiftly läuft wie immer."),
+        Text(translated("Google Play hat nicht geantwortet. Das passiert ohne Internet oder wenn Käufe auf deinem Konto eingeschränkt sind. Nichts geht verloren, und FTV läuft wie immer."),
              style = giftFont(13f), color = Theme.fontQuiet)
         LegalLink(translated("Google Play erneut fragen"), onRetry)
     }
@@ -283,9 +284,9 @@ fun GrowThanksBody(app: SwiftlyApplication, close: () -> Unit, home: () -> Unit)
             Text(if (name.isNotEmpty()) translated("Danke, %@ 🫶", name) else translated("Danke 🫶"),
                  style = giftFont(30f, FontWeight.Bold).copy(letterSpacing = (-0.6).sp, textAlign = TextAlign.Center), color = Theme.font,
                  modifier = Modifier.padding(top = 26.dp, bottom = 8.dp).semantics { heading() })
-            Text(if (tipOnly) translated("Du hast Swiftly gerade beim Weitermachen geholfen. Freigeschaltet wird dafür nichts, es ist einfach nur Danke.")
-                 else if (look.id != "original") translated("Du hast Swiftly gerade beim Weitermachen geholfen. %@ ist an, dein Icon und Logo auch. Schau dich um.", look.name)
-                 else translated("Du hast Swiftly gerade beim Weitermachen geholfen. Looks und Icons gehören jetzt dir. Schau dich um."),
+            Text(if (tipOnly) translated("Du hast FTV gerade beim Weitermachen geholfen. Freigeschaltet wird dafür nichts, es ist einfach nur Danke.")
+                 else if (look.id != "original") translated("Du hast FTV gerade beim Weitermachen geholfen. %@ ist an, dein Icon und Logo auch. Schau dich um.", look.name)
+                 else translated("Du hast FTV gerade beim Weitermachen geholfen. Looks und Icons gehören jetzt dir. Schau dich um."),
                  style = giftFont(15f).copy(lineHeight = 21.sp, textAlign = TextAlign.Center), color = Theme.fontQuiet)
             if (!tipOnly) Text(translated("Looks kannst du jederzeit im Profil wechseln."), style = giftFont(13f).copy(textAlign = TextAlign.Center),
                  color = Theme.fontVeryQuiet, modifier = Modifier.padding(top = 18.dp, start = 4.dp, end = 4.dp))

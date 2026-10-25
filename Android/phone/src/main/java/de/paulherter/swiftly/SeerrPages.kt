@@ -186,7 +186,7 @@ fun SeerrSettingsPage(app: SwiftlyApplication, back: () -> Unit) {
                     address.isNotBlank() && user.isNotBlank() && password.isNotBlank() ->
                         PrimaryButton(translated("Verbinden"), modifier = Modifier.padding(top = 20.dp)) { linkUp() }
                 }
-                Text(translated("Swiftly speichert dein Passwort nicht, nur die Anmeldung bei Seerr."),
+                Text(translated("FTV speichert dein Passwort nicht, nur die Anmeldung bei Seerr."),
                      style = Theme.small.copy(lineHeight = 17.sp), color = Theme.fontVeryQuiet, modifier = Modifier.padding(top = 12.dp))
             }
         }

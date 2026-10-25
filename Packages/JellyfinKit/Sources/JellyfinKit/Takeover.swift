@@ -157,7 +157,7 @@ public enum Takeover {
     /// text, and Swiftly Music takes over nothing.
     public static func takesHint(_ s: RemoteSession) -> Bool {
         let p = s.program ?? ""
-        return p.hasPrefix("Swiftly") && p != "Swiftly Music"
+        return p.hasPrefix("FTV") && p != "Swiftly Music"
     }
 
     /// **Does a stop belong to a takeover?** Only then does the picture go off as a

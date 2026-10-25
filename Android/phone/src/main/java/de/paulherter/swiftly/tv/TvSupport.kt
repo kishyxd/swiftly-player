@@ -63,13 +63,13 @@ fun TvSupportHeart(app: SwiftlyApplication) {
             contentAlignment = Alignment.Center) {
             // Always filled and white, as on Apple TV (`heart.fill`); being a supporter shows in the settings row.
             Symbol(Glyph.HeartFilled, 15.dp, color = Theme.font, strength = Strength.Medium,
-                   description = translated("Swiftly unterstützen"))
+                   description = translated("FTV unterstützen"))
         }
     }
 }
 
 /**
- * **The support row in "Swiftly"** (`TVSupportEntryRow`): the filled heart, "Swiftly unterstützen"
+ * **The support row in "FTV"** (`TVSupportEntryRow`): the filled heart, "FTV unterstützen"
  * with its quiet line below, "Danke" on the right for supporters. Opens the ask, or the thanks.
  */
 @Composable
@@ -84,7 +84,7 @@ fun TvSupportEntryRow(app: SwiftlyApplication, modifier: Modifier = Modifier) {
                 Symbol(Glyph.HeartFilled, 15.dp, color = if (supporter) Theme.accent else Theme.font, strength = Strength.Semibold)
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
-                Text(translated("Swiftly unterstützen"), style = TvTheme.body, color = Theme.font, maxLines = 1)
+                Text(translated("FTV unterstützen"), style = TvTheme.body, color = Theme.font, maxLines = 1)
                 Text(translated("Mit einem Kaffee Danke sagen. Alles bleibt für alle kostenlos."), style = TvTheme.small,
                      color = Theme.fontQuiet, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
@@ -93,7 +93,7 @@ fun TvSupportEntryRow(app: SwiftlyApplication, modifier: Modifier = Modifier) {
     }
 }
 
-/** The settings row in the "Swiftly" section: opens the ask, or the thanks for supporters. */
+/** The settings row in the "FTV" section: opens the ask, or the thanks for supporters. */
 fun tvSupportOpen(app: SwiftlyApplication) {
     app.looks.tvFromLooks = false
     app.support.tvPanel.value = if (app.support.isSupporter) TvSupportPanel.Thanks else TvSupportPanel.Ask

@@ -1358,7 +1358,7 @@ extension App {
         if inquiry.suffices {
             append(list, loadHint(converted
                 ? translated("Der Server wandelt die Datei beim Laden um. Die Größe ist geschätzt.")
-                : translated("Swiftly lädt die Originaldatei, in derselben Qualität wie beim Streamen.")))
+                : translated("FTV lädt die Originaldatei, in derselben Qualität wie beim Streamen.")))
         }
     }
 

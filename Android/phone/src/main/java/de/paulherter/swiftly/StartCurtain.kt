@@ -67,6 +67,6 @@ fun StartCurtain(done: () -> Unit) {
     }
     Box(Modifier.fillMaxSize().background(Theme.reason), contentAlignment = Alignment.Center) {
         // The curtain says who is starting, otherwise TalkBack would sit up to 3.5 s in front of a silent surface.
-        LottieAnimation(composition, { progress }, Modifier.size(440.dp).clearAndSetSemantics { contentDescription = "Swiftly" })
+        LottieAnimation(composition, { progress }, Modifier.size(440.dp).clearAndSetSemantics { contentDescription = "FTV" })
     }
 }

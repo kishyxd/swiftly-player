@@ -59,7 +59,7 @@ extension App {
         gtk_widget_set_margin_bottom(card, Int32(Theme.edgeSpacing))
 
         let header = stack(GTK_ORIENTATION_HORIZONTAL, spacing: 8)
-        let title = label(translated("Swiftly hat einen Discord"), style: "swiftly-listentitel")
+        let title = label(translated("FTV hat einen Discord"), style: "swiftly-listentitel")
         gtk_label_set_xalign(OpaquePointer(title), 0)
         gtk_widget_set_hexpand(title, 1)
         append(header, title)

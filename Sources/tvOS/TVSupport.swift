@@ -13,7 +13,7 @@ import SwiftUI
 
 // MARK: - Settings entries
 
-/// **The first row of the "Swiftly" area**: the heart, the line, "Thank you" for
+/// **The first row of the "FTV" area**: the heart, the line, "Thank you" for
 /// supporters. Built here because `ActionRow` has no icon or second line.
 struct TVSupportEntryRow: View {
     let action: () -> Void
@@ -70,7 +70,7 @@ struct TVAppIconRow: View {
 struct TVVersionRow: View {
     var body: some View {
         HStack(spacing: 24) {
-            Text("Swiftly").font(.system(size: 30, weight: .medium))
+            Text("FTV").font(.system(size: 30, weight: .medium))
             Spacer(minLength: 40)
             if SupportModel.shared.isSupporter {
                 Image(systemName: "heart.fill")

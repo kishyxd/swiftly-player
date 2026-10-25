@@ -101,7 +101,7 @@ struct SeerrConnectView: View {
                 .buttonStyle(ThemedButtonStyle())
             }
 
-            Text("Swiftly speichert dein Passwort nicht, nur die Anmeldung bei Seerr.")
+            Text("FTV speichert dein Passwort nicht, nur die Anmeldung bei Seerr.")
                 .font(Theme.small)
                 .foregroundStyle(Theme.fontVeryQuiet)
         }

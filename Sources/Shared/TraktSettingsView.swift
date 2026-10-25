@@ -34,7 +34,7 @@ struct TraktSettingsView: View {
 
     private var content: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Swiftly meldet an Trakt, was du schaust. Ab 80 Prozent steht der Titel dort als gesehen.")
+            Text("FTV meldet an Trakt, was du schaust. Ab 80 Prozent steht der Titel dort als gesehen.")
                 .growing(15)
                 .foregroundStyle(Theme.fontQuiet)
                 .fixedSize(horizontal: false, vertical: true)

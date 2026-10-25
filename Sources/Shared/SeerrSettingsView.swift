@@ -132,7 +132,7 @@ struct SeerrSettingsView: View {
                     .padding(.top, 20)
             }
 
-            Text("Swiftly speichert dein Passwort nicht, nur die Anmeldung bei Seerr.")
+            Text("FTV speichert dein Passwort nicht, nur die Anmeldung bei Seerr.")
                 .growing(12)
                 .foregroundStyle(Theme.fontVeryQuiet)
                 .fixedSize(horizontal: false, vertical: true)

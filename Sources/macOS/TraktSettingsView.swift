@@ -20,7 +20,7 @@ struct TraktSettingsView: View {
             VStack(alignment: .leading, spacing: 0) {
                 SubpageHeader(title: "Trakt", back: back)
 
-                Text("Swiftly meldet an Trakt, was du schaust. Ab 80 Prozent steht der Titel dort als gesehen.")
+                Text("FTV meldet an Trakt, was du schaust. Ab 80 Prozent steht der Titel dort als gesehen.")
                     .font(Theme.body)
                     .foregroundStyle(Theme.fontQuiet)
                     .fixedSize(horizontal: false, vertical: true)

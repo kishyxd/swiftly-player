@@ -117,7 +117,7 @@ fun ProfilePage(app: SwiftlyApplication, open: (Destination) -> Unit, back: () -
         // closed testing, because Google throttles the prompt and does not report whether it appeared.
         val context = androidx.compose.ui.platform.LocalContext.current
         CardView {
-            ProfileRow(Glyph.Star, translated("Swiftly bewerten"), translated("Im Play Store")) {
+            ProfileRow(Glyph.Star, translated("FTV bewerten"), translated("Im Play Store")) {
                 app.addressOpen(context, app.communityAddress("play"))
             }
             SeparatorLine()

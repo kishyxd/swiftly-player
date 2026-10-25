@@ -163,7 +163,7 @@ fun TvLookRow(app: SwiftlyApplication, modifier: Modifier = Modifier) {
                 "teaser" -> {
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
                         Text(translated("Wähl deinen Look"), style = TvTheme.body, color = Theme.font, maxLines = 1)
-                        Text(translated("Looks und Icons für alle, die Swiftly am Laufen halten."), style = TvTheme.small,
+                        Text(translated("Looks und Icons für alle, die FTV am Laufen halten."), style = TvTheme.small,
                              color = Theme.fontQuiet, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                     Symbol(Glyph.AngleRight, 12.dp, color = Theme.fontVeryQuiet, strength = Strength.Semibold)
@@ -370,7 +370,7 @@ private const val TERMS_ADDRESS = "play.google.com/about/play-terms"
 private const val PRIVACY_ADDRESS = "swiftlyplayer.com/privacy.html"
 
 /**
- * **"Hilf Swiftly zu wachsen" on the television** (`TVSupportGrowView`): one column, top to bottom
+ * **"Hilf FTV zu wachsen" on the television** (`TVSupportGrowView`): one column, top to bottom
  * the title, "Look ausprobieren", the two plans side by side, the tips as capsules, nothing
  * preselected, the buy button, the terms, "Wiederherstellen". Back closes. The store's dialog (or,
  * in Debug, the simulated purchase) does the rest; the thanks replaces this page. A television has
@@ -388,10 +388,10 @@ fun TvGrowBody(app: SwiftlyApplication, close: () -> Unit, first: FocusRequester
     val lifetime = plans.firstOrNull { it.plan == "lifetime" }
 
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-        Text(translated("Hilf Swiftly zu wachsen"), style = TvTheme.titleLarge, color = Theme.font)
+        Text(translated("Hilf FTV zu wachsen"), style = TvTheme.titleLarge, color = Theme.font)
         Text("🌱", style = TvTheme.titleLarge)
     }
-    Text(translated("Dein Beitrag hält Swiftly am Laufen."), style = TvTheme.body.copy(textAlign = TextAlign.Center),
+    Text(translated("Dein Beitrag hält FTV am Laufen."), style = TvTheme.body.copy(textAlign = TextAlign.Center),
          color = Theme.fontQuiet, modifier = Modifier.padding(top = 5.dp))
     Text(translated("Open Source, keine Werbung, alles zum Schauen bleibt kostenlos."),
          style = TvTheme.small.copy(textAlign = TextAlign.Center), color = Theme.fontVeryQuiet, modifier = Modifier.padding(top = 2.dp))
@@ -403,7 +403,7 @@ fun TvGrowBody(app: SwiftlyApplication, close: () -> Unit, first: FocusRequester
 
     if (support.channel.pricesUnavailable.value) {
         Text(translated("Preise sind gerade nicht verfügbar"), style = TvTheme.body, color = Theme.font, modifier = Modifier.padding(top = 18.dp))
-        Text(translated("Google Play hat nicht geantwortet. Das passiert ohne Internet oder wenn Käufe auf deinem Konto eingeschränkt sind. Nichts geht verloren, und Swiftly läuft wie immer."),
+        Text(translated("Google Play hat nicht geantwortet. Das passiert ohne Internet oder wenn Käufe auf deinem Konto eingeschränkt sind. Nichts geht verloren, und FTV läuft wie immer."),
              style = TvTheme.small.copy(textAlign = TextAlign.Center), color = Theme.fontQuiet,
              modifier = Modifier.padding(top = 4.dp).widthIn(max = 550.dp))
         TvButton(translated("Google Play erneut fragen"), modifier = Modifier.padding(top = 8.dp).focusRequester(first)) {
@@ -495,9 +495,9 @@ fun TvThanksBody(app: SwiftlyApplication, first: FocusRequester, close: () -> Un
     LookTileView(looks.tileIcon(look), 90.dp)
     Text(if (name.isNotEmpty()) translated("Danke, %@ 🫶", name) else translated("Danke 🫶"),
          style = TvTheme.titleLarge, color = Theme.font, modifier = Modifier.padding(top = 18.dp))
-    Text(if (tipOnly) translated("Du hast Swiftly gerade beim Weitermachen geholfen. Freigeschaltet wird dafür nichts, es ist einfach nur Danke.")
-         else if (look.id != "original") translated("Du hast Swiftly gerade beim Weitermachen geholfen. %@ ist an, dein Icon und Logo auch. Schau dich um.", look.name)
-         else translated("Du hast Swiftly gerade beim Weitermachen geholfen. Looks und Icons gehören jetzt dir. Schau dich um."),
+    Text(if (tipOnly) translated("Du hast FTV gerade beim Weitermachen geholfen. Freigeschaltet wird dafür nichts, es ist einfach nur Danke.")
+         else if (look.id != "original") translated("Du hast FTV gerade beim Weitermachen geholfen. %@ ist an, dein Icon und Logo auch. Schau dich um.", look.name)
+         else translated("Du hast FTV gerade beim Weitermachen geholfen. Looks und Icons gehören jetzt dir. Schau dich um."),
          style = TvTheme.body.copy(textAlign = TextAlign.Center), color = Theme.fontQuiet,
          modifier = Modifier.padding(top = 6.dp).widthIn(max = 550.dp))
     if (!tipOnly) Text(translated("Looks kannst du jederzeit im Profil wechseln."), style = TvTheme.small.copy(textAlign = TextAlign.Center),

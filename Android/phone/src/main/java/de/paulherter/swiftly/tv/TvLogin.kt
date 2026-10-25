@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.paulherter.swiftly.SwiftlyApplication
 import de.paulherter.swiftly.errorString
+import de.paulherter.swiftly.BuildConfig
 import de.paulherter.swiftly.shared.Theme
 import de.paulherter.swiftly.asJson
 import de.paulherter.swiftly.shared.Wordmark
@@ -65,6 +66,9 @@ fun TvServerPage(app: SwiftlyApplication, connected: (String, String) -> Unit) {
     val focus = firstFocus()
     /** "Advanced": custom headers for a service in front of the server. */
     val headers = de.paulherter.swiftly.rememberHeaderRow()
+    // **The FTV edition**: the server is fixed at build time and the free field is the second door.
+    val ftvMode = BuildConfig.FTV_MODE
+    var ownServer by remember { mutableStateOf(!ftvMode) }
 
     fun linkUp() {
         if (address.isBlank() || running) return
@@ -88,6 +92,13 @@ fun TvServerPage(app: SwiftlyApplication, connected: (String, String) -> Unit) {
         }
     }
 
+    /** The FTV edition: connect to the address the build carries, without touching the field. */
+    fun signInToFtv() {
+        if (running) return
+        address = BuildConfig.FTV_SERVER
+        linkUp()
+    }
+
     /** Like `AppModel.addressChanged` on Apple: changing the address during the check cancels it. */
     fun addressChange(new: String) {
         if (new != address && running) {
@@ -99,6 +110,24 @@ fun TvServerPage(app: SwiftlyApplication, connected: (String, String) -> Unit) {
     Box(Modifier.fillMaxSize().background(Theme.reason), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.widthIn(max = 480.dp)) {
             Wordmark(height = 36.dp)
+            // **The FTV edition.** The build carries the address of the KXVN server
+            // (`BuildConfig.FTV_SERVER`, set with `-PftvServer=`); the page then offers one
+            // button that signs in there, and the free address field only as a second door
+            // behind "Use your own server". The same pattern as the Plezy/FTV build.
+            if (ftvMode && !ownServer) {
+                Text(translated("Mit FTV anmelden"), style = TvTheme.titleLarge, color = Theme.font,
+                     modifier = Modifier.padding(top = 28.dp))
+                Text(BuildConfig.FTV_SERVER.removePrefix("https://"), style = TvTheme.small, color = Theme.fontQuiet,
+                     modifier = Modifier.padding(top = 8.dp))
+                TvButton(translated(if (running) "Verbinden…" else "Anmelden"), released = !running,
+                        modifier = Modifier.padding(top = 24.dp)) { signInToFtv() }
+                TvButton(translated("Anderer Server"), modifier = Modifier.padding(top = 14.dp)) { ownServer = true }
+                error?.let {
+                    Text(it, style = TvTheme.body, color = Theme.warning, textAlign = TextAlign.Center,
+                         modifier = Modifier.widthIn(max = 560.dp).padding(top = 18.dp))
+                }
+                return@Column
+            }
             Text(translated("Wo steht dein Jellyfin-Server?"), style = TvTheme.body, color = Theme.fontQuiet,
                  modifier = Modifier.padding(top = 28.dp))
             TvField(address, { addressChange(it) }, "tv.beispiel.de",
@@ -109,6 +138,10 @@ fun TvServerPage(app: SwiftlyApplication, connected: (String, String) -> Unit) {
             TvAdvanced(headers, modifier = Modifier.padding(top = 14.dp))
             TvButton(translated(if (running) "Verbinden…" else "Verbinden"), released = address.isNotBlank() && !running,
                     modifier = Modifier.padding(top = 22.dp)) { linkUp() }
+            // The FTV edition keeps the way back to the free field next to the button.
+            if (ftvMode) {
+                TvButton(translated("Mit FTV anmelden"), modifier = Modifier.padding(top = 14.dp)) { ownServer = false; signInToFtv() }
+            }
             // **No ring replacing the button**, as on tvOS: the button keeps its place and its label says
             // "Connecting…" instead of hiding.
             error?.let {

@@ -71,7 +71,7 @@ object Certificates {
                 Os.unsetenv(VARIABLE)
                 folder = null
                 if (store.exists()) store.deleteRecursively()
-                Log.i("Swiftly", "Zertifikate: keine eigenen, der Kern nimmt den Systemspeicher")
+                Log.i("FTV", "Zertifikate: keine eigenen, der Kern nimmt den Systemspeicher")
                 return
             }
             val encoder = java.util.Base64.getMimeEncoder(64, "\n".toByteArray())
@@ -89,9 +89,9 @@ object Certificates {
             if (!new.renameTo(target)) { new.copyTo(target, overwrite = true); new.delete() }
             Os.setenv(VARIABLE, target.absolutePath, true)
             folder = store.absolutePath
-            Log.i("Swiftly", "Zertifikate: ${names.size - ownOnes} System, $ownOnes eigene — Bündel für Kern und VLC")
+            Log.i("FTV", "Zertifikate: ${names.size - ownOnes} System, $ownOnes eigene — Bündel für Kern und VLC")
         } catch (e: Exception) {
-            Log.w("Swiftly", "Zertifikate: Bündel nicht angelegt, der Kern nimmt den Systemspeicher", e)
+            Log.w("FTV", "Zertifikate: Bündel nicht angelegt, der Kern nimmt den Systemspeicher", e)
         }
     }
 }
