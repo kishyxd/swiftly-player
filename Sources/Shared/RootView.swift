@@ -204,9 +204,11 @@ struct ConnectView: View {
             if address.isEmpty {
                 // **The FTV edition starts on the KXVN server**; a remembered
                 // server of another app comes second.
-                address = FTVEdition.serverURL.isEmpty
-                    ? (model.lastServer?.address ?? "")
-                    : FTVEdition.serverURL
+                #if FTV_EDITION
+                address = FTVEdition.serverURL
+                #else
+                address = model.lastServer?.address ?? ""
+                #endif
             }
         }
         // Changing the address during the check cancels it.

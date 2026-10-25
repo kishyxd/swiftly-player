@@ -41,7 +41,9 @@ struct SeerrSettingsView: View {
             // **The FTV edition starts with the owner's request instance.** The field
             // stays editable: somebody who runs their own Seerr must be able to
             // point the app at it.
+            #if FTV_EDITION
             if address.isEmpty { address = FTVEdition.seerrURL }
+            #endif
             await seerr.lookUp()
         }
     }

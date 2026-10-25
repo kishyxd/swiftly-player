@@ -50,9 +50,12 @@ extension App {
         // must be able to point the app at it.
         if let z = seerrAccess {
             gtk_editable_set_text(OpaquePointer(address), z.address.absoluteString)
-        } else if !FTVEdition.seerrURL.isEmpty {
+        }
+        #if FTV_EDITION
+        else {
             gtk_editable_set_text(OpaquePointer(address), FTVEdition.seerrURL)
         }
+        #endif
         append(block, fieldRow(translated("Adresse"), address))
 
         let user: Widget! = gtk_entry_new()

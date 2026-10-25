@@ -37,7 +37,10 @@ enum FTVDefaults {
     /// Does nothing outside an FTV build, and nothing on an install that has already
     /// been through here.
     static func applyOnFirstLaunch(_ store: UserDefaults = .standard) {
-        guard FTVEdition.isEnabled else { return }
+        // **The FTV edition decides for itself.** The flag is set for this app
+        // target (project.yml), which is where it can be read; the package that
+        // holds the values does not see it.
+        #if FTV_EDITION
         guard store.object(forKey: appliedKey) == nil else { return }
 
         // **Only the keys the user has never set.** A setting that is already in
@@ -70,5 +73,6 @@ enum FTVDefaults {
         }
 
         store.set(true, forKey: appliedKey)
+        #endif
     }
 }

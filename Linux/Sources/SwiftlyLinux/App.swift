@@ -504,9 +504,9 @@ final class App: @unchecked Sendable {
         // **The FTV edition starts on the KXVN server** (`FTVEdition.serverURL`), like
         // on the other platforms. The field stays editable: somebody who runs their own
         // Jellyfin must be able to point the app at it.
-        if !FTVEdition.serverURL.isEmpty {
-            gtk_editable_set_text(OpaquePointer(serverField), FTVEdition.serverURL)
-        }
+        #if FTV_EDITION
+        gtk_editable_set_text(OpaquePointer(serverField), FTVEdition.serverURL)
+        #endif
 
         let (advanced, reader) = advancedBuild(available: [])
         gtk_widget_set_size_request(advanced, Int32(Theme.loginWidth), -1)

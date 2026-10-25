@@ -25,10 +25,15 @@ struct Choices: Codable {
     /// below). New users still see only the two simple fields, so the names and defaults stay.
     /// **The FTV edition starts with Direct Play forced** (`FTVEdition` in the package),
     /// the same value the other platforms start with.
+    #if FTV_EDITION
     private var alwaysDirectPlayDevice = FTVEdition.alwaysDirectPlay
     /// **The FTV edition starts with no bitrate limit**, the same value the other
     /// platforms start with.
     private var bitratesLimitDevice = FTVEdition.bitratesLimit
+    #else
+    private var alwaysDirectPlayDevice = true
+    private var bitratesLimitDevice = 0
+    #endif
     /// Direct Play and bitrate limit per server, as on Apple (`AppModel`) and Android. Not
     /// driven by `CodingKeys` over the old field names, so a file from before this change
     /// still reads.
@@ -80,9 +85,15 @@ struct Choices: Codable {
     /// so a `true` in it does not mean anyone chose it. A `false` does, since the default
     /// was `true`.
     var nextAutomaticSelected: Bool?
+    #if FTV_EDITION
     var backSeconds = FTVEdition.backSeconds
     var forwardSeconds = FTVEdition.forwardSeconds
     var progressOnTiles = FTVEdition.progressOnTiles
+    #else
+    var backSeconds = 10
+    var forwardSeconds = 30
+    var progressOnTiles = true
+    #endif
     /// **Title as logo** on movie and series pages, when the server has one
     /// (Apple: `@AppStorage("titelAlsLogo")`, default off).
     var titleAsLogo = false

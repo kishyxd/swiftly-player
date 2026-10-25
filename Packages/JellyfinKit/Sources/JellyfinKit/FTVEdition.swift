@@ -19,52 +19,38 @@ import Foundation
 ///
 /// ## How the build decides whether this applies
 ///
-/// `isEnabled` is true when the app was built as the FTV edition. It is set by the
-/// build flag `FTV_EDITION`, which the Apple and desktop workflows pass; an upstream
-/// build without that flag keeps the old behaviour (ask for a server, ask for a Seerr
-/// address, keep the upstream defaults).
+/// The **values** live here, in the package, so that every platform reads the same
+/// ones. The **decision** to use them is made in the app layer, because only the app
+/// target knows its own build flags: `FTV_EDITION` for the Swift builds (set in
+/// `project.yml` and in the Linux and Windows `Package.swift`), `BuildConfig.FTV_MODE`
+/// for Android (which already had it).
 ///
-/// The Android app has its own equivalent, `BuildConfig.FTV_MODE`, because it is a
-/// separate code base (Kotlin, not Swift). Both are set from the same place in the
-/// build, so the two agree.
+/// **The package cannot hold the flag itself.** A Swift package target compiles with
+/// its own settings and does not inherit the app target's compilation conditions, so
+/// a `#if` written in this file would be false on every platform - the whole
+/// configuration would have been dead code. That is why the flag is read where it is
+/// set, and the values are read from here.
 public enum FTVEdition {
 
     /// Whether this build is the FTV edition.
     ///
-    /// **A compile-time flag, not a runtime setting.** A user cannot turn the FTV
-    /// edition off, and the FTV edition cannot be built without it: the whole point
-    /// is that it always points at the owner's server.
-    public static var isEnabled: Bool {
-        #if FTV_EDITION
-        return true
-        #else
-        return false
-        #endif
-    }
-
-    /// The one media server this app signs in to.
+    /// **The package cannot answer this.** A Swift package target compiles with its
+    /// own settings and does not inherit the app target's compilation conditions,
+    /// so a flag set for the app never reaches here. The app layer therefore
+    /// decides for itself - it knows its own build flags - and this file holds only
+    /// the values.
     ///
-    /// Empty in a non-FTV build: there is no preset then, the app asks.
-    public static var serverURL: String {
-        #if FTV_EDITION
-        return "https://ftv.kxvn.io"
-        #else
-        return ""
-        #endif
-    }
+    /// **The values are here and not in the app, so that they cannot differ per
+    /// platform.** One list, read by every platform, is the whole point of this
+    /// file; a second copy in the Kotlin app would drift from it.
+    public static var serverURL: String { "https://ftv.kxvn.io" }
 
     /// The one request instance this app asks for titles from.
     ///
     /// Pre-filled in the Seerr settings so a new user only has to sign in; it stays
     /// editable, because somebody who runs their own Seerr must be able to point the
     /// app at it.
-    public static var seerrURL: String {
-        #if FTV_EDITION
-        return "https://request.kxvn.io"
-        #else
-        return ""
-        #endif
-    }
+    public static var seerrURL: String { "https://request.kxvn.io" }
 
     // MARK: - The settings a new install starts with
 
@@ -93,11 +79,5 @@ public enum FTVEdition {
     ///
     /// A user can still pick another accent; this is only what a new install begins
     /// with.
-    public static var accentID: String? {
-        #if FTV_EDITION
-        return "violet"
-        #else
-        return nil
-        #endif
-    }
+    public static var accentID: String? { "violet" }
 }
