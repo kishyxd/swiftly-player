@@ -48,6 +48,14 @@ jobs:
     runs-on: ubuntu-latest
     container: swift:6.3.3-noble
 
+    defaults:
+      run:
+        # **The container's default shell is `sh` (dash).** The upstream
+        # scripts are bash - `Linux/build.sh` uses `set -uo pipefail` and
+        # `Linux/environment.sh` uses arrays - so dash refuses them with
+        # "Illegal option -o pipefail".
+        shell: bash
+
     steps:
       - uses: actions/checkout@v4
 
@@ -69,6 +77,7 @@ jobs:
       # (`PKG_CONFIG_PATH="${env_local}/lib/pkgconfig"`), so the build finds it
       # without any further wiring.
       - name: rlottie
+        shell: bash
         run: |
           export SWIFTLY_RLOTTIE_ZIEL="$HOME/.local"
           bash Werkzeuge/rlottie-build.sh "$PWD/.rlottie-quelle"
@@ -80,6 +89,7 @@ jobs:
       # licence texts next to the program, builds, and then places the private
       # libraries next to the executable.
       - name: Bauen
+        shell: bash
         run: |
           set -euo pipefail
           CONFIGURATION=release bash Linux/build.sh
@@ -97,6 +107,7 @@ jobs:
       # and the `Resources` folder with icons and fonts all belong together;
       # the program resolves them relative to its own path.
       - name: Ausgabe zusammenstellen
+        shell: bash
         run: |
           set -euo pipefail
           mkdir -p ausgabe
@@ -112,6 +123,7 @@ jobs:
           du -sh ausgabe
 
       - name: Nachweis (ldd, file)
+        shell: bash
         run: |
           set -euo pipefail
           echo "== ldd =="
