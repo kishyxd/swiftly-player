@@ -30,7 +30,15 @@ public struct SupportCopy: Sendable, Hashable {
 
     // MARK: Entry (Settings, About)
 
-    public static let supportSwiftly = SupportCopy(de: "FTV unterstützen", en: "Support FTV")
+    /// **"Support FTV", the entry in the settings and in the profile.**
+    ///
+    /// The FTV edition renamed the entry, and with it the name here: the
+    /// Linux and Windows sources ask for `supportFTV`, the Apple ones still
+    /// for `supportSwiftly`. Both are the same text, so both names exist and
+    /// neither platform has to be changed for the other.
+    public static let supportFTV = SupportCopy(de: "FTV unterstützen", en: "Support FTV")
+    /// The old name for the same text; the Apple targets still use it.
+    public static let supportSwiftly = supportFTV
     public static let sayThanks = SupportCopy(de: "Mit einem Kaffee Danke sagen",
                                               en: "Say thanks with a coffee")
     /// Apple TV settings row, where there is room for one more sentence.

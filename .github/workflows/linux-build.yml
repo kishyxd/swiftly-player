@@ -1,0 +1,140 @@
+# Builds the FTV Player for Linux and uploads the result as a GitHub artifact.
+#
+# **What is built.** The same program the upstream project builds: the UI lives
+# once in `Linux/Sources/SwiftlyLinux` and is compiled against the *system*
+# libraries - GTK 4 and libVLC - not against a bundled VLCKit. `Linux/Package.swift`
+# says so with `pkgConfig: "gtk4"` and `pkgConfig: "libvlc"`, and
+# `Linux/build.sh` is the upstream entry point that checks the environment,
+# builds, and then places the private libraries next to the program.
+#
+# **Why a container and not a plain runner.** The Swift toolchain for Linux is
+# distributed per distribution, and the app links against the distribution's
+# GTK 4 and libVLC. The official `swift:6.3.3-noble` image is Ubuntu 24.04 with
+# the toolchain already inside, so the build sees exactly the libraries a user
+# on Ubuntu 24.04 has. `Linux/environment.sh` names the same version
+# ("swiftly install 6.3.3").
+#
+# **The static standard library.** The upstream release pipeline
+# (`.github/workflows/linux-packages.yml`) builds with
+# `-Xswiftc -static-stdlib`, so the program does not need the Swift runtime
+# next to it. The same is done here: the artifact runs on a plain Ubuntu
+# without a Swift installation.
+#
+# **The artifact is the whole output directory, not just the executable.**
+# The program finds its resource bundle, its icons and its fonts relative to
+# the path of the running executable (`Platform.bundled`), and the private
+# libraries sit next to the binary so that `$ORIGIN` finds them. A lone
+# executable would not start.
+
+name: Linux-Build
+
+on:
+  push:
+    branches: [build/desktop]
+  workflow_dispatch:
+
+concurrency:
+  # **Never cancel a running build.** A new push must not kill the build that
+  # is already compiling; that is minutes of work thrown away.
+  group: linux-build-${{ github.run_id }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: FTV Player (Linux)
+    runs-on: ubuntu-latest
+    container: swift:6.3.3-noble
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Werkzeuge
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            libgtk-4-dev libvlc-dev pkg-config g++ git ca-certificates xvfb file
+
+      - name: Toolchain
+        run: |
+          swift --version
+          pkg-config --modversion gtk4
+          pkg-config --modversion libvlc
+
+      # **rlottie is not packaged on Ubuntu.** `Werkzeuge/rlottie-build.sh`
+      # compiles it without cmake into `~/.local` and writes the pkg-config
+      # file there. `Linux/environment.sh` looks in exactly that place
+      # (`PKG_CONFIG_PATH="${env_local}/lib/pkgconfig"`), so the build finds it
+      # without any further wiring.
+      - name: rlottie
+        run: |
+          export SWIFTLY_RLOTTIE_ZIEL="$HOME/.local"
+          bash Werkzeuge/rlottie-build.sh "$PWD/.rlottie-quelle"
+          ls -la "$HOME/.local/lib" "$HOME/.local/lib/pkgconfig"
+
+      # **The upstream entry point.** `Linux/build.sh` sources
+      # `Linux/environment.sh`, which checks that swift, gtk4, rlottie and
+      # libvlc are all present before a single file is compiled, copies the
+      # licence texts next to the program, builds, and then places the private
+      # libraries next to the executable.
+      - name: Bauen
+        run: |
+          set -euo pipefail
+          CONFIGURATION=release bash Linux/build.sh
+          # The static standard library, as the upstream release pipeline does
+          # it. `environment.sh` is sourced again because it is what puts the
+          # rlottie pkg-config file on the search path.
+          # shellcheck source=/dev/null
+          . Linux/environment.sh
+          cd Linux
+          swift build -c release -Xswiftc -static-stdlib
+          echo "BAUORDNER=$(swift build -c release -Xswiftc -static-stdlib --show-bin-path)" >> "$GITHUB_ENV"
+
+      # **The artifact is the whole output directory.** The executable, the
+      # resource bundles (`*.resources` / `*.bundle`), the private libraries
+      # and the `Resources` folder with icons and fonts all belong together;
+      # the program resolves them relative to its own path.
+      - name: Ausgabe zusammenstellen
+        run: |
+          set -euo pipefail
+          mkdir -p ausgabe
+          # The binary and everything SwiftPM put next to it.
+          cp -a "$BAUORDNER/." ausgabe/
+          # The resources that live next to the *program* in an installation
+          # (`Platform.bundled` walks up from the executable).
+          cp -a Linux/Resources ausgabe/Resources
+          # The install files, rebranded, for completeness.
+          cp -a Linux/Install/com.kxvn.ftvplayer.desktop ausgabe/
+          cp -a Linux/Install/com.kxvn.ftvplayer.metainfo.xml ausgabe/
+          ls -la ausgabe
+          du -sh ausgabe
+
+      - name: Nachweis (ldd, file)
+        run: |
+          set -euo pipefail
+          echo "== ldd =="
+          ldd ausgabe/SwiftlyLinux
+          echo "== file =="
+          file ausgabe/SwiftlyLinux
+          echo "== Groesse =="
+          ls -l ausgabe/SwiftlyLinux
+          du -sh ausgabe
+          # **What the app answers when it is asked for its version.**
+          # It is a GTK program, so it needs a display; `xvfb-run` gives it
+          # one. The app has no `--version` switch of its own, so it starts
+          # its window instead - which is the proof that the binary runs and
+          # finds its libraries. The timeout stops it again.
+          echo "== Start (xvfb) =="
+          timeout 20 xvfb-run -a ausgabe/SwiftlyLinux --version 2>&1 | head -20 || true
+          echo "== Das Programm nennt seine Version im Fenster: =="
+          strings ausgabe/SwiftlyLinux | grep -i "FTV Player 1\.0" | head -3 || true
+
+      - name: Artefakt hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: ftv-player-linux-x86_64
+          path: ausgabe
+          if-no-files-found: error
+          retention-days: 30

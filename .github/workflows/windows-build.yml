@@ -1,0 +1,252 @@
+# Builds the FTV Player for Windows and uploads the result as a GitHub artifact.
+#
+# **What is built.** The same UI the upstream project builds: the sources live
+# once under `Linux/Sources/SwiftlyLinux` and are compiled for Windows by
+# `Windows/build.ps1`, which mirrors them into `Windows/Sources/SwiftlyWindows`
+# before every build. It also compiles the small launcher (`Launcher/launcher.c`)
+# and writes the starter script.
+#
+# **The three tools the build needs, and where they come from.**
+#
+#   * MSVC. `Windows/environment.ps1` expects the Build Tools at
+#     `C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools` and
+#     reads `vcvars64.bat` from there. The runner image has Visual Studio
+#     *Enterprise* instead, so the path is pointed at it (see below).
+#   * Swift for Windows. The official installer lays out
+#     `Toolchains\<version>+Asserts\usr\bin`, `Runtimes\<version>\usr\bin` and
+#     `Platforms\<version>\Windows.platform\Developer\SDKs\Windows.sdk`, which
+#     is exactly what `environment.ps1` looks for under `C:\Swift`.
+#   * GTK 4 and libVLC as MSVC libraries. GTK comes from the gvsbuild release
+#     (the README names it), libVLC from the official VideoLAN SDK.
+#
+# **rlottie is built here, not downloaded.** `Werkzeuge/rlottie-build.ps1`
+# compiles it with MSVC into a static library, exactly as it does on a
+# developer's machine.
+#
+# **The artifact is the staged program, not just the .exe.** GTK derives the
+# location of its data files from the location of its DLL, and libVLC looks for
+# its modules next to itself, so `Windows/Install/package.ps1` puts everything
+# into the layout that runs without any environment set. Only that layout is
+# uploaded.
+
+name: Windows-Build
+
+on:
+  push:
+    branches: [build/desktop]
+  workflow_dispatch:
+
+concurrency:
+  # **Never cancel a running build.** A new push must not kill the build that
+  # is already compiling; that is minutes of work thrown away.
+  group: windows-build-${{ github.run_id }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  # **The Swift version `Windows/environment.ps1` names.** It looks for
+  # `Toolchains\6.2.1+Asserts` and `Runtimes\6.2.1`, so the installer of that
+  # version is the one that fits.
+  SWIFT_VERSION: "6.2.1"
+  SWIFT_INSTALLER: "https://download.swift.org/swift-6.2.1-release/windows10/swift-6.2.1-RELEASE/swift-6.2.1-RELEASE-windows10.exe"
+  # The GTK 4 build for MSVC, from the gvsbuild release the README names.
+  GTK4_URL: "https://github.com/wingtk/gvsbuild/releases/download/2026.8.0/GTK4_Gvsbuild_2026.8.0_x64.zip"
+  # The libVLC SDK and the matching runtime, from VideoLAN.
+  VLC_SDK_URL: "https://get.videolan.org/vlc/3.0.21/win64/vlc-3.0.21-win64.7z"
+  VLC_RUNTIME_URL: "https://get.videolan.org/vlc/3.0.21/win64/vlc-3.0.21-win64.zip"
+
+jobs:
+  build:
+    name: FTV Player (Windows)
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # **MSVC.** `environment.ps1` looks for `vcvars64.bat` under the Build
+      # Tools path. The runner has Visual Studio Enterprise at a different
+      # place, so the path is given to the script as its parameter. The
+      # components (`Microsoft.VisualStudio.Component.VC.Tools.x86.x64` and
+      # the Windows SDK) are on the image already.
+      - name: MSVC bereitstellen
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vs = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
+                -property installationPath
+          if (-not $vs) { throw "Kein Visual Studio mit den C++-Werkzeugen gefunden." }
+          Write-Host "Visual Studio: $vs"
+          "VCVARS=$vs\VC\Auxiliary\Build\vcvars64.bat" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "VSINSTALL=$vs" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      # **Swift for Windows.** The installer is a Burn bundle: `/passive`
+      # installs without a dialog, and `InstallRoot` says where. The layout it
+      # produces is the one `Windows/environment.ps1` expects:
+      # `Toolchains\<version>+Asserts\usr\bin`, `Runtimes\<version>\usr\bin`,
+      # `Platforms\<version>\Windows.platform\Developer\SDKs\Windows.sdk`.
+      # The Android platform and the IDE integration are switched off: they are
+      # not needed to build this program and would double the download.
+      - name: Swift installieren
+        shell: pwsh
+        run: |
+          $installer = Join-Path $env:RUNNER_TEMP 'swift.exe'
+          Write-Host "Lade $env:SWIFT_INSTALLER"
+          curl.exe -L --retry 3 -o $installer $env:SWIFT_INSTALLER
+          Write-Host "Installiere nach C:\Swift"
+          $p = Start-Process -FilePath $installer -ArgumentList @(
+            '/passive', '/norestart',
+            'InstallRoot=C:\Swift',
+            'OptionsInstallAndroidPlatform=0',
+            'OptionsInstallIDE=0',
+            'OptionsInstallPy=0',
+            'OptionsInstallUtilities=0',
+            'OptionsInstallWindowsSDKX86=0',
+            'OptionsInstallWindowsSDKARM64=0'
+          ) -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "Swift-Installer endete mit $($p.ExitCode)" }
+          Get-ChildItem C:\Swift -Depth 2 | Select-Object -First 30 FullName
+          if (-not (Test-Path "C:\Swift\Toolchains\$env:SWIFT_VERSION+Asserts\usr\bin\swift.exe")) {
+            throw "Swift fehlt unter C:\Swift\Toolchains\$env:SWIFT_VERSION+Asserts\usr\bin"
+          }
+          "SWIFT_ROOT=C:\Swift" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      # **GTK 4 for MSVC.** The gvsbuild archive unpacks into `bin`, `include`,
+      # `lib`, `share` and `etc` - exactly the structure `build.ps1` expects
+      # under `C:\Werkzeuge\gtk4`.
+      - name: GTK4 holen
+        shell: pwsh
+        run: |
+          $zip = Join-Path $env:RUNNER_TEMP 'gtk4.zip'
+          Write-Host "Lade $env:GTK4_URL"
+          curl.exe -L --retry 3 -o $zip $env:GTK4_URL
+          New-Item -ItemType Directory -Force -Path 'C:\Werkzeuge\gtk4' | Out-Null
+          Expand-Archive -Path $zip -DestinationPath 'C:\Werkzeuge\gtk4' -Force
+          if (-not (Test-Path 'C:\Werkzeuge\gtk4\include\gtk-4.0\gtk\gtk.h')) {
+            throw "GTK4-Header fehlen nach dem Entpacken."
+          }
+          Get-ChildItem 'C:\Werkzeuge\gtk4' | Select-Object Name
+
+      # **libVLC.** The SDK archive contains the folder `sdk` with the headers
+      # and the import libraries; `build.ps1` expects `include` and `lib`
+      # directly under `C:\Werkzeuge\vlcsdk`. The runtime archive is what the
+      # program loads at run time, including the decoder modules.
+      - name: libVLC holen
+        shell: pwsh
+        run: |
+          $sdk = Join-Path $env:RUNNER_TEMP 'vlc-sdk.7z'
+          $runtime = Join-Path $env:RUNNER_TEMP 'vlc-runtime.zip'
+          Write-Host "Lade $env:VLC_SDK_URL"
+          curl.exe -L --retry 3 -o $sdk $env:VLC_SDK_URL
+          Write-Host "Lade $env:VLC_RUNTIME_URL"
+          curl.exe -L --retry 3 -o $runtime $env:VLC_RUNTIME_URL
+          # 7-Zip is on the runner.
+          & "${env:ProgramFiles}\7-Zip\7z.exe" x $sdk "-o$env:RUNNER_TEMP\vlc" -y | Out-Null
+          $sdkOrdner = Join-Path $env:RUNNER_TEMP 'vlc\vlc-3.0.21\sdk'
+          if (-not (Test-Path (Join-Path $sdkOrdner 'include\vlc\vlc.h'))) {
+            throw "VLC-SDK (vlc.h) nicht gefunden."
+          }
+          New-Item -ItemType Directory -Force -Path 'C:\Werkzeuge\vlcsdk' | Out-Null
+          Copy-Item (Join-Path $sdkOrdner '*') 'C:\Werkzeuge\vlcsdk' -Recurse -Force
+          New-Item -ItemType Directory -Force -Path 'C:\Werkzeuge\vlc' | Out-Null
+          Expand-Archive -Path $runtime -DestinationPath 'C:\Werkzeuge\vlc' -Force
+          # The archive carries the folder `vlc-3.0.21`; the build expects
+          # exactly that name under `C:\Werkzeuge\vlc`.
+          if (-not (Test-Path 'C:\Werkzeuge\vlc\vlc-3.0.21\libvlc.dll')) {
+            throw "VLC-Laufzeit (libvlc.dll) nicht gefunden."
+          }
+          Get-ChildItem 'C:\Werkzeuge\vlcsdk' | Select-Object Name
+
+      # **rlottie.** `Werkzeuge/rlottie-build.ps1` compiles the library with
+      # MSVC into `C:\Werkzeuge\rlottie`, which is where `build.ps1` looks
+      # for it. The script takes its environment from
+      # `C:\swiftly\Windows\environment.ps1`; the checkout is copied there
+      # first, because the script hard-codes that path.
+      - name: rlottie bauen
+        shell: pwsh
+        run: |
+          Copy-Item -Path (Join-Path $env:GITHUB_WORKSPACE '*') -Destination 'C:\swiftly' -Recurse -Force
+          $env:Path = "$env:VSINSTALL\VC\Tools\MSVC\*\bin\Hostx64\x64;$env:Path"
+          & 'C:\Program Files\Git\cmd\git.exe' --version
+          & 'C:\swiftly\Werkzeuge\rlottie-build.ps1'
+          if (-not (Test-Path 'C:\Werkzeuge\rlottie\lib\rlottie.lib')) {
+            throw "rlottie.lib fehlt nach dem Bauen."
+          }
+          Get-ChildItem 'C:\Werkzeuge\rlottie' -Recurse | Select-Object FullName
+
+      # **The build itself.** `Windows/build.ps1` mirrors the shared sources
+      # from `Linux/Sources/SwiftlyLinux`, compiles the program and the
+      # launcher, and writes the starter script. It takes the paths of the
+      # tools as parameters, so they are given explicitly instead of the
+      # defaults of a developer's machine.
+      - name: Bauen
+        shell: pwsh
+        run: |
+          $swiftRoot = $env:SWIFT_ROOT
+          & 'C:\swiftly\Windows\build.ps1' `
+            -Konfiguration release `
+            -Gtk 'C:\Werkzeuge\gtk4' `
+            -Vlc 'C:\Werkzeuge\vlcsdk' `
+            -VlcLaufzeit 'C:\Werkzeuge\vlc\vlc-3.0.21' `
+            -SwiftLaufzeit "$swiftRoot\Runtimes\$env:SWIFT_VERSION\usr\bin" `
+            -Rlottie 'C:\Werkzeuge\rlottie'
+          if ($LASTEXITCODE -ne 0) { throw "build.ps1 endete mit $LASTEXITCODE" }
+          Get-ChildItem 'C:\swiftly\Windows\.build\release' | Select-Object Name, Length
+
+      # **The staged program.** `Windows/Install/package.ps1` builds the layout
+      # that runs without any environment set: the program under `bin`, the
+      # GTK data under `share`, the Swift runtime and the libVLC modules
+      # next to it, and the launcher above it.
+      - name: Programm zusammenstellen
+        shell: pwsh
+        run: |
+          $swiftRoot = $env:SWIFT_ROOT
+          & 'C:\swiftly\Windows\Install\package.ps1' `
+            -Konfiguration release `
+            -Ziel 'C:\swiftly\Windows\Output\FTVPlayer' `
+            -Gtk 'C:\Werkzeuge\gtk4' `
+            -VlcLaufzeit 'C:\Werkzeuge\vlc\vlc-3.0.21' `
+            -SwiftLaufzeit "$swiftRoot\Runtimes\$env:SWIFT_VERSION\usr\bin"
+          if ($LASTEXITCODE -ne 0) { throw "package.ps1 endete mit $LASTEXITCODE" }
+          Get-ChildItem 'C:\swiftly\Windows\Output\FTVPlayer' | Select-Object Name
+
+      # **What the artifact is.** A short report about the .exe: its size, its
+      # type, and the resources it carries. `dumpbin` comes from the same MSVC
+      # that built it.
+      - name: Nachweis
+        shell: pwsh
+        run: |
+          $exe = 'C:\swiftly\Windows\Output\FTVPlayer\bin\Swiftly.exe'
+          if (-not (Test-Path $exe)) { throw "Die .exe fehlt: $exe" }
+          $info = Get-Item $exe
+          Write-Host "== .exe =="
+          Write-Host ("Groesse: {0} bytes ({1:N1} MB)" -f $info.Length, ($info.Length / 1MB))
+          Write-Host "== Kopfzeile (MZ / PE) =="
+          $bytes = [System.IO.File]::ReadAllBytes($exe)[0..1]
+          Write-Host ("Magic: {0}{1}" -f [char]$bytes[0], [char]$bytes[1])
+          $dumpbin = Get-ChildItem "$env:VSINSTALL\VC\Tools\MSVC" -Recurse -Filter dumpbin.exe `
+                      -ErrorAction SilentlyContinue |
+                      Where-Object { $_.FullName -like '*HostX64\x64*' } | Select-Object -First 1
+          if ($dumpbin) {
+            Write-Host "== dumpbin /headers =="
+            & $dumpbin.FullName /nologo /headers $exe | Select-String -Pattern 'machine|subsystem' |
+              Select-Object -First 6 | ForEach-Object { $_.Line.Trim() }
+            Write-Host "== dumpbin /dependents =="
+            & $dumpbin.FullName /nologo /dependents $exe |
+              Select-String -Pattern '^\s+\S+\.dll\s*$' | ForEach-Object { $_.Line.Trim() }
+          } else {
+            Write-Host "dumpbin nicht gefunden - die Kopfzeile oben genügt als Nachweis."
+          }
+          Write-Host "== Groesse des ganzen Programms =="
+          $summe = (Get-ChildItem 'C:\swiftly\Windows\Output\FTVPlayer' -Recurse -File |
+                    Measure-Object Length -Sum).Sum
+          Write-Host ("{0:N1} MB" -f ($summe / 1MB))
+
+      - name: Artefakt hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: ftv-player-windows-x64
+          path: C:\swiftly\Windows\Output\FTVPlayer
+          if-no-files-found: error
+          retention-days: 30
