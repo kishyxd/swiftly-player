@@ -102,6 +102,20 @@ jobs:
             --no-daemon
           ls -R "$HOME/.m2/repository/org/swift/swiftkit/swiftkit-core" | head -20
 
+      # The KXVN signing key. It lives in the repository's secrets, so the key file is written
+      # to the workspace and `key.properties` points Gradle at it; both are deleted afterwards.
+      - name: Configure the signing key
+        run: |
+          set -euo pipefail
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > "$GITHUB_WORKSPACE/kxvn.keystore"
+          cat > "$GITHUB_WORKSPACE/key.properties" << EOF
+          storePassword=${{ secrets.ANDROID_STORE_PASSWORD }}
+          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+          storeFile=$GITHUB_WORKSPACE/kxvn.keystore
+          EOF
+          keytool -list -keystore "$GITHUB_WORKSPACE/kxvn.keystore" -storepass "${{ secrets.ANDROID_STORE_PASSWORD }}" -alias "${{ secrets.ANDROID_KEY_ALIAS }}" | head -5
+
       - name: Build the Android APK
         working-directory: Android
         run: |
@@ -112,9 +126,23 @@ jobs:
           export ANDROID_SDK_ROOT="$ANDROID_HOME"
           echo "JAVA_HOME=$JAVA_HOME"
           java -version
-          ./gradlew :phone:tasks --all --console=plain | grep -iE '^assembleDirect' || true
+          # `key.properties` sits next to the Gradle build (Android/ is the root project).
+          cp "$GITHUB_WORKSPACE/key.properties" .
           # The FTV edition: the server the app signs in to is fixed at build time.
           ./gradlew :phone:assembleDirectRelease --console=plain --stacktrace -PftvServer="https://ftv.kxvn.io"
+
+      - name: Inspect the APK
+        run: |
+          set -euo pipefail
+          APK=$(find Android/phone/build/outputs/apk/direct/release -name '*.apk' | head -1)
+          echo "APK=$APK"
+          ls -la "$APK"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump badging "$APK" | head -6
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs "$APK" | head -4
+
+      - name: Clean up the key
+        if: always()
+        run: rm -f "$GITHUB_WORKSPACE/kxvn.keystore" "$GITHUB_WORKSPACE/key.properties" Android/key.properties
 
       - name: Upload the APK
         uses: actions/upload-artifact@v4
