@@ -102,7 +102,7 @@ struct SupportCopyTests {
         for text in SupportCopy.all {
             #expect(tokens(text.de) == tokens(text.en), "\(text.key)")
         }
-        #expect(String(format: SupportCopy.cardWatchedHours.en, 25) == "You have watched 25 hours with Swiftly.")
+        #expect(String(format: SupportCopy.cardWatchedHours.en, 25) == "You have watched 25 hours with FTV.")
     }
 
     @Test("No exclamation marks and none of the banned words")
