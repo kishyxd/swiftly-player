@@ -89,7 +89,11 @@ jobs:
           set -euo pipefail
           git clone --depth 1 https://github.com/swiftlang/swift-java swift-java
           cd swift-java
-          export JAVA_HOME="$JAVA_HOME_25_X64"
+          # `SwiftKitCore` compiles against Java 25 (its own toolchain declaration), and the
+          # runner image names the JDKs in variables that are not exported in every step.
+          export JAVA_HOME="$(/usr/libexec/java_home -v 25)"
+          echo "JAVA_HOME=$JAVA_HOME"
+          java -version
           ./gradlew :SwiftKitCore:publishToMavenLocal \
             -PswiftkitVersion="1.0.0" \
             --no-daemon
@@ -97,17 +101,14 @@ jobs:
 
       - name: Build the Android APK
         working-directory: Android
-        env:
-          JAVA_HOME: ${{ env.JAVA_HOME_21_X64 }}
         run: |
           set -euo pipefail
-          export JAVA_HOME
+          export JAVA_HOME="$(/usr/libexec/java_home -v 21)"
           export PATH="$JAVA_HOME/bin:$HOME/.swiftly/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
           export ANDROID_HOME
           export ANDROID_SDK_ROOT="$ANDROID_HOME"
-          # `Android/core/build.gradle` pins the macOS SDK by name; the runner image names it
-          # differently, so the pin is replaced by whatever the image actually has.
-          ls -d /Library/Developer/CommandLineTools/SDKs/MacOSX*.sdk | tail -1
+          echo "JAVA_HOME=$JAVA_HOME"
+          java -version
           ./gradlew :phone:tasks --all --console=plain | grep -iE '^assembleDirect' || true
           ./gradlew :phone:assembleDirectRelease --console=plain --stacktrace
 
