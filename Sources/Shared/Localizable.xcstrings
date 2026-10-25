@@ -14077,6 +14077,23 @@
           }
         }
       }
+    },
+    "Mit FTV anmelden": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit FTV anmelden"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in with FTV"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
