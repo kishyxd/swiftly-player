@@ -344,6 +344,31 @@ jobs:
       # icon on the way into the bundle, so the comparison is pixel-wise
       # (mean absolute difference per channel) and not a hash of the file.
       #
+      # **Each platform stores its icon differently, and each is therefore
+      # checked in its own way.**
+      #
+      #   * macOS keeps a plain `.icns` in `Contents/Resources` holding the
+      #     artwork unmasked, so the 1024x1024 entry is compared pixel by
+      #     pixel against the owner's file directly.
+      #
+      #   * iOS keeps the icon in `Assets.car`, and `actool` bakes Apple's
+      #     icon shape (the rounded "squircle") into it. The masked result
+      #     cannot be compared against the owner's flat PNG, so the built car
+      #     is rendered with Apple's own `iconutil`, a *reference* car is
+      #     compiled from the owner's PNG with the same `actool` and rendered
+      #     the same way, and the two renderings are compared. Apple renders
+      #     both, so an identical result means the built app carries the
+      #     owner's artwork. The bundle's loose fallback PNG (the flat
+      #     artwork, for SpringBoard) is compared against the owner's PNG
+      #     as well.
+      #
+      #   * tvOS keeps the icon in `Assets.car` as a *brand* asset - a layer
+      #     stack of a background and a wordmark - which no public tool
+      #     renders. What is verifiable is the wordmark layer's own content,
+      #     and `assetutil --info` reports a SHA-1 digest for every
+      #     rendition. The digest of the built car is compared with the
+      #     digest of a reference car compiled from the wordmark PNG.
+      #
       # The iOS and macOS references are the owner's own 1024x1024 file
       # (byte-identical to `ftv_icon.png` in the owner's own folder); the tvOS
       # one is the wordmark layer of the layered Apple TV icon.
@@ -361,17 +386,93 @@ jobs:
           shasum -a 256 out/icon-check/*.png
           echo
           status=0
-          for platform in ios tvos macos; do
-            app=$(ls -d build/$platform/Build/Products/*/*.app 2>/dev/null | grep -v TopShelf | head -1)
-            [ -n "$app" ] || continue
-            echo "=== $platform ==="
-            case "$platform" in
-              ios)   ref=out/icon-check/ftv-icon-1024.png ;;
-              tvos)  ref=out/icon-check/ftv-tvos-wordmark-800x480.png ;;
-              macos) ref=out/icon-check/ftv-mac-1024.png ;;
-            esac
-            python3 .github/scripts/verify-icon.py "$ref" "$app" || status=1
-          done
+
+          ios_app=$(ls -d build/ios/Build/Products/*/*.app 2>/dev/null | grep -v TopShelf | head -1)
+          tvos_app=$(ls -d build/tvos/Build/Products/*/*.app 2>/dev/null | grep -v TopShelf | head -1)
+          macos_app=$(ls -d build/macos/Build/Products/*/*.app 2>/dev/null | grep -v TopShelf | head -1)
+
+          # ---------------------------------------------------------------- iOS
+          echo "=== ios ==="
+          if [ -n "$ios_app" ]; then
+            # The reference car: the owner's artwork, compiled by the same
+            # actool with the same flags the build used.
+            rm -rf out/icon-check/ref-ios
+            mkdir -p out/icon-check/ref-ios.xcassets/AppIcon.appiconset
+            cp out/icon-check/ftv-icon-1024.png \
+               out/icon-check/ref-ios.xcassets/AppIcon.appiconset/ftv-icon.png
+            cat > out/icon-check/ref-ios.xcassets/AppIcon.appiconset/Contents.json <<'JSON'
+          { "images" : [ { "filename" : "ftv-icon.png", "idiom" : "universal", "platform" : "ios", "size" : "1024x1024" } ],
+            "info" : { "author" : "xcode", "version" : 1 } }
+          JSON
+            cat > out/icon-check/ref-ios.xcassets/Contents.json <<'JSON'
+          { "info" : { "author" : "xcode", "version" : 1 } }
+          JSON
+            mkdir -p out/icon-check/ref-ios
+            xcrun actool out/icon-check/ref-ios.xcassets \
+              --compile out/icon-check/ref-ios \
+              --output-format human-readable-text \
+              --output-partial-info-plist out/icon-check/ref-ios/partial.plist \
+              --app-icon AppIcon --compress-pngs --development-region de \
+              --target-device iphone --target-device ipad \
+              --minimum-deployment-target 18.0 --platform iphoneos \
+              --bundle-identifier de.paulherter.swiftly
+            # Render the built car and the reference car the same way.
+            rm -rf out/icon-check/ios-built.iconset out/icon-check/ios-ref.iconset
+            iconutil -c iconset "$ios_app/Assets.car" AppIcon \
+              -o out/icon-check/ios-built.iconset
+            iconutil -c iconset out/icon-check/ref-ios/Assets.car AppIcon \
+              -o out/icon-check/ios-ref.iconset
+            echo "--- the built app's icon against the owner's artwork, both rendered by Apple ---"
+            python3 .github/scripts/verify-icon.py \
+              --png-dir out/icon-check/ios-built.iconset \
+              out/icon-check/ios-ref.iconset/icon_512x512@2x.png || status=1
+            echo "--- the bundle's own fallback PNG against the owner's artwork ---"
+            python3 .github/scripts/verify-icon.py \
+              out/icon-check/ftv-icon-1024.png "$ios_app" || status=1
+          else
+            echo "no iOS bundle"; status=1
+          fi
+          echo
+
+          # --------------------------------------------------------------- tvOS
+          echo "=== tvos ==="
+          if [ -n "$tvos_app" ]; then
+            # The reference car: the wordmark, compiled by the same actool
+            # with the same flags the build used.
+            rm -rf out/icon-check/ref-tvos
+            mkdir -p out/icon-check/ref-tvos.xcassets
+            cp -R "Sources/tvOS/Assets.xcassets/AppIcon.brandassets" \
+                  out/icon-check/ref-tvos.xcassets/
+            cat > out/icon-check/ref-tvos.xcassets/Contents.json <<'JSON'
+          { "info" : { "author" : "xcode", "version" : 1 } }
+          JSON
+            mkdir -p out/icon-check/ref-tvos
+            xcrun actool out/icon-check/ref-tvos.xcassets \
+              --compile out/icon-check/ref-tvos \
+              --output-format human-readable-text \
+              --output-partial-info-plist out/icon-check/ref-tvos/partial.plist \
+              --app-icon AppIcon --compress-pngs --development-region de \
+              --target-device tv --minimum-deployment-target 18.0 \
+              --platform appletvos --bundle-identifier de.paulherter.swiftly
+            assetutil --info "$tvos_app/Assets.car" > out/icon-check/tvos-built.json
+            assetutil --info out/icon-check/ref-tvos/Assets.car > out/icon-check/tvos-ref.json
+            echo "--- the wordmark layer in the built app against the owner's artwork ---"
+            python3 .github/scripts/verify-icon.py --car-digest \
+              out/icon-check/tvos-built.json out/icon-check/tvos-ref.json \
+              "App Icon/Wordmark/Content" || status=1
+          else
+            echo "no tvOS bundle"; status=1
+          fi
+          echo
+
+          # -------------------------------------------------------------- macOS
+          echo "=== macos ==="
+          if [ -n "$macos_app" ]; then
+            python3 .github/scripts/verify-icon.py \
+              out/icon-check/ftv-mac-1024.png "$macos_app" || status=1
+          else
+            echo "no macOS bundle"; status=1
+          fi
           exit $status
 
       - name: Upload the build logs

@@ -1,26 +1,50 @@
 #!/usr/bin/env python3
 """Verify that the icon inside a built .app is the FTV artwork.
 
-The reference is the owner's own file (1024x1024 for iOS and macOS, the
-wordmark layer for tvOS). It is compared **pixel by pixel**, not by file
-hash: the app icon goes through `actool`, which re-encodes and re-scales it,
-so the bytes in the bundle are never the bytes in the source PNG. The
-comparison is a mean absolute difference per channel; 0.00 means the two
-images are identical pixel for pixel.
+The reference is the owner's own file. It is compared **pixel by pixel**,
+not by file hash: the app icon goes through `actool`, which re-encodes and
+re-scales it, so the bytes in the bundle are never the bytes in the source
+PNG. The comparison is a mean absolute difference per channel; 0.00 means the
+two images are identical pixel for pixel.
 
-The icon is read out of the built bundle:
+Three ways to look at the icon, one per platform:
 
-  * macOS: the `.icns` files in `Contents/Resources` - the `CFBundleIconFile`
-    and the one `actool` generates from the asset catalog. The 1024x1024
-    entry (`ic10`) is the one that carries the owner's artwork.
-  * iOS/tvOS: the app icon is compiled into `Assets.car`. The PNG streams
-    inside the car are extracted and compared.
+  * **macOS** - the `.icns` files in `Contents/Resources`. The 1024x1024 entry
+    (`ic10`) is the one that carries the owner's artwork. The bundle holds
+    the artwork unmasked, so it is compared against the reference directly.
+
+  * **iOS** - the icon lives in `Assets.car`, and `actool` stores it with
+    Apple's icon shape (a rounded "squircle") baked in, so the car cannot be
+    compared against the owner's flat PNG directly. The workflow renders the
+    car with Apple's own `iconutil` and renders a *reference* car - compiled
+    from the owner's canonical PNG by the same `actool` - the same way, and
+    the two renderings are compared here. Apple renders both, so an
+    identical result means the built app carries the owner's artwork.
+    The bundle additionally ships a fallback PNG for SpringBoard; that one
+    is the flat artwork and is compared against the owner's PNG as well.
+
+  * **tvOS** - the icon is a *brand* asset (a layer stack), which no public
+    tool renders. What is verifiable is the layer's own content, and
+    `assetutil --info` reports a SHA-1 digest for every rendition. The
+    workflow dumps the metadata of the built car and of a reference car
+    compiled from the reference PNG, and the two are compared here.
 
 No third-party modules: the PNG decoding is done here with `zlib` from the
 standard library, so the script runs on a bare runner.
 
-Usage:  verify-icon.py <reference.png> <bundle> [<reference.png> <bundle> ...]
+Usage:
+  verify-icon.py <reference.png> <bundle> [<reference.png> <bundle> ...]
+      Compare the reference against every icon rendition in a built bundle.
+
+  verify-icon.py --png-dir <dir> <reference.png>
+      Compare the reference against every PNG in a directory (a rendered
+      asset catalog, or the loose PNGs of a bundle).
+
+  verify-icon.py --car-digest <built.json> <reference.json> <rendition>
+      Compare the SHA-1 digest of one rendition between two `assetutil
+      --info` dumps.
 """
+import json
 import os
 import struct
 import sys
@@ -56,11 +80,90 @@ def paeth(a, b, c):
     return c
 
 
+def is_cgbi(data):
+    """True for Apple's own PNG encoding (`CgBI` chunk, raw deflate, BGRA)."""
+    return b"CgBI" in data[:64]
+
+
+def decode_cgbi(data):
+    """Decode an Apple `CgBI` PNG into (width, height, [r,g,b] rows).
+
+    `CgBI` PNGs differ from the PNG spec in three ways: the image data is a
+    raw DEFLATE stream (no zlib header), the samples are BGRA instead of
+    RGBA, and there are always four bytes per pixel.
+    """
+    off = 8
+    idat = bytearray()
+    ihdr = None
+    while off + 8 <= len(data):
+        length = struct.unpack(">I", data[off:off + 4])[0]
+        ctype = data[off + 4:off + 8]
+        payload = data[off + 8:off + 8 + length]
+        if len(payload) < length:
+            return None
+        if ctype == b"IHDR":
+            ihdr = struct.unpack(">IIBBBBB", payload[:13])
+        elif ctype == b"IDAT":
+            idat += payload
+        off += 12 + length
+        if ctype == b"IEND":
+            break
+    if ihdr is None or ihdr[2] != 8:
+        return None
+    width, height = ihdr[0], ihdr[1]
+    try:
+        raw = zlib.decompressobj(-15).decompress(bytes(idat))
+    except zlib.error:
+        return None
+    bpp = 4
+    stride = width * bpp
+    if len(raw) < (stride + 1) * height:
+        return None
+    rows = []
+    prev = bytearray(stride)
+    pos = 0
+    for _ in range(height):
+        ftype = raw[pos]
+        pos += 1
+        line = bytearray(raw[pos:pos + stride])
+        pos += stride
+        if ftype == 1:
+            for i in range(bpp, stride):
+                line[i] = (line[i] + line[i - bpp]) & 0xFF
+        elif ftype == 2:
+            for i in range(stride):
+                line[i] = (line[i] + prev[i]) & 0xFF
+        elif ftype == 3:
+            for i in range(stride):
+                left = line[i - bpp] if i >= bpp else 0
+                line[i] = (line[i] + ((left + prev[i]) >> 1)) & 0xFF
+        elif ftype == 4:
+            for i in range(stride):
+                left = line[i - bpp] if i >= bpp else 0
+                upleft = prev[i - bpp] if i >= bpp else 0
+                line[i] = (line[i] + paeth(left, prev[i], upleft)) & 0xFF
+        elif ftype != 0:
+            return None
+        prev = line
+        # BGRA -> RGB
+        rgb = bytearray(width * 3)
+        for x in range(width):
+            b, g, r = line[x * 4:x * 4 + 3]
+            rgb[x * 3] = r
+            rgb[x * 3 + 1] = g
+            rgb[x * 3 + 2] = b
+        rows.append(bytes(rgb))
+    return width, height, rows
+
+
 def decode_png(data):
     """Decode an 8-bit non-interlaced PNG into (width, height, [r,g,b] rows).
 
-    Returns None for anything it does not understand.
+    Apple's own `CgBI` encoding is handled as well. Returns None for
+    anything it does not understand.
     """
+    if is_cgbi(data):
+        return decode_cgbi(data)
     width = height = None
     depth = ctype = None
     idat = bytearray()
@@ -123,10 +226,10 @@ def decode_png(data):
                 rgb[x * 3:x * 3 + 3] = line[x * 4:x * 4 + 3]
             elif ctype == 0:
                 v = line[x]
-                rgb[x * 3:x * 3 + 3] = bytes((v, v, v))
+                rgb[x * 3] = rgb[x * 3 + 1] = rgb[x * 3 + 2] = v
             elif ctype == 4:
                 v = line[x * 2]
-                rgb[x * 3:x * 3 + 3] = bytes((v, v, v))
+                rgb[x * 3] = rgb[x * 3 + 1] = rgb[x * 3 + 2] = v
             elif ctype == 3:
                 idx = line[x]
                 rgb[x * 3:x * 3 + 3] = palette[idx * 3:idx * 3 + 3]
@@ -209,6 +312,10 @@ def car_pngs(path):
     CoreUI stores the bitmap data of a rendition as a plain PNG inside the
     car, so scanning for the PNG signature finds them. The stream ends at the
     IEND chunk, which is found by walking the chunk lengths.
+
+    (Xcode 26 stores most renditions LZFSE-compressed instead, so this scan
+    usually finds nothing on a current toolchain. It is kept because it is
+    the only way to read a car on a machine without Apple's tools.)
     """
     data = open(path, "rb").read()
     out = []
@@ -231,6 +338,26 @@ def car_pngs(path):
     return out
 
 
+def dir_pngs(path):
+    """Return [(label, png_bytes)] for every PNG below a directory."""
+    out = []
+    for root, dirs, files in os.walk(path):
+        dirs.sort()
+        for name in sorted(files):
+            if not name.lower().endswith(".png"):
+                continue
+            full = os.path.join(root, name)
+            try:
+                data = open(full, "rb").read()
+            except OSError:
+                continue
+            if data[:8] != b"\x89PNG\r\n\x1a\n":
+                continue
+            label = os.path.relpath(full, path)
+            out.append((label, data))
+    return out
+
+
 def bundle_renditions(bundle):
     """Return [(label, png_bytes)] for every icon rendition in a built bundle."""
     out = []
@@ -246,6 +373,17 @@ def bundle_renditions(bundle):
             for png in car_pngs(car):
                 out.append(("Assets.car", png))
         return out
+    # An iOS or tvOS bundle keeps its resources at the top level.
+    for name in sorted(os.listdir(bundle)):
+        if not name.lower().endswith(".png"):
+            continue
+        full = os.path.join(bundle, name)
+        if not os.path.isfile(full):
+            continue
+        data = open(full, "rb").read()
+        if data[:8] != b"\x89PNG\r\n\x1a\n":
+            continue
+        out.append((name, data))
     car = os.path.join(bundle, "Assets.car")
     if os.path.exists(car):
         for png in car_pngs(car):
@@ -253,8 +391,133 @@ def bundle_renditions(bundle):
     return out
 
 
+# ------------------------------------------------------------------- verdicts
+
+def compare(reference, candidates):
+    """Compare a reference image against a list of candidate renditions."""
+    ref = decode_png(open(reference, "rb").read())
+    if ref is None:
+        print(f"ERROR: the reference {reference} could not be decoded.")
+        return None
+    ref_w, ref_h, ref_rows = ref
+    print(f"reference: {reference} {ref_w}x{ref_h}")
+
+    best = None
+    exact = []
+    for label, png in candidates:
+        decoded = decode_png(png)
+        if decoded is None:
+            continue
+        w, h, rows = decoded
+        if (w, h) == (ref_w, ref_h):
+            diff = mean_diff(rows, ref_rows, w, h)
+            exact.append((label, w, h, diff))
+            if best is None or diff < best[3]:
+                best = (label, w, h, diff)
+            continue
+        # A smaller rendition: compare it against the reference scaled to
+        # the same size, so a match is still recognisable.
+        scaled = area_resize(ref_w, ref_h, ref_rows, w, h)
+        diff = mean_diff(rows, scaled, w, h)
+        if best is None or diff < best[3]:
+            best = (label, w, h, diff)
+
+    for label, w, h, diff in exact:
+        print(f"  {label} {w}x{h}: mean diff {diff:.2f}  (exact size match)")
+    if best is not None:
+        label, w, h, diff = best
+        print(f"  closest rendition: {label} {w}x{h}, mean diff {diff:.2f}")
+        # 0.00 means pixel-identical. A small number is the same artwork
+        # re-encoded and re-scaled by actool. A large number is the
+        # wrong art.
+        if diff > 12.0:
+            print("  VERDICT: NOT the FTV artwork")
+            return 1
+        print("  VERDICT: FTV artwork")
+        return 0
+    # Nothing comparable was found. That is not a mismatch - it means the
+    # check could not read the icon - and it must not be reported as one.
+    print("  VERDICT: inconclusive - no comparable rendition found")
+    return 1
+
+
+def car_digest(built_json, reference_json, rendition):
+    """Compare the SHA-1 digest of one rendition between two car dumps.
+
+    The two catalogues do not hold the same set of renditions - the built
+    one carries the whole app's assets, the reference one only the icon -
+    so the renditions are matched by their key (name, idiom, scale and
+    pixel size) and each matching pair is compared.
+    """
+    def load(path):
+        with open(path) as fp:
+            return json.load(fp)
+
+    def index(entries, name):
+        """{rendition key: entry} for every rendition called `name`."""
+        found = {}
+        for entry in entries:
+            if not isinstance(entry, dict) or entry.get("Name") != name:
+                continue
+            key = (entry.get("RenditionName"), entry.get("Idiom"),
+                   entry.get("Scale"), entry.get("PixelWidth"),
+                   entry.get("PixelHeight"))
+            found.setdefault(key, entry)
+        return found
+
+    built = index(load(built_json), rendition)
+    reference = index(load(reference_json), rendition)
+    if not built:
+        print(f"ERROR: the rendition {rendition!r} is not in {built_json}.")
+        return 1
+    if not reference:
+        print(f"ERROR: the rendition {rendition!r} is not in {reference_json}.")
+        return 1
+
+    common = sorted(set(built) & set(reference))
+    if not common:
+        print(f"ERROR: {rendition!r} has no rendition in common between "
+              f"the built car and the reference car.")
+        return 1
+
+    for key in common:
+        b, r = built[key], reference[key]
+        name, idiom, scale, width, height = key
+        print(f"  {rendition!r} {name} {width}x{height} {idiom}@{scale}x "
+              f"sha1 {b.get('SHA1Digest')}")
+        if b.get("SHA1Digest") != r.get("SHA1Digest"):
+            print(f"  VERDICT: NOT the FTV artwork "
+                  f"(built digest {b.get('SHA1Digest')}, "
+                  f"reference digest {r.get('SHA1Digest')})")
+            return 1
+    print(f"  {len(common)} rendition(s) identical to the reference")
+    print("  VERDICT: FTV artwork")
+    return 0
+
+
 def main():
     args = sys.argv[1:]
+    if args and args[0] == "--png-dir":
+        if len(args) != 3:
+            print(__doc__)
+            return 2
+        directory, reference = args[1], args[2]
+        if not os.path.isdir(directory):
+            print(f"ERROR: {directory} is not a directory.")
+            return 1
+        candidates = dir_pngs(directory)
+        if not candidates:
+            print(f"ERROR: no PNGs found in {directory}.")
+            return 1
+        print(f"bundle:    {directory}")
+        return compare(reference, candidates)
+
+    if args and args[0] == "--car-digest":
+        if len(args) != 4:
+            print(__doc__)
+            return 2
+        return car_digest(args[1], args[2], args[3])
+
     if len(args) < 2 or len(args) % 2 != 0:
         print(__doc__)
         return 2
@@ -263,59 +526,19 @@ def main():
     for i in range(0, len(args), 2):
         reference = args[i]
         bundle = args[i + 1]
-        ref = decode_png(open(reference, "rb").read())
-        if ref is None:
-            print(f"ERROR: the reference {reference} could not be decoded.")
+        if not os.path.isdir(bundle):
+            print(f"ERROR: {bundle} is not a directory.")
             return 1
-        ref_w, ref_h, ref_rows = ref
-        print(f"reference: {reference} {ref_w}x{ref_h}")
         print(f"bundle:    {bundle}")
-
         renditions = bundle_renditions(bundle)
         if not renditions:
             print("  no icon renditions found in the bundle")
             print()
             exit_code = 1
             continue
-
-        best = None
-        exact = []
-        for label, png in renditions:
-            decoded = decode_png(png)
-            if decoded is None:
-                continue
-            w, h, rows = decoded
-            if (w, h) == (ref_w, ref_h):
-                diff = mean_diff(rows, ref_rows, w, h)
-                exact.append((label, w, h, diff))
-                if best is None or diff < best[3]:
-                    best = (label, w, h, diff)
-                continue
-            # A smaller rendition: compare it against the reference scaled to
-            # the same size, so a match is still recognisable.
-            scaled = area_resize(ref_w, ref_h, ref_rows, w, h)
-            diff = mean_diff(rows, scaled, w, h)
-            if best is None or diff < best[3]:
-                best = (label, w, h, diff)
-
-        for label, w, h, diff in exact:
-            print(f"  {label} {w}x{h}: mean diff {diff:.2f}  (exact size match)")
-        if best is not None:
-            label, w, h, diff = best
-            print(f"  closest rendition: {label} {w}x{h}, mean diff {diff:.2f}")
-            # 0.00 means pixel-identical. A small number is the same artwork
-            # re-encoded and re-scaled by actool. A large number is the
-            # wrong art.
-            if diff > 12.0:
-                print("  VERDICT: NOT the FTV artwork")
-                exit_code = 1
-            else:
-                print("  VERDICT: FTV artwork")
-        else:
-            # Nothing comparable was found in the bundle. That is not a
-            # mismatch - it means the check could not read the icon - and it
-            # must not be reported as one.
-            print("  VERDICT: inconclusive - no comparable rendition found")
+        result = compare(reference, renditions)
+        if result:
+            exit_code = 1
         print()
     return exit_code
 
