@@ -12,8 +12,15 @@ plugins {
 // repo. The keychain is queried only for release builds; debug builds never need either.
 val uploadKey = file(System.getProperty("user.home") + "/.swiftly-android/swiftly-upload.jks")
 val releaseBuild = gradle.startParameter.taskNames.any { it.contains("Release", ignoreCase = true) }
-/** The KXVN signing key, if CI wrote one. Never committed; see the `kxvn` signing config below. */
-val keyProperties = rootProject.file("key.properties")
+/**
+ * The KXVN signing key, if CI wrote one. Never committed; see the `kxvn` signing config below.
+ * CI writes it next to the Gradle build (`Android/key.properties`); a local build may put it in
+ * the repository root, so both places are looked at.
+ */
+val keyProperties = listOf(
+    rootProject.file("key.properties"),
+    rootProject.file("../key.properties"),
+).firstOrNull { it.exists() } ?: rootProject.file("key.properties")
 val signingPassword: String? = if (releaseBuild && uploadKey.exists()) runCatching {
     providers.exec { commandLine("security", "find-generic-password", "-s", "swiftly-android-signatur", "-w") }
         .standardOutput.asText.get().trim().ifEmpty { null }
