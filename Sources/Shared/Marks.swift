@@ -65,7 +65,7 @@ struct Wordmark: View {
                 .fill(logo ?? accent.map(AnyShapeStyle.init) ?? LookStore.shared.palette.logoStyle)
         }
         .frame(width: width, height: height)
-        .accessibilityLabel("FTV")
+        .accessibilityLabel("FTV Player")
     }
 }
 

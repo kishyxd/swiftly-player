@@ -20,7 +20,7 @@ struct TakeoverTests {
                          forwardSeconds: TimeInterval? = 5) -> RemoteSession {
         RemoteSession(id: id, userIdentifier: user,
                      devicesIdentifier: device, deviceName: "iPhone im Wohnzimmer",
-                     program: "FTV", takesCommands: takesCommands,
+                     program: "FTV Player", takesCommands: takesCommands,
                      running: running, state: .init(halted: false, spot: 812),
                      lastActivity: forwardSeconds.map { now.addingTimeInterval(-$0) })
     }
@@ -184,12 +184,12 @@ struct TakeoverTests {
 
     @Test("Swiftly auf einem Android-Telefon ist ein Telefon, kein Fernseher")
     func androidPhone() {
-        #expect(art("Pixel 10 Pro", program: "Swiftly Player Android") == .phone)
+        #expect(art("Pixel 10 Pro", program: "FTV Player Android") == .phone)
     }
 
     @Test("Swiftly auf Android TV ist ein Fernseher")
     func androidTV() {
-        #expect(art("TCL 55C805", program: "Swiftly Player Android TV") == .tv)
+        #expect(art("TCL 55C805", program: "FTV Player Android TV") == .tv)
     }
 
     @Test("Ohne Android im Programm entscheidet weiter der Gerätename")

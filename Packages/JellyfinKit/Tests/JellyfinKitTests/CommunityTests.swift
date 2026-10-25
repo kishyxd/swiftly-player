@@ -43,7 +43,7 @@ struct CommunityTests {
         let url = Community.errorReport(version: "1.0.3 (14)", platform: "iOS 26.0")
         let parts = try #require(URLComponents(url: url, resolvingAgainstBaseURL: false))
         #expect(parts.host == "github.com")
-        #expect(parts.path == "/paulherter/swiftly-player/issues/new")
+        #expect(parts.path == "/kishyxd/swiftly-player/issues/new")
         #expect(parts.queryItems?.count == 1)
         let text = try #require(parts.queryItems?.first?.value)
         #expect(text.contains("1.0.3 (14)"))

@@ -87,7 +87,10 @@ struct SupportCopyTests {
         #expect(Set(keys).count == keys.count)
         for text in SupportCopy.all {
             #expect(!text.de.isEmpty && !text.en.isEmpty)
-            #expect(text.de != text.en || text.de == "FTV")
+            // Every entry needs both languages filled in. The FTV edition translated its
+            // German copy too, so no entry is allowed to be identical in both languages
+            // (that used to be the case for the one untranslated brand name).
+            #expect(text.de != text.en)
         }
     }
 

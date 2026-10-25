@@ -70,7 +70,7 @@ struct TVAppIconRow: View {
 struct TVVersionRow: View {
     var body: some View {
         HStack(spacing: 24) {
-            Text("FTV").font(.system(size: 30, weight: .medium))
+            Text("FTV Player").font(.system(size: 30, weight: .medium))
             Spacer(minLength: 40)
             if SupportModel.shared.isSupporter {
                 Image(systemName: "heart.fill")

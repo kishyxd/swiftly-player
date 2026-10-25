@@ -30,7 +30,7 @@ public struct SupportCopy: Sendable, Hashable {
 
     // MARK: Entry (Settings, About)
 
-    public static let supportSwiftly = SupportCopy(de: "FTV unterstützen", en: "Support Swiftly")
+    public static let supportSwiftly = SupportCopy(de: "FTV unterstützen", en: "Support FTV")
     public static let sayThanks = SupportCopy(de: "Mit einem Kaffee Danke sagen",
                                               en: "Say thanks with a coffee")
     /// Apple TV settings row, where there is room for one more sentence.
@@ -42,7 +42,7 @@ public struct SupportCopy: Sendable, Hashable {
 
     public static let sheetIntro = SupportCopy(
         de: "Wir bauen FTV ohne Werbung und ohne Tracking. Wenn es deine Abende besser macht, hilft uns ein Kaffee, weiterzumachen.",
-        en: "We build Swiftly without ads or tracking. If it makes your evenings better, a coffee helps us keep going.")
+        en: "We build FTV without ads or tracking. If it makes your evenings better, a coffee helps us keep going.")
     public static let freeForEveryone = SupportCopy(de: "Alles bleibt für alle kostenlos.",
                                                     en: "Everything stays free for everyone.")
     public static let storeThankYouGifts = SupportCopy(
@@ -70,7 +70,7 @@ public struct SupportCopy: Sendable, Hashable {
     public static let thanksTitle = SupportCopy(de: "Danke. Du bist dabei.", en: "Thank you. You are in.")
     public static let thanksBody = SupportCopy(
         de: "Dein Kaffee hilft uns, FTV für alle kostenlos zu halten. Das ist neu für dich.",
-        en: "Your coffee helps us keep Swiftly free for everyone. Here is what is new for you.")
+        en: "Your coffee helps us keep FTV free for everyone. Here is what is new for you.")
     public static let giftIconsTitle = SupportCopy(de: "Unterstützer-App-Icons", en: "Supporter app icons")
     public static let giftIconsDetail = SupportCopy(de: "Neue Icons für die App", en: "New icons for the app")
     public static let giftHeartTitle = SupportCopy(de: "Ein Herz in „Über“", en: "A heart in About")
@@ -84,7 +84,7 @@ public struct SupportCopy: Sendable, Hashable {
 
     /// `%lld` is `WatchTimeCounter.watchedHours`; the card only appears from 2 hours on.
     public static let cardWatchedHours = SupportCopy(de: "Du hast mit FTV %lld Stunden geschaut.",
-                                                     en: "You have watched %lld hours with Swiftly.")
+                                                     en: "You have watched %lld hours with FTV.")
     public static let cardAsk = SupportCopy(de: "Wenn es dir einen Kaffee wert ist, freuen wir uns sehr.",
                                             en: "If it earns a coffee, we would love that.")
     public static let cardSupport = SupportCopy(de: "Unterstützen", en: "Support")

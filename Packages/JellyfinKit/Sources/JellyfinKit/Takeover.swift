@@ -157,7 +157,11 @@ public enum Takeover {
     /// text, and Swiftly Music takes over nothing.
     public static func takesHint(_ s: RemoteSession) -> Bool {
         let p = s.program ?? ""
-        return p.hasPrefix("FTV") && p != "Swiftly Music"
+        // **The FTV edition answers to "FTV Player", but the old name still counts.** A session
+        // started by the stock Swiftly app keeps its program name, and the takeover hint has to
+        // reach it too. "Swiftly Music" is a different app and takes over nothing.
+        if p == "Swiftly Music" { return false }
+        return p.hasPrefix("FTV") || p == "Swiftly Player" || p == "Swiftly"
     }
 
     /// **Does a stop belong to a takeover?** Only then does the picture go off as a

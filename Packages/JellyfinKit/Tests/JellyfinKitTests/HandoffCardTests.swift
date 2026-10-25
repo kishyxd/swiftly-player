@@ -219,7 +219,7 @@ struct HandoffCardTests {
                          takesCommands: true, running: nil, state: nil)
         }
         #expect(Takeover.takesHint(s("Swiftly Player")))
-        #expect(Takeover.takesHint(s("FTV")))
+        #expect(Takeover.takesHint(s("FTV Player")))
         #expect(!Takeover.takesHint(s("Swiftly Music")))
         #expect(!Takeover.takesHint(s("Jellyfin Web")))
         #expect(!Takeover.takesHint(s(nil)))

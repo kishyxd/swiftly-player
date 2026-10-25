@@ -45,7 +45,7 @@ struct SwiftlyApp: App {
         // every further window would get its own, i.e. a second, signed-out app inside the
         // same process. The "New Window" item was therefore already removed, and with it
         // the only way back. That is exactly the gap App Review saw.
-        Window(Text(verbatim: "FTV"), id: Self.mainWindow) {
+        Window(Text(verbatim: "FTV Player"), id: Self.mainWindow) {
             RootView()
                 .frame(minWidth: Theme.windowMinWidth, minHeight: Theme.windowMinHeight)
                 // There is no light theme; the design is built for dark. Verbatim from the iPhone
@@ -196,7 +196,7 @@ struct WindowOpener: View {
 
     var body: some View {
         Button { openIt(id: SwiftlyApp.mainWindow) } label: {
-            Text(verbatim: "FTV")
+            Text(verbatim: "FTV Player")
         }
         .keyboardShortcut("0", modifiers: .command)
     }

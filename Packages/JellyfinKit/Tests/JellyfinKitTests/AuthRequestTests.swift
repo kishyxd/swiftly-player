@@ -73,11 +73,11 @@ struct AuthRequestTests {
         _ = try await spyClient().authenticate(username: "paul", password: "x")
         let header = try #require(Spy.captured?.value(forHTTPHeaderField: "Authorization"))
         #expect(header.hasPrefix("MediaBrowser "))
-        // **"Swiftly Player", the name from the store.** Users see it
+        // **"FTV Player", the name from the store.** Users see it
         // in Jellyfin's device list, not on the home screen, where the app
-        // is still called "FTV". Sessions used to show "Swiftly 0.1.0":
+        // is called "FTV Player" too. Sessions used to show "Swiftly 0.1.0":
         // the wrong name and a version that never existed.
-        #expect(header.contains(#"Client="Swiftly Player""#))
+        #expect(header.contains(#"Client="FTV Player""#))
         #expect(header.contains(#"DeviceId="dev-42""#))
         // The version comes from the bundle. There is none in the test, so it
         // reads "unbekannt"; the test checks that the old fixed "0.1.0"
