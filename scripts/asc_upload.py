@@ -1,27 +1,29 @@
 #!/usr/bin/env python3
 """
-Upload a signed .ipa to App Store Connect and get it into a beta group.
+!! THIS ROUTE DOES NOT WORK. DO NOT USE IT TO UPLOAD A BUILD. !!
 
-The ASC API can upload the binary itself, so this runs anywhere - no macOS,
-no altool, no Xcode. The flow is FOUR resources, not one:
+Kept only as a record of what was tried, and because the attribute names
+and the four-resource shape are the only reference I have for the ASC
+buildUploads API. The failure is silent and looks like success:
 
-  1. POST   /v1/buildUploads          -> a slot for the build
-  2. POST   /v1/buildUploadFiles     -> the presigned multipart upload URLs
-  3. PUT    <each url>               -> push the .ipa bytes (multipart)
-  4. PATCH  /v1/buildUploadFiles/{id} -> confirm, and the build is created
+  * POST /v1/buildUploads           -> 201, a slot
+  * POST /v1/buildUploadFiles      -> 201, the presigned multipart urls
+  * PUT  each part                 -> 200 for every part, ETags match
+  * PATCH /v1/buildUploadFiles/{id} -> 200 with an EMPTY attributes object,
+                                       409 for anything else:
+          "The attribute 'uploadOperations' can not be included in a
+           'UPDATE' operation"
 
-The attribute names are the OLD-style ones and the upload operations are NOT
-on the create response - they are on the buildUploadFiles resource:
+...and then the file sits in "AWAITING_UPLOAD" FOREVER. No build is ever
+created. It does not time out and it does not error - it just never
+happens. Do not spend time on it again.
 
-  * buildUploads wants 'cfBundleShortVersionString' AND 'cfBundleVersion'.
-    'version' is rejected: "'version' is not an attribute on the resource
-    'buildUploads'".
-  * buildUploadFiles wants: assetType ('ASSET'), fileName, fileSize, uti
-    ('com.apple.ipa'). 'UPLOAD_OPERATIONS' is not a valid assetType.
+USE altool INSTEAD, on a macOS runner:
+  xcrun altool --upload-app --file <the.ipa> --type ios \
+    -u "$APPLE_ID" -p "$APPLE_APP_SPEC_PW" --team-id "$APPLE_TEAM_ID"
+It takes about 5 minutes for the build to appear in GET /v1/builds.
 
-Apple's API is flaky with 401s under a single key, so every call retries.
-
-Usage:  asc_upload.py <path/to.ipa> [app_id]
+The working upload lives in .github/workflows/upload-ftvplayer-ipa.yml.
 """
 import json
 import os
