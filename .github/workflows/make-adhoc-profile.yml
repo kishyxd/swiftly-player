@@ -1,0 +1,50 @@
+name: Make-Adhoc-Profile
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/make-adhoc-profile.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  profile:
+    runs-on: macos-14
+    steps:
+      - name: The Apple auth paths
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPEC_PW: ${{ secrets.APPLE_APP_SPEC_PW }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set +x
+          mkdir -p /tmp/p && cd /tmp/p
+          echo "### 1. altool --list-devices"
+          xcrun altool --list-devices --apple-id "$APPLE_ID" --password "$APPLE_APP_SPEC_PW" --team-id "$APPLE_TEAM_ID" 2>&1 | head -20 | tee a1.txt
+
+          echo "### 2. altool --list-apps"
+          xcrun altool --list-apps --apple-id "$APPLE_ID" --password "$APPLE_APP_SPEC_PW" --team-id "$APPLE_TEAM_ID" 2>&1 | head -20 | tee a2.txt
+
+          echo "### 3. the developer portal's device list (a session cookie is needed?)"
+          curl -s -o b1.json -w 'HTTP %{http_code}\n' -u "$APPLE_ID:$APPLE_APP_SPEC_PW" \
+            -H 'Content-Type: application/json' -X POST \
+            'https://developer.apple.com/services-account/QH65B2/downloadws/listDevices.action' 2>&1 | tail -2
+          head -c 1200 b1.json; echo
+
+          echo "### 4. the same with the acct endpoint"
+          curl -s -o b2.json -w 'HTTP %{http_code}\n' -u "$APPLE_ID:$APPLE_APP_SPEC_PW" \
+            -H 'Content-Type: application/json' -X POST \
+            'https://developer.apple.com/services-account/QH65B2/downloadws/listDevices.action?wsKey=adhoc' 2>&1 | tail -2
+          head -c 600 b2.json; echo
+
+          echo "### 5. altool's own notary/transporter version (it may not have profile support)"
+          xcrun altool --help 2>&1 | head -30 | tee a3.txt
+
+      - name: Upload the probe
+        uses: actions/upload-artifact@v4
+        with:
+          name: apple-auth-probe
+          path: /tmp/p
+          retention-days: 3
