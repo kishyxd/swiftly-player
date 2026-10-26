@@ -1,0 +1,255 @@
+name: ASC-Cleanup
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/asc-cleanup.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: macos-14
+    env:
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPEC_PW: ${{ secrets.APPLE_APP_SPEC_PW }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      KEEP_BUILDS: '1167,157'
+      APP_ID: '6823967654'
+    steps:
+      - name: The cleanup
+        env:
+          FASTLANE_USER: ${{ secrets.APPLE_ID }}
+          FASTLANE_PASSWORD: ${{ secrets.APPLE_APP_SPEC_PW }}
+          FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPEC_PW }}
+          FASTLANE_SKIP_2FA: 'true'
+        run: |
+          set +x
+          cd /tmp
+          gem install jwt --no-document 2>&1 | tail -2
+
+          cat > /tmp/clean.rb <<'RUBY'
+          require 'fastlane'
+          require 'spaceship'
+          require 'json'
+          require 'net/http'
+          require 'uri'
+          require 'jwt'
+          require 'base64'
+
+          U = ENV['FASTLANE_USER']
+          P = ENV['FASTLANE_PASSWORD']
+          TEAM = ENV['APPLE_TEAM_ID']
+          APP_ID = ENV['APP_ID']
+          KEEP = (ENV['KEEP_BUILDS'] || '').split(',').map(&:strip)
+
+          def say(x)
+            puts x
+            $stdout.flush
+          end
+
+          # ================= 1. a portal session =================
+          say '### 1. the portal session'
+          begin
+            Spaceship::Portal.login(U, P)
+            say 'PORTAL_LOGIN_OK'
+          rescue => e
+            say "PORTAL_LOGIN_ERR #{e.class}: #{e.message.to_s[0,200]}"
+          end
+
+          # ================= 2. the new portal client =================
+          say '### 2. the portal client'
+          client = nil
+          begin
+            client = Spaceship::PortalClient.new
+            say 'CLIENT_NEW_OK'
+            say "CLIENT_CLASS_METHODS " + (Spaceship::PortalClient.methods(false).sort.join(','))
+            say "CLIENT_OWN_METHODS " + (Spaceship::PortalClient.instance_methods(false).sort.join(','))
+            if Spaceship::PortalClient.respond_to?(:login)
+              begin
+                Spaceship::PortalClient.login(U, P)
+                say 'CLIENT_LOGIN_OK'
+              rescue => e
+                say "CLIENT_LOGIN_ERR #{e.class}: #{e.message.to_s[0,200]}"
+              end
+            end
+            if Spaceship::PortalClient.respond_to?(:teams)
+              begin
+                Spaceship::PortalClient.teams.each { |t| say "TEAM #{t.to_s[0,120]}" }
+              rescue => e
+                say "TEAMS_ERR #{e.class}: #{e.message.to_s[0,200]}"
+              end
+            end
+            if client.respond_to?(:select_team)
+              begin
+                client.select_team
+                say 'SELECT_TEAM_OK'
+              rescue => e
+                say "SELECT_TEAM_ERR #{e.class}: #{e.message.to_s[0,200]}"
+              end
+            end
+          rescue => e
+            say "CLIENT_ERR #{e.class}: #{e.message.to_s[0,200]}"
+          end
+
+          # ================= 3. an ASC API key =================
+          say '### 3. the API key'
+          key_pem = nil
+          key_id = nil
+          issuer = nil
+          begin
+            if client && client.respond_to?(:list_keys)
+              keys = client.list_keys
+              say "KEYS #{keys.size}"
+              keys.each { |k| say "KEY #{k.to_s[0,200]}" }
+              # if a key can be downloaded, use it
+              keys.each do |k|
+                next unless k.respond_to?(:can_download) && k.can_download
+                next unless client.respond_to?(:download_key)
+                begin
+                  pem = client.download_key(k)
+                  say "KEY_DOWNLOADED #{k.to_s[0,80]} len=#{pem.to_s.length}"
+                  key_pem = pem
+                  key_id = k.respond_to?(:kid) ? k.kid : nil
+                rescue => e
+                  say "KEY_DOWNLOAD_FAIL #{e.class}: #{e.message.to_s[0,200]}"
+                end
+              end
+            end
+          rescue => e
+            say "KEYS_ERR #{e.class}: #{e.message.to_s[0,300]}"
+          end
+
+          # if there is no key, make one and download it
+          if key_pem.nil? && client && client.respond_to?(:create_key!)
+            begin
+              made = client.create_key!('KXVN Cleanup Temp')
+              say "KEY_CREATED #{made.to_s[0,160]}"
+              if client.respond_to?(:download_key)
+                key_pem = client.download_key(made)
+                key_id = made.respond_to?(:kid) ? made.kid : nil
+                say "KEY_DOWNLOADED_NEW len=#{key_pem.to_s.length}"
+              end
+            rescue => e
+              say "KEY_CREATE_ERR #{e.class}: #{e.message.to_s[0,300]}"
+            end
+          end
+
+          # ================= 4. the ASC API =================
+          if key_pem.nil?
+            say 'NO_KEY_NO_API'
+            exit 0
+          end
+
+          issuer = client.respond_to?(:team_id) ? client.team_id : TEAM
+          say "ISSUER #{issuer}"
+
+          def jwt_for(pem, kid, issuer)
+            JWT.encode({
+              'iss' => issuer,
+              'iat' => Time.now.to_i,
+              'exp' => Time.now.to_i + 1200,
+              'aud' => 'appstoreconnect-v1'
+            }, OpenSSL::PKey::RSA.new(pem), 'ES256', { 'kid' => kid })
+          end
+
+          def asc(method, path, token, body = nil)
+            url = "https://api.appstoreconnect.apple.com#{path}"
+            uri = URI.parse(url)
+            req = Net::HTTP.const_get(method.capitalize).new(uri)
+            req['Authorization'] = "Bearer #{token}"
+            req['Content-Type'] = 'application/json'
+            req.body = JSON.generate(body) if body
+            Net::HTTP.start(uri.hostname, uri.port, use_ssl: true, open_timeout: 30, read_timeout: 60) do |h|
+              h.request(req)
+            end
+          end
+
+          token = jwt_for(key_pem, key_id, issuer)
+          say 'JWT_OK'
+
+          # the versions of the app
+          say '### 5. the versions'
+          r = asc(:get, "/v1/preReleaseVersions?filter[app]=#{APP_ID}&limit=200", token)
+          say "VERSIONS_HTTP #{r.code}"
+          versions = JSON.parse(r.body)['data'] || []
+          versions.each { |v| say "VERSION #{v['id']} | #{v['attributes']['version']} | platform=#{v['attributes']['platform']}" }
+
+          # the builds
+          say '### 6. the builds'
+          all = []
+          offset = 0
+          loop do
+            r = asc(:get, "/v1/builds?filter[app]=#{APP_ID}&limit=200&offset=#{offset}&include=preReleaseVersion", token)
+            say "BUILDS_HTTP #{r.code} offset=#{offset}"
+            break unless r.code.to_s.start_with?('2')
+            data = JSON.parse(r.body)['data'] || []
+            break if data.empty?
+            all += data
+            offset += 200
+            break if offset > 4000
+          end
+          say "TOTAL_BUILDS #{all.size}"
+
+          keep = []
+          drop = []
+          all.each do |b|
+            ver = b.dig('attributes', 'version')
+            (KEEP.include?(ver) ? keep : drop) << b
+          end
+          keep.each { |b| say "KEEP #{b['id']} | build=#{b['attributes']['version']} | expired=#{b['attributes']['expired']} | #{b['attributes']['processingState']}" }
+          say "KEEP_COUNT #{keep.size}"
+          say "DROP_COUNT #{drop.size}"
+          drop.each { |b| say "DROP #{b['id']} | build=#{b['attributes']['version']} | #{b['attributes']['processingState']}" }
+
+          # ================= 7. expire the rest =================
+          say '### 7. expiring the rest'
+          ok = 0
+          bad = 0
+          drop.each do |b|
+            begin
+              rr = asc(:patch, "/v1/builds/#{b['id']}", token, {
+                'data' => { 'type' => 'builds', 'id' => b['id'], 'attributes' => { 'expired' => true } }
+              })
+              if rr.code.to_s.start_with?('2')
+                ok += 1
+                say "EXPIRED #{b['attributes']['version']} #{b['id']}"
+              else
+                bad += 1
+                say "EXPIRE_FAIL #{b['attributes']['version']} #{b['id']} http=#{rr.code} #{rr.body.to_s[0,120]}"
+              end
+            rescue => e
+              bad += 1
+              say "EXPIRE_ERR #{b['attributes']['version']} #{b['id']} #{e.class}: #{e.message.to_s[0,120]}"
+            end
+          end
+          say "EXPIRED_OK #{ok} FAILED #{bad}"
+
+          # ================= 8. verify =================
+          say '### 8. the verification'
+          r = asc(:get, "/v1/builds?filter[app]=#{APP_ID}&limit=200&filter[expired]=false", token)
+          live = JSON.parse(r.body)['data'] || []
+          say "LIVE_BUILDS #{live.size}"
+          live.each { |b| say "LIVE #{b['attributes']['version']} | expired=#{b['attributes']['expired']} | #{b['attributes']['processingState']}" }
+
+          # ================= 9. remove the temporary key =================
+          if client && client.respond_to?(:revoke_key!)
+            begin
+              client.revoke_key!('KXVN Cleanup Temp')
+              say 'TEMP_KEY_REVOKED'
+            rescue => e
+              say "TEMP_KEY_REVOKE_ERR #{e.class}: #{e.message.to_s[0,200]}"
+            end
+          end
+          RUBY
+          ruby /tmp/clean.rb 2>&1 | tee a1.txt | tail -200
+
+      - name: The output
+        uses: actions/upload-artifact@v4
+        with:
+          name: asc-cleanup
+          path: /tmp/a1.txt
+          retention-days: 7
+          if-no-files-found: warn
