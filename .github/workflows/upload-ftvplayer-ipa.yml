@@ -1,0 +1,134 @@
+name: Upload-FTVPlayer-iPA
+
+# Uploads an already-built FTV Player .ipa to App Store Connect with altool.
+#
+# This is the upload-ONLY half of build-ftvplayer-ios.yml, so a rebuild is
+# not needed to ship a new binary. It takes the ipa from the artifact of a
+# previous build run.
+#
+# The ASC API's own buildUploads route (POST /v1/buildUploads ->
+# /v1/buildUploadFiles -> PUT the parts -> PATCH) was tried and does NOT
+# work: every part uploads with 200, but the file stays in
+# "AWAITING_UPLOAD" forever and no build is ever created. altool is the
+# supported path and is what the existing FTV app was uploaded with.
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run:
+        description: 'The build run whose artifact holds the ipa'
+        type: string
+        required: true
+        default: '40378112308'
+      upload:
+        description: 'Upload it'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ftvplayer-ios-upload
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    runs-on: macos-15
+    env:
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPEC_PW: ${{ secrets.APPLE_APP_SPEC_PW }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_DIST_P12_B64: ${{ secrets.ASC_DIST_P12_B64 }}
+      ASC_DIST_P12_PASSWORD: ${{ secrets.ASC_DIST_P12_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: The ipa
+        run: |
+          set -euo pipefail
+          # the artifact from the build run
+          gh run download "${{ inputs.source_run }}" --repo kishyxd/swiftly-player \
+            --name ftvplayer-ipa --dir "$RUNNER_TEMP/art"
+          ls -la "$RUNNER_TEMP/art"
+          IPA=$(ls "$RUNNER_TEMP/art"/*.ipa | head -1)
+          echo "the ipa: $IPA"
+          echo "IPA=$IPA" >> "$GITHUB_ENV"
+          # what is actually in it
+          unzip -l "$IPA" | head -6
+
+      - name: The signing identity
+        run: |
+          set -euo pipefail
+          set +x
+          KEYCHAIN="$RUNNER_TEMP/build.keychain"
+          KEYCHAIN_PW="$(uuidgen)"
+          echo "KEYCHAIN=$KEYCHAIN" >> "$GITHUB_ENV"
+          echo "KEYCHAIN_PW=$KEYCHAIN_PW" >> "$GITHUB_ENV"
+          security create-keychain -p "$KEYCHAIN_PW" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PW" "$KEYCHAIN"
+          echo "$ASC_DIST_P12_B64" | base64 -d > "$RUNNER_TEMP/dist.p12"
+          security import "$RUNNER_TEMP/dist.p12" \
+            -k "$KEYCHAIN" -P "$ASC_DIST_P12_PASSWORD" \
+            -T /usr/bin/codesign -T /usr/bin/security
+          security set-key-partition-list \
+            -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PW" "$KEYCHAIN" > /dev/null
+          security list-keychain -d user -s "$KEYCHAIN"
+          rm -f "$RUNNER_TEMP/dist.p12"
+          security find-identity -v -p codesigning
+
+      - name: Upload
+        if: ${{ inputs.upload == true }}
+        run: |
+          set -euo pipefail
+          set +x
+          # --type ios, the app-specific password, and the team.
+          # No portal session: that path is dead.
+          xcrun altool --upload-app --file "$IPA" --type ios \
+            -u "$APPLE_ID" -p "$APPLE_APP_SPEC_PW" --team-id "$APPLE_TEAM_ID" 2>&1 | tee upload.log
+          # Trust ONLY the literal success line. A broad error scan marks a
+          # successful upload as a failure.
+          grep -q "No errors uploading" upload.log || {
+            echo "::error::the upload did not succeed"; exit 1; }
+          echo "UPLOAD_OK"
+
+      - name: The one build rule
+        if: ${{ inputs.upload == true }}
+        run: |
+          set -euo pipefail
+          set +x
+          python3 - <<'PY'
+          import base64, os, time
+          import jwt, requests
+
+          raw = base64.b64decode(os.environ['ASC_KEY_P8'])
+          now = int(time.time())
+          token = jwt.encode(
+              {"iss": os.environ['ASC_ISSUER_ID'], "iat": now,
+               "exp": now + 1200, "aud": "appstoreconnect-v1"},
+              raw, algorithm="ES256",
+              headers={"kid": os.environ['ASC_KEY_ID'], "typ": "JWT"})
+          B = "https://api.appstoreconnect.apple.com"
+          H = {"Authorization": f"Bearer {token}"}
+
+          APP = "6827263915"   # FTV Player
+          for i in range(40):
+              r = requests.get(B + "/v1/builds", headers=H,
+                              params={"filter[app]": APP, "limit": 20}, timeout=60)
+              builds = r.json().get("data", [])
+              if builds:
+                  for b in builds:
+                      a = b["attributes"]
+                      print(f"build {a['version']} ({a.get('buildNumber')}) "
+                            f"state={a.get('processingState')} expired={a.get('expired')} {b['id']}")
+                  if any(b["attributes"].get("processingState") == "VALID" for b in builds):
+                      print("VALID_BUILD_OK")
+                      break
+              else:
+                  print("  no build yet, Apple is processing")
+              time.sleep(20)
+          PY
