@@ -13,7 +13,7 @@ jobs:
   profile:
     runs-on: ubuntu-latest
     steps:
-      - name: Create a fresh ad-hoc profile
+      - name: Find the live profile API
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPEC_PW: ${{ secrets.APPLE_APP_SPEC_PW }}
@@ -22,114 +22,54 @@ jobs:
           set +x
           mkdir -p /tmp/p && cd /tmp/p
           AUTH="$APPLE_ID:$APPLE_APP_SPEC_PW"
-          BASE="https://developer.apple.com/services/v1"
-
-          echo "### 1. the devices"
-          curl -s -o devices.json -w 'HTTP %{http_code}\n' -u "$AUTH" "$BASE/devices"
-          head -c 1500 devices.json; echo
-
-          echo "### 2. the certificates"
-          curl -s -o certs.json -w 'HTTP %{http_code}\n' -u "$AUTH" "$BASE/certificates"
-          head -c 1500 certs.json; echo
-
-          echo "### 3. the app ids"
-          curl -s -o appids.json -w 'HTTP %{http_code}\n' -u "$AUTH" "$BASE/appIds"
-          head -c 2000 appids.json; echo
-
-          echo "### 4. the existing profiles"
-          curl -s -o profiles.json -w 'HTTP %{http_code}\n' -u "$AUTH" "$BASE/profiles"
-          head -c 1200 profiles.json; echo
-
-          echo "### 5. the bundle ids"
-          curl -s -o bundleids.json -w 'HTTP %{http_code}\n' -u "$AUTH" "$BASE/bundleIds"
-          head -c 1200 bundleids.json; echo
-
-      - name: The profile creation
-        env:
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_APP_SPEC_PW: ${{ secrets.APPLE_APP_SPEC_PW }}
-        run: |
-          set +x
-          cd /tmp/p
-          AUTH="$APPLE_ID:$APPLE_APP_SPEC_PW"
-          BASE="https://developer.apple.com/services/v1"
           UDID="00008140-001C31803E90801C"
 
-          python3 - <<'PY'
-          import json, os
-          def load(n):
-              p = f'/tmp/p/{n}'
-              if not os.path.exists(p): return []
-              try:
-                  d = json.load(open(p))
-              except Exception as e:
-                  print(f'  {n}: unparsable ({e})')
-                  return []
-              if isinstance(d, dict):
-                  for k in ('devices','certificates','appIds','bundleIds','profiles','data'):
-                      if k in d: return d[k]
-              return d if isinstance(d, list) else []
+          probe () {
+            local name="$1"; shift
+            local code
+            code=$(curl -s -o "r_$name" -w '%{http_code}' "$@")
+            printf '%-34s HTTP %s  ' "$name" "$code"
+            head -c 180 "r_$name" | tr -d '\n' | sed 's/  */ /g'
+            echo
+          }
 
-          devs = load('devices.json')
-          print('the devices:', [(d.get('udid'), d.get('name'), d.get('deviceId')) for d in devs][:5])
-          certs = load('certs.json')
-          print('the certs:', [(c.get('name'), c.get('certificateType'), c.get('certificateId')) for c in certs][:6])
-          appids = load('appids.json') + load('bundleids.json')
-          print('the app ids:', [(a.get('bundleId'), a.get('appId') or a.get('bundleIdId'), a.get('name')) for a in appids][:6])
-          PY
+          echo "=== the downloadws endpoints (a GET, no body) ==="
+          for ws in listDevices listCertificates listAppIds listProfiles listBundleIds; do
+            probe "dw_$ws" -u "$AUTH" "https://developer.apple.com/services-account/QH65B2/downloadws/$ws.action"
+          done
 
-          # The device, the certificate and the app id, read out of the API.
-          DEVICE_ID=$(python3 -c "
-          import json
-          d=json.load(open('/tmp/p/devices.json'))
-          if isinstance(d,dict): d=d.get('devices',d.get('data',[]))
-          print(next((x['deviceId'] for x in d if x.get('udid')=='00008140-001C31803E90801C'),''))")
-          CERT_ID=$(python3 -c "
-          import json
-          d=json.load(open('/tmp/p/certs.json'))
-          if isinstance(d,dict): d=d.get('certificates',d.get('data',[]))
-          print(next((x['certificateId'] for x in d if x.get('certificateType')=='distribution'),''))")
-          APP_ID=$(python3 -c "
-          import json
-          d=json.load(open('/tmp/p/appids.json'))
-          if isinstance(d,dict): d=d.get('appIds',d.get('data',[]))
-          print(next((x['appId'] for x in d if x.get('bundleId')=='com.kxvn.*'),''))")
+          echo
+          echo "=== the same, as a POST with an empty body (the 411 wants a content length) ==="
+          for ws in listDevices listCertificates listAppIds; do
+            probe "dwp_$ws" -u "$AUTH" -H 'Content-Type: application/json' -X POST --data '{}' \
+              "https://developer.apple.com/services-account/QH65B2/downloadws/$ws.action"
+          done
 
-          echo "the device id:  $DEVICE_ID"
-          echo "the cert id:    $CERT_ID"
-          echo "the app id:     $APP_ID"
+          echo
+          echo "=== the ASC iris endpoints with basic auth ==="
+          for p in devices certificates bundleIds profiles; do
+            probe "iris_$p" -u "$AUTH" "https://appstoreconnect.apple.com/iris/v1/$p"
+          done
 
-          if [ -z "$DEVICE_ID" ] || [ -z "$CERT_ID" ] || [ -z "$APP_ID" ]; then
-            echo "::error::one of the ids is missing - the API shape differs"
-            exit 1
-          fi
+          echo
+          echo "=== the ASC web api ==="
+          for p in devices certificates bundleIds profiles; do
+            probe "asc_$p" -u "$AUTH" "https://api.appstoreconnect.apple.com/v1/$p"
+          done
 
-          cat > body.json <<JSON
-          {"profile":{"name":"KXVN Adhoc 2026-10-26","profileType":"adhoc","appId":"$APP_ID","deviceIds":["$DEVICE_ID"],"certificateIds":["$CERT_ID"]}}
-          JSON
-          cat body.json
+          echo
+          echo "=== the portal's account endpoints ==="
+          for p in listDevices listCertificates listAppIds listProfiles; do
+            probe "acct_$p" -u "$AUTH" "https://developer.apple.com/services-account/QH65B2/account/$p.action"
+          done
 
-          curl -s -o created.json -w 'HTTP %{http_code}\n' -u "$AUTH" \
-            -H 'Content-Type: application/json' -X POST "$BASE/profiles" --data @body.json
-          head -c 1200 created.json; echo
+          echo
+          echo "=== does basic auth work at all? (the altool endpoint) ==="
+          probe "altool_ping" -u "$AUTH" "https://appstoreconnect.apple.com/Authentication/v1/token"
 
-          PROFILE_ID=$(python3 -c "
-          import json
-          d=json.load(open('/tmp/p/created.json'))
-          print(d.get('profile',{}).get('profileId') or d.get('profileId') or '')" 2>/dev/null)
-          echo "the new profile id: $PROFILE_ID"
-
-          if [ -n "$PROFILE_ID" ]; then
-            echo "### downloading it"
-            curl -s -o fresh.mobileprovision -w 'HTTP %{http_code} size=%{size_download}\n' -u "$AUTH" \
-              "$BASE/profiles/$PROFILE_ID/download"
-            file fresh.mobileprovision
-            openssl cms -inform DER -verify -noverify -nosigs -in fresh.mobileprovision 2>/dev/null | head -30
-          fi
-
-      - name: Upload the fresh profile
+      - name: Upload the probe
         uses: actions/upload-artifact@v4
         with:
-          name: fresh-adhoc-profile
+          name: apple-api-probe
           path: /tmp/p
-          retention-days: 7
+          retention-days: 3
