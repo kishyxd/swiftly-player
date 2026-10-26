@@ -1,0 +1,96 @@
+name: probe5
+
+# The Swift type checker gives up on the preview box expression:
+#   "the compiler is unable to type-check this expression in reasonable time"
+#
+# The real flags (dumped from `swiftc -frontend -help-hidden`, Swift 6.2.4):
+#   -solver-expression-time-threshold=<value>
+#   -solver-memory-threshold <value>
+#   -solver-scope-threshold=<value>
+#   -solver-trail-threshold <value>
+#   -solver-disable-shrink
+#
+# The time threshold is the wrong lever (it did not help at 1000 or 20000).
+# The scope/trail/memory limits are the ones that actually make the solver
+# declare an expression too complex.
+#
+# Four legs in parallel:
+#   a) the current source (split + explicit types) - is the source fix enough?
+#   b) scope + trail + memory thresholds raised
+#   c) a much larger expression time threshold
+#   d) the shrink phase disabled
+#
+# The flags are the least invasive: they change no upstream source. If one of
+# them works, the build needs no source change at all.
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ftvplayer-probe5
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: a-current
+            flags: ''
+          - name: b-limits
+            flags: '-Xfrontend -solver-scope-threshold=1000 -Xfrontend -solver-trail-threshold=100000000 -Xfrontend -solver-memory-threshold=4000000000'
+          - name: c-time
+            flags: '-Xfrontend -solver-expression-time-threshold=600000'
+          - name: d-noshrink
+            flags: '-Xfrontend -solver-disable-shrink'
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: The Xcode
+        run: |
+          set -euo pipefail
+          XCODE_APP=$(ls -1d /Applications/Xcode_26.*.app 2>/dev/null \
+                      | grep -vE '\.0\.app$' | sort -V | tail -1)
+          echo "using $XCODE_APP"
+          sudo xcode-select -s "$XCODE_APP"
+          echo "DEVELOPER_DIR=$XCODE_APP/Contents/Developer" >> "$GITHUB_ENV"
+          xcodebuild -version
+
+      - name: XcodeGen
+        run: brew install xcodegen
+
+      - name: The framework
+        run: |
+          set -euo pipefail
+          mkdir -p Vendor
+          bash Werkzeuge/vlckit-fetch.sh
+          rm -rf Vendor/VLCKit-gepatcht.xcframework
+          mv Vendor/VLCKit.xcframework Vendor/VLCKit-gepatcht.xcframework
+
+      - name: The project
+        run: xcodegen generate
+
+      - name: The compile
+        env:
+          FLAGS: ${{ matrix.flags }}
+        run: |
+          set -uo pipefail
+          set +e
+          xcodebuild \
+            -project Swiftly.xcodeproj \
+            -scheme Swiftly-iOS \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -skipPackagePluginValidation \
+            CODE_SIGNING_ALLOWED=NO \
+            "OTHER_SWIFT_FLAGS=\$(inherited) $FLAGS" \
+            build 2>&1 | tee build.log
+          echo "=== BUILD VERDICT"
+          grep -E '\*\* BUILD (SUCCEEDED|FAILED) \*\*' build.log | tail -1
+          echo "=== the error count"
+          grep -cE ': error:' build.log || echo 0
+          echo "=== the errors"
+          grep -E ': error:' build.log | sed 's/^/ERR /' | sort -u | head -20
+          exit 0
