@@ -1,0 +1,146 @@
+name: ASC-Enforce-One-Build
+
+# HARD RULE (owner, 2026-10-26): App Store Connect must hold exactly ONE
+# version and ONE build per app at all times. Never upload another build
+# unless it is a genuinely updated version. When a new build IS uploaded the
+# previous one must be removed/expired in the same operation.
+#
+# This workflow uses the App Store Connect API key (ESC256 / ES256 JWT).
+# It does NOT use the fastlane/portal session login, which Apple keeps
+# rejecting ("Your session has expired", 401/503/411).
+
+on:
+  workflow_dispatch:
+    inputs:
+      keep_builds:
+        description: 'Build numbers (CFBundleVersion) to KEEP live, comma separated'
+        required: false
+        default: '1167,157'
+      app_id:
+        description: 'App Store Connect app id'
+        required: false
+        default: '6823967654'
+  schedule:
+    # 03:17 UTC daily - enforce the one-build rule even if nobody remembers
+    - cron: '17 3 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  enforce:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: The API key and the token
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.keys
+          echo "$ASC_KEY_P8" | base64 -d > ~/.keys/AuthKey.p8
+          chmod 600 ~/.keys/AuthKey.p8
+          test -s ~/.keys/AuthKey.p8 || { echo "::error::the key did not decode"; exit 1; }
+          echo "KEY_BYTES $(wc -c < ~/.keys/AuthKey.p8)"
+
+      - name: Enforce the one build rule
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          KEEP_BUILDS: ${{ inputs.keep_builds || '1167,157' }}
+          APP_ID: ${{ inputs.app_id || '6823967654' }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import base64, json, os, time
+          import jwt, requests
+
+          raw = base64.b64decode(os.environ['ASC_KEY_P8'])
+          now = int(time.time())
+          token = jwt.encode(
+              {"iss": os.environ['ASC_ISSUER_ID'], "iat": now,
+               "exp": now + 1200, "aud": "appstoreconnect-v1"},
+              raw, algorithm="ES256",
+              headers={"kid": os.environ['ASC_KEY_ID'], "typ": "JWT"})
+          B = "https://api.appstoreconnect.apple.com"
+          H = {"Authorization": f"Bearer {token}"}
+          APP = os.environ['APP_ID']
+          KEEP = {b.strip() for b in os.environ['KEEP_BUILDS'].split(',') if b.strip()}
+
+          def get(path, params=None):
+              for attempt in range(5):
+                  r = requests.get(B + path, headers=H, params=params, timeout=60)
+                  if r.status_code == 200:
+                      return r.json()
+                  # a fresh token often clears a transient 401
+                  global token
+                  time.sleep(3 + attempt * 3)
+                  now = int(time.time())
+                  token = jwt.encode(
+                      {"iss": os.environ['ASC_ISSUER_ID'], "iat": now,
+                       "exp": now + 1200, "aud": "appstoreconnect-v1"},
+                      raw, algorithm="ES256",
+                      headers={"kid": os.environ['ASC_KEY_ID'], "typ": "JWT"})
+                  H["Authorization"] = f"Bearer {token}"
+              raise SystemExit(f"GET {path} -> {r.status_code} {r.text[:200]}")
+
+          builds = get("/v1/builds", {"filter[app]": APP, "limit": 200})["data"]
+          print(f"BUILD_COUNT {len(builds)}")
+          for b in builds:
+              a = b["attributes"]
+              print(f"  {a['version']:<8} expired={a['expired']} state={a['processingState']} id={b['id']}")
+
+          # 1. expire every build that is not on the keep list
+          ok = bad = 0
+          for b in builds:
+              a = b["attributes"]
+              if a["version"] in KEEP:
+                  print(f"KEEP {a['version']} {b['id']}")
+                  continue
+              if a["expired"]:
+                  print(f"ALREADY_EXPIRED {a['version']}")
+                  continue
+              r = requests.patch(
+                  f"{B}/v1/builds/{b['id']}",
+                  headers={**H, "Content-Type": "application/json"},
+                  json={"data": {"type": "builds", "id": b["id"],
+                                 "attributes": {"expired": True}}}, timeout=60)
+              if r.status_code in (200, 204):
+                  print(f"EXPIRED {a['version']} {b['id']}")
+                  ok += 1
+              else:
+                  print(f"EXPIRE_FAIL {a['version']} {r.status_code} {r.text[:160]}")
+                  bad += 1
+              time.sleep(1)
+          print(f"EXPIRED_OK {ok} FAILED {bad}")
+
+          # 2. drop the expired builds from every beta group
+          for g in get("/v1/betaGroups", {"filter[app]": APP, "limit": 50})["data"]:
+              gid = g["id"]
+              rel = [x["id"] for x in g.get("relationships", {}).get("builds", {}).get("data", [])]
+              expired_ids = [b["id"] for b in builds
+                             if b["attributes"]["version"] not in KEEP and b["id"] in rel]
+              if not expired_ids:
+                  print(f"GROUP {g['attributes']['name']} already clean")
+                  continue
+              r = requests.delete(
+                  f"{B}/v1/betaGroups/{gid}/relationships/builds",
+                  headers={**H, "Content-Type": "application/json"},
+                  json={"data": [{"type": "builds", "id": b} for b in expired_ids]}, timeout=60)
+              print(f"GROUP {g['attributes']['name']} removed {len(expired_ids)} -> {r.status_code}")
+              time.sleep(1)
+
+          # 3. verify
+          print("=== VERIFY ===")
+          for b in get("/v1/builds", {"filter[app]": APP, "limit": 200})["data"]:
+              a = b["attributes"]
+              print(f"  {a['version']:<8} expired={a['expired']}")
+          for g in get("/v1/betaGroups", {"filter[app]": APP, "limit": 50})["data"]:
+              rel = [x["id"] for x in g.get("relationships", {}).get("builds", {}).get("data", [])]
+              print(f"  GROUP {g['attributes']['name']}: {len(rel)} builds")
+          PY
