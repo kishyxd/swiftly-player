@@ -1,0 +1,86 @@
+name: ASC-Legacy
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/asc-legacy.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  legacy:
+    runs-on: macos-14
+    env:
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPEC_PW: ${{ secrets.APPLE_APP_SPEC_PW }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+    steps:
+      - name: The legacy iTunes Connect client
+        env:
+          FASTLANE_USER: ${{ secrets.APPLE_ID }}
+          FASTLANE_PASSWORD: ${{ secrets.APPLE_APP_SPEC_PW }}
+          FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPEC_PW }}
+          FASTLANE_SKIP_2FA: 'true'
+        run: |
+          set +x
+          cd /tmp
+          echo "### the fastlane version"
+          fastlane --version 2>&1 | tail -4
+          echo "### the spaceship gem paths"
+          gem contents spaceship 2>/dev/null | grep -E 'tunes_connect|portal' | head -20
+          echo "### the gem root"
+          gem which spaceship 2>/dev/null
+          echo "### the fastlane session"
+          ls -la ~/.fastlane 2>/dev/null | head
+
+          cat > /tmp/tc.rb <<'RUBY'
+          begin
+            require 'fastlane'
+          rescue => e
+            puts "REQUIRE_FASTLANE_FAIL #{e.class}"
+          end
+          begin
+            require 'spaceship'
+            puts "REQUIRE_SPACESHIP_OK"
+          rescue => e
+            puts "REQUIRE_SPACESHIP_FAIL #{e.class}: #{e.message.to_s[0,200]}"
+          end
+          ['spaceship/tunes_connect', 'spaceship/tunes_connect/tunes_connect',
+           'spaceship/portal', 'spaceship/portal/client'].each do |p|
+            begin
+              require p
+              puts "REQUIRE_OK #{p}"
+            rescue => e
+              puts "REQUIRE_NO #{p} (#{e.class})"
+            end
+          end
+          puts "SPACESHIP_CONSTANTS " + Spaceship.constants.grep(/Portal|Tunes|Connect/).sort.join(',')
+
+          U = ENV['FASTLANE_USER']
+          P = ENV['FASTLANE_PASSWORD']
+          begin
+            Spaceship::TunesConnect.login(U, P)
+            puts "TC_LOGIN_OK"
+            apps = Spaceship::TunesConnect::Application.all
+            puts "TC_APPS #{apps.size}"
+            apps.first(12).each { |a| puts "TC_APP #{a.apple_id} | #{a.name} | #{a.bundle_id}" }
+            devs = Spaceship::TunesConnect::Device.all
+            puts "TC_DEVICES #{devs.size}"
+            devs.first(8).each { |d| puts "TC_DEVICE #{d.udid} | #{d.name}" }
+            profs = Spaceship::TunesConnect::ProvisioningProfile.all
+            puts "TC_PROFILES #{profs.size}"
+            profs.first(12).each { |p2| puts "TC_PROFILE #{p2.name} | #{p2.profile_type} | #{p2.expiration_date} | #{p2.app_id}" }
+          rescue => e
+            puts "TC_FAIL #{e.class}: #{e.message.to_s[0,400]}"
+          end
+          RUBY
+          ruby /tmp/tc.rb 2>&1 | tail -70 | tee a1.txt
+
+      - name: The output
+        uses: actions/upload-artifact@v4
+        with:
+          name: asc-legacy-probe
+          path: /tmp
+          retention-days: 3
