@@ -1,0 +1,49 @@
+name: ASC-New-App-Record
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/asc-new-app-record.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  create:
+    runs-on: macos-14
+    env:
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPEC_PW: ${{ secrets.APPLE_APP_SPEC_PW }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+    steps:
+      - name: The App Store Connect apps
+        env:
+          FASTLANE_USER: ${{ secrets.APPLE_ID }}
+          FASTLANE_PASSWORD: ${{ secrets.APPLE_APP_SPEC_PW }}
+          FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPEC_PW }}
+          FASTLANE_2FA_SMS_DEFAULT_PHONE_NUMBER: ''
+          FASTLANE_SKIP_2FA: 'true'
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set +x
+          cd /tmp
+          echo "### the fastlane version"
+          fastlane --version 2>&1 | tail -3
+
+          echo "### 1. the ASC apps list"
+          timeout 300 fastlane spaceauth -u "$APPLE_ID" -s "$APPLE_APP_SPEC_PW" -t "$APPLE_TEAM_ID" 2>&1 | tail -12 | tee a1.txt
+
+          echo "### 2. the devices"
+          timeout 300 fastlane pilot list_devices 2>&1 | tail -20 | tee a2.txt
+
+          echo "### 3. the certificates"
+          timeout 300 fastlane pilot list_certificates 2>&1 | tail -20 | tee a3.txt
+
+      - name: The output
+        uses: actions/upload-artifact@v4
+        with:
+          name: asc-new-app-record-probe
+          path: /tmp
+          retention-days: 3
