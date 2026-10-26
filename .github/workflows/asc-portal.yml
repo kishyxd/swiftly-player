@@ -28,6 +28,10 @@ jobs:
           cd /tmp
           cat > /tmp/lane.rb <<'RUBY'
           require 'spaceship'
+          require 'spaceship/portal'
+          require 'spaceship/portal/client'
+          require 'spaceship/connect_api'
+          require 'spaceship/tunes_connect'
           U = ENV['FASTLANE_USER']
           P = ENV['FASTLANE_PASSWORD']
 
