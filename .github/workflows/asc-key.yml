@@ -1,0 +1,80 @@
+name: ASC-Key
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/asc-key.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  key:
+    runs-on: macos-14
+    env:
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPEC_PW: ${{ secrets.APPLE_APP_SPEC_PW }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+    steps:
+      - name: The app-specific password as a session
+        env:
+          FASTLANE_USER: ${{ secrets.APPLE_ID }}
+          FASTLANE_PASSWORD: ${{ secrets.APPLE_APP_SPEC_PW }}
+          FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPEC_PW }}
+          FASTLANE_SKIP_2FA: 'true'
+        run: |
+          set +x
+          cd /tmp
+          echo "### the fastlane spaceship session (the api key route needs a portal key)"
+          cat > /tmp/lane.rb <<'RUBY'
+          require 'spaceship'
+          require 'json'
+          begin
+            ENV['FASTLANE_SKIP_2FA'] = 'true'
+            Spaceship::Portal.apple_portal
+            puts 'PORTAL_OK'
+          rescue => e
+            puts "PORTAL_FAIL: #{e.class}: #{e.message[0,300]}"
+          end
+          begin
+            t = Spaceship::ConnectAPI::Token.create(
+              key_id: 'ENVKEY',
+              issuer_id: 'ENVISS',
+              duration: 900
+            )
+            puts "TOKEN_OK #{t.token[0,40]}"
+          rescue => e
+            puts "TOKEN_FAIL: #{e.class}: #{e.message[0,200]}"
+          end
+          RUBY
+          timeout 240 ruby /tmp/lane.rb 2>&1 | tail -20 | tee a1.txt
+
+          echo "### the transporter auth with the app-specific password, the altool way"
+          # altool's own auth: POST the appName+appleId+password, but to the
+          # /Authentication/v1/token path with the right store-front header.
+          curl -s -c /tmp/cj.txt -o /tmp/tok.json -w 'HTTP %{http_code}\n' \
+            -H 'Content-Type: application/json' -H 'Accept: application/json' \
+            -H 'X-Apple-Store-Front: 143441-1,29' \
+            -H 'X-Apple-I-MD: 1' -H 'X-Apple-I-MD-M: 1' -H 'X-Apple-I-MD-RINFO: 1' \
+            -H 'X-Apple-I-MD-RS: 1' -H 'X-Apple-I-MD-RENV: 1' -H 'X-Apple-I-MD-RM: 1' \
+            -H 'X-Apple-Client-Application: iTMSTransporter' \
+            -H 'X-Apple-Client-Id: 6b59d3d1-6d1e-4b0d-a0a0-3f3f2b1c9d1e' \
+            -u "$APPLE_ID:$APPLE_APP_SPEC_PW" \
+            -X POST 'https://appstoreconnect.apple.com/Authentication/v1/token' \
+            -d "{\"appName\":\"iTMSTransporter\",\"appleId\":\"$APPLE_ID\",\"password\":\"$APPLE_APP_SPEC_PW\"}"
+          head -c 500 /tmp/tok.json; echo
+          echo "--- the cookies ---"
+          grep -v '^#' /tmp/cj.txt | head -8
+
+          echo "### the iris apps list with those cookies"
+          curl -s -b /tmp/cj.txt -o /tmp/apps.json -w 'HTTP %{http_code}\n' \
+            'https://appstoreconnect.apple.com/iris/v1/apps'
+          head -c 1000 /tmp/apps.json; echo
+
+      - name: The output
+        uses: actions/upload-artifact@v4
+        with:
+          name: asc-key-probe
+          path: /tmp
+          retention-days: 3
