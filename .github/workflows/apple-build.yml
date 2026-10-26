@@ -135,17 +135,16 @@ jobs:
                   print(f"{i}: {line.strip()}")
           PY
 
-      # **The macOS `.icns` is stale.** `Sources/macOS/Swiftly.icns` is the
-      # `CFBundleIconFile` - the icon the Dock and Finder show - and it still
-      # holds the old Swiftly artwork: it was never touched by the rebrand,
-      # while the asset catalog next to it was. `actool` therefore compiles
-      # the FTV artwork into `AppIcon.icns` (from the catalog), but the file
-      # the app actually points at is the old one.
+      # **The complete `.icns` the Dock and Finder show.** The catalog's own
+      # `AppIcon.icns` holds only the small renditions, and `actool` writes a
+      # partial Info.plist with `CFBundleIconName`/`CFBundleIconFile` =
+      # `AppIcon`, which wins the merge over the plist in `project.yml`. The
+      # Dock then shows a downscaled icon.
       #
-      # It is rebuilt here from the catalog's own images with `iconutil`, the
-      # way `Assets/SupporterIcons/build-icons.py` builds the supporter
-      # icons. No new artwork: every pixel comes from the owner's
-      # `ftv-mac-*.png` files. The result is uploaded so it can be committed.
+      # So the complete file is built here with `iconutil` from the owner's
+      # own `ftv-mac-*.png` files - no new artwork, every pixel is his - and
+      # it is copied over the catalog's file in the built bundle under both
+      # names. Whichever key the system reads, the icon is the complete one.
       - name: Rebuild the macOS .icns from the FTV artwork
         run: |
           set -euo pipefail
@@ -163,11 +162,11 @@ jobs:
           cp "$set/ftv-mac-256x256@2x.png" /tmp/Swiftly.iconset/icon_256x256@2x.png
           cp "$set/ftv-mac-512x512@1x.png" /tmp/Swiftly.iconset/icon_512x512.png
           cp "$set/ftv-mac-512x512@2x.png" /tmp/Swiftly.iconset/icon_512x512@2x.png
-          iconutil -c icns /tmp/Swiftly.iconset -o Sources/macOS/Swiftly.icns
+          iconutil -c icns /tmp/Swiftly.iconset -o Sources/macOS/FTVPlayer.icns
           echo "--- rebuilt ---"
-          ls -la Sources/macOS/Swiftly.icns
+          ls -la Sources/macOS/FTVPlayer.icns
           mkdir -p out/icon-check
-          cp Sources/macOS/Swiftly.icns out/icon-check/Swiftly.icns
+          cp Sources/macOS/FTVPlayer.icns out/icon-check/FTVPlayer.icns
 
       - name: Generate the Xcode project
         run: |
@@ -259,12 +258,31 @@ jobs:
 
       # The macOS build gets a .dmg so the artifact is a double-clickable disk
       # image, the way a Mac build is normally handed out.
+      # **The complete icon over the catalog's file.** `actool` writes a
+      # partial Info.plist with `CFBundleIconName`/`CFBundleIconFile` =
+      # `AppIcon`, and Xcode's merge lets it win over the key in
+      # `project.yml`. The catalog's `AppIcon.icns` has only the small
+      # renditions, so the Dock showed a downscaled icon. Copying the
+      # complete file over it - under both names - fixes the icon whichever
+      # key the system reads.
+      - name: Put the complete icon into the Mac bundle
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE"
+          app=$(ls -d build/macos/Build/Products/*/*.app 2>/dev/null | grep -v TopShelf | head -1)
+          [ -n "$app" ] || { echo 'no .app'; exit 1; }
+          res="$app/Contents/Resources"
+          ls -la "$res"/*.icns
+          cp Sources/macOS/FTVPlayer.icns "$res/AppIcon.icns"
+          cp Sources/macOS/FTVPlayer.icns "$res/FTVPlayer.icns"
+          ls -la "$res"/*.icns
+
       - name: Package the unsigned macOS .dmg
         run: |
           set -euo pipefail
           cd "$GITHUB_WORKSPACE"
           mkdir -p out/dmg
-          app="build/macos/Build/Products/Release/Swiftly.app"
+          app="build/macos/Build/Products/Release/FTVPlayer.app"
           [ -d "$app" ] || { echo "no .app at $app"; exit 1; }
           cp -R "$app" out/dmg/
           ln -s /Applications out/dmg/Applications
@@ -284,7 +302,7 @@ jobs:
           mkdir -p out/zips
           for entry in "build/ios/Build/Products/Release-iphoneos/Swiftly-iOS.app" \
                        "build/tvos/Build/Products/Release-appletvos/Swiftly-tvOS.app" \
-                       "build/macos/Build/Products/Release/Swiftly.app"; do
+                       "build/macos/Build/Products/Release/FTVPlayer.app"; do
             [ -d "$entry" ] || { echo "missing $entry"; exit 1; }
             name=$(basename "$entry" .app)
             ditto -c -k --sequesterRsrc --keepParent "$entry" "out/zips/$name.zip"
@@ -300,7 +318,7 @@ jobs:
             out/*.ipa
             out/*.dmg
             out/zips/*.zip
-            out/icon-check/Swiftly.icns
+            out/icon-check/FTVPlayer.icns
             build/ios/Build/Products/Release-iphoneos/*.app
             build/tvos/Build/Products/Release-appletvos/*.app
             build/macos/Build/Products/Release/*.app
