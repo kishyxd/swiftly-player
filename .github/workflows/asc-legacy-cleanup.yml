@@ -1,0 +1,97 @@
+name: ASC-Legacy-Cleanup
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/asc-legacy-cleanup.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: macos-14
+    env:
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPEC_PW: ${{ secrets.APPLE_APP_SPEC_PW }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      APP_ID: '6823967654'
+      KEEP_BUILDS: '1167,157'
+    steps:
+      - name: The legacy paths
+        env:
+          FASTLANE_USER: ${{ secrets.APPLE_ID }}
+          FASTLANE_PASSWORD: ${{ secrets.APPLE_APP_SPEC_PW }}
+          FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPEC_PW }}
+          FASTLANE_SKIP_2FA: 'true'
+        run: |
+          set +x
+          cd /tmp
+          AUTH="$APPLE_ID:$APPLE_APP_SPEC_PW"
+
+          echo '### A. the legacy iTunes Connect API, basic auth'
+          for path in "ra/apps" "ra/apps/$APP_ID/buildHistory?platform=ios" "ra/apps/$APP_ID/platforms/ios/trains"; do
+            printf '%-60s ' "$path"
+            code=$(curl -s -o /tmp/lc.txt -w '%{http_code}' -u "$AUTH" -H 'Content-Type: application/json' \
+              "https://itunesconnect.apple.com/WebObjects/iTunesConnect.woa/$path")
+            echo "HTTP $code"
+            head -c 300 /tmp/lc.txt; echo
+          done
+
+          echo '### B. the legacy API, the POST flavour'
+          for path in "ra/devices" "ra/apps/$APP_ID/buildHistory"; do
+            printf '%-60s ' "$path"
+            code=$(curl -s -o /tmp/lp.txt -w '%{http_code}' -u "$AUTH" -H 'Content-Type: application/json' \
+              -X POST "https://itunesconnect.apple.com/WebObjects/iTunesConnect.woa/$path" --data '{"limit":50}')
+            echo "HTTP $code"
+            head -c 300 /tmp/lp.txt; echo
+          done
+
+          echo '### C. the idmsa signin with the app-specific password'
+          code=$(curl -s -c /tmp/idmsa.txt -o /tmp/idmsa.json -w '%{http_code}' -X POST \
+            'https://idmsa.apple.com/appleauth/auth/signin' \
+            -H 'Content-Type: application/json' -H 'Accept: application/json' \
+            -H 'X-Apple-I-MD: 1' -H 'X-Apple-I-MD-RINFO: 1' -H 'X-Apple-I-MD-SUPPORTS: 1' \
+            -d "{\"accountName\":\"$APPLE_ID\",\"password\":\"$APPLE_APP_SPEC_PW\",\"rememberMe\":true,\"attempt\":\"4Y\"}")
+          echo "IDMSA_HTTP $code"
+          head -c 400 /tmp/idmsa.json; echo
+
+          echo '### D. the transporter token, followed by the iris builds'
+          code=$(curl -s -L -c /tmp/tk.txt -b /tmp/tk.txt -o /tmp/tk.json -w '%{http_code}' \
+            -H 'Content-Type: application/json' -H 'Accept: application/json' \
+            -H 'X-Apple-Store-Front: 143441-1,29' \
+            -H 'X-Apple-I-MD: 1' -H 'X-Apple-I-MD-M: 1' -H 'X-Apple-I-MD-RINFO: 1' \
+            -H 'X-Apple-I-MD-RS: 1' -H 'X-Apple-I-MD-RENV: 1' -H 'X-Apple-I-MD-RM: 1' \
+            -H 'X-Apple-Client-Application: iTMSTransporter' \
+            -u "$AUTH" -X POST 'https://appstoreconnect.apple.com/Authentication/v1/token' \
+            -d "{\"appName\":\"iTMSTransporter\",\"appleId\":\"$APPLE_ID\",\"password\":\"$APPLE_APP_SPEC_PW\"}")
+          echo "TOKEN_HTTP $code"
+          head -c 300 /tmp/tk.json; echo
+          echo '--- the cookies'
+          grep -v '^#' /tmp/tk.txt | head -8
+
+          echo '### E. the iris builds with those cookies'
+          code=$(curl -s -b /tmp/tk.txt -o /tmp/iris.json -w '%{http_code}' \
+            -H 'accept: application/vnd.api+json' -H 'content-type: application/vnd.api+json' \
+            "https://appstoreconnect.apple.com/iris/v1/builds?filter%5Bapp%5D=$APP_ID&sort=-version&limit=200")
+          echo "IRIS_HTTP $code"
+          head -c 400 /tmp/iris.json; echo
+
+          echo '### F. the ruby legacy client'
+          cat > /tmp/leg.rb <<'RUBY'
+          require 'fastlane'
+          require 'spaceship'
+          U = ENV['FASTLANE_USER']
+          P = ENV['FASTLANE_PASSWORD']
+          begin
+            Spaceship::TunesClient.send_login_request(U, P)
+            puts 'TUNES_LOGIN_OK'
+            apps = Spaceship::TunesClient.applications
+            puts "TUNES_APPS #{apps.size}"
+            apps.each { |a| puts "TAPP #{a.apple_id} | #{a.name} | #{a.bundle_id}" }
+          rescue => e
+            puts "TUNES_FAIL #{e.class}: #{e.message.to_s[0,300]}"
+          end
+          RUBY
+          ruby /tmp/leg.rb 2>&1 | tail -30
