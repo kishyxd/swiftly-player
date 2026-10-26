@@ -468,7 +468,7 @@ private struct GiftOffer: View {
                 .foregroundStyle(Theme.font)
                 .accessibilityAddTraits(.isHeader)
                 .padding(.top, 20)
-            Text("Danke, dass du Swiftly benutzt. \(look.name) ist ein Geschenk an alle.")
+            Text("Danke, dass du FTV Player benutzt. \(look.name) ist ein Geschenk an alle.")
                 .giftFont(15)
                 .foregroundStyle(Theme.fontQuiet)
                 .lineSpacing(3)

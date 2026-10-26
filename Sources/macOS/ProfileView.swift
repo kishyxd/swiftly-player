@@ -168,7 +168,7 @@ struct ProfileView: View {
                     // Last, because it sets nothing: it shows what is in the app and where the
                     // VLCKit source code is.
                     ValuesRow(symbol: "text.book.closed", title: Text("Open-Source-Lizenzen"),
-                               under: Text("Was in Swiftly steckt, und der Quelltext von VLCKit"),
+                               under: Text("Was in FTV Player steckt, und der Quelltext von VLCKit"),
                                arrow: true,
                                action: { navigator.openIt(.licenses, in: section) })
                 }

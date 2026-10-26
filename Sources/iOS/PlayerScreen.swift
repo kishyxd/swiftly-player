@@ -2407,8 +2407,6 @@ private struct TimeRow: View {
             let half: CGFloat = image != nil ? width / 2 : max(name.isEmpty ? 40 : boxWidth / 2, 40)
             let x: CGFloat = min(max(g.size.width * share, half), max(g.size.width - half, half))
             previewContent(image: image, name: name, width: width, height: height)
-                .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { boxWidth = $0 }
-                // At most as wide as the preview image, otherwise a long chapter name would push the capsule past the edge of the bar.
                 .frame(maxWidth: width)
                 .fixedSize(horizontal: false, vertical: true)
                 // Bottom edge just above the hit area; the bar itself sits in its middle.
@@ -2422,6 +2420,12 @@ private struct TimeRow: View {
     }
 
     /// The box's content: the trickplay image over the time.
+    ///
+    /// **`.onGeometryChange` sits on the VStack, not on the caller's result.**
+    /// It is a generic modifier (`for:` the measured type), so on an opaque
+    /// `some View` the solver has to expand that type to apply it — and that
+    /// expansion is what the type checker runs out of budget on. On the
+    /// concrete stack it is cheap.
     @ViewBuilder
     private func previewContent(image: CGImage?, name: String, width: CGFloat, height: CGFloat) -> some View {
         VStack(spacing: 6) {
@@ -2430,6 +2434,7 @@ private struct TimeRow: View {
             }
             previewCaption(name: name)
         }
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { boxWidth = $0 }
     }
 
     /// The trickplay still, with its border.

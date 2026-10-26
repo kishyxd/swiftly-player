@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>Swiftly</string>
+	<string>FTV Player</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -30,7 +30,7 @@
 		<true/>
 	</dict>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Swiftly looks for your Jellyfin server on your home network. Without this, the app cannot reach a server at an address like 192.168.1.5.</string>
+	<string>FTV Player looks for your Jellyfin server on your home network. Without this, the app cannot reach a server at an address like 192.168.1.5.</string>
 	<key>SKIncludeConsumableInAppPurchaseHistory</key>
 	<true/>
 	<key>UIBackgroundModes</key>

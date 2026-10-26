@@ -258,7 +258,7 @@ private struct ProfileIntroPanel: View {
                                    center: UnitPoint(x: 0.5, y: 0.4), startRadius: 0, endRadius: 36),
                     in: Circle())
                 .accessibilityHidden(true)
-            Text("Swiftly ist kostenlos.\nSo bleibt es dabei.")
+            Text("FTV Player ist kostenlos.\nSo bleibt es dabei.")
                 .growing(22, .semibold)
                 .tracking(-0.3)
                 .foregroundStyle(Theme.font)

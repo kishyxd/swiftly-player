@@ -64,7 +64,7 @@ struct LicensesView: View {
                 SubpageHeader(title: String(localized: "Open-Source-Lizenzen")) { back() }
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
-                        Text("Swiftly Player nutzt VLCKit und libVLC von VideoLAN (LGPL 2.1 oder später). Was sonst noch drinsteckt, steht darunter, mit Lizenz und Urheber.")
+                        Text("FTV Player nutzt VLCKit und libVLC von VideoLAN (LGPL 2.1 oder später). Was sonst noch drinsteckt, steht darunter, mit Lizenz und Urheber.")
                             .growing(15)
                             .lineSpacing(3)
                             .foregroundStyle(Theme.fontQuiet)

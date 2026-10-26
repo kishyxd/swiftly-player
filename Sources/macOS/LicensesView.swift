@@ -53,7 +53,7 @@ struct LicensesView: View {
 
     var body: some View {
         LicensePage(title: "Open-Source-Lizenzen", back: back) {
-            Text("Swiftly Player nutzt VLCKit und libVLC von VideoLAN (LGPL 2.1 oder später). Was sonst noch drinsteckt, steht darunter, mit Lizenz und Urheber.")
+            Text("FTV Player nutzt VLCKit und libVLC von VideoLAN (LGPL 2.1 oder später). Was sonst noch drinsteckt, steht darunter, mit Lizenz und Urheber.")
                 .font(Theme.body)
                 .lineSpacing(3)
                 .foregroundStyle(Theme.fontQuiet)

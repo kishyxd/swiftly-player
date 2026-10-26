@@ -133,7 +133,7 @@ private struct TVGiftOffer: View {
                 .foregroundStyle(Theme.font)
                 .padding(.top, 40)
                 .accessibilityAddTraits(.isHeader)
-            Text("Danke, dass du Swiftly benutzt. \(look.name) ist ein Geschenk an alle.")
+            Text("Danke, dass du FTV Player benutzt. \(look.name) ist ein Geschenk an alle.")
                 .font(Theme.body)
                 .foregroundStyle(Theme.fontQuiet)
                 .multilineTextAlignment(.center)

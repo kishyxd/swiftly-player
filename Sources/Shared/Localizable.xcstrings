@@ -7497,19 +7497,19 @@
         }
       }
     },
-    "Swiftly 1.0 · VLCKit 4.0.0-a23": {
+    "FTV Player · VLCKit 4.0.0-a23": {
       "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Swiftly 1.0 · VLCKit 4.0.0-a23"
+            "value": "FTV Player · VLCKit 4.0.0-a23"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Swiftly 1.0 · VLCKit 4.0.0-a23"
+            "value": "FTV Player · VLCKit 4.0.0-a23"
           }
         }
       }
@@ -11216,19 +11216,19 @@
         }
       }
     },
-    "Swiftly Player nutzt libVLC von VideoLAN unter der LGPL 2.1 oder später": {
+    "FTV Player nutzt libVLC von VideoLAN unter der LGPL 2.1 oder später": {
       "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Swiftly Player nutzt libVLC von VideoLAN unter der LGPL 2.1 oder später"
+            "value": "FTV Player nutzt libVLC von VideoLAN unter der LGPL 2.1 oder später"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Swiftly Player uses libVLC by VideoLAN under the LGPL 2.1 or later"
+            "value": "FTV Player uses libVLC by VideoLAN under the LGPL 2.1 or later"
           }
         }
       }
@@ -11250,36 +11250,36 @@
         }
       }
     },
-    "Was in Swiftly steckt, und der Quelltext von VLCKit": {
+    "Was in FTV Player steckt, und der Quelltext von VLCKit": {
       "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Was in Swiftly steckt, und der Quelltext von VLCKit"
+            "value": "Was in FTV Player steckt, und der Quelltext von VLCKit"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "What's inside Swiftly, and the source code of VLCKit"
+            "value": "What's inside FTV Player, and the source code of VLCKit"
           }
         }
       }
     },
-    "Swiftly Player nutzt VLCKit und libVLC von VideoLAN (LGPL 2.1 oder später). Was sonst noch drinsteckt, steht darunter, mit Lizenz und Urheber.": {
+    "FTV Player nutzt VLCKit und libVLC von VideoLAN (LGPL 2.1 oder später). Was sonst noch drinsteckt, steht darunter, mit Lizenz und Urheber.": {
       "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Swiftly Player nutzt VLCKit und libVLC von VideoLAN (LGPL 2.1 oder später). Was sonst noch drinsteckt, steht darunter, mit Lizenz und Urheber."
+            "value": "FTV Player nutzt VLCKit und libVLC von VideoLAN (LGPL 2.1 oder später). Was sonst noch drinsteckt, steht darunter, mit Lizenz und Urheber."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Swiftly Player uses VLCKit and libVLC by VideoLAN (LGPL 2.1 or later). Everything else that's inside is listed below, with license and author."
+            "value": "FTV Player uses VLCKit and libVLC by VideoLAN (LGPL 2.1 or later). Everything else that's inside is listed below, with license and author."
           }
         }
       }
