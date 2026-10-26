@@ -1,0 +1,41 @@
+name: Probe2
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/probe2.yml']
+permissions:
+  contents: write
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    steps:
+      - name: probe
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPEC_PW: ${{ secrets.APPLE_APP_SPEC_PW }}
+        run: |
+          set +x
+          AUTH="$APPLE_ID:$APPLE_APP_SPEC_PW"
+          echo "### A. the token endpoint's redirect target"
+          curl -s -o /dev/null -D - -u "$AUTH" -H 'Content-Type: application/json' \
+            -H 'Accept: application/json' -H 'X-Apple-Store-Front: 143441-1,29' \
+            -X POST 'https://appstoreconnect.apple.com/Authentication/v1/token' \
+            -d "{\"appName\":\"iTMSTransporter\",\"appleId\":\"$APPLE_ID\",\"password\":\"$APPLE_APP_SPEC_PW\"}" 2>&1 | grep -iE '^HTTP|^location' | head -5
+          echo "### B. the legacy itunesconnect WebObjects API"
+          for p in devices profiles; do
+            echo "--- ra/$p"
+            curl -s -o /tmp/w_$p -w 'HTTP %{http_code}\n' -u "$AUTH" -H 'Content-Type: application/json' \
+              -X POST "https://itunesconnect.apple.com/WebObjects/iTunesConnect.woa/ra/$p" --data '{"limit":50}'
+            head -c 400 /tmp/w_$p; echo
+          echo "### C. the idmsa signin with the app-specific password"
+          curl -s -o /tmp/idmsa -w 'HTTP %{http_code}\n' -X POST 'https://idmsa.apple.com/appleauth/auth/signin' \
+            -H 'Content-Type: application/json' -H 'Accept: application/json' \
+            -d "{\"accountName\":\"$APPLE_ID\",\"password\":\"$APPLE_APP_SPEC_PW\",\"rememberMe\":true}" 2>&1 | tail -1
+          head -c 400 /tmp/idmsa; echo
+          echo "### D. the portal's downloadws with the wsKey variants"
+          for ws in listDevices listCertificates listAppIds listProfiles; do
+            printf '%-18s ' "$ws"
+            curl -s -o /tmp/d_$ws -w 'HTTP %{http_code} ' -u "$AUTH" \
+              "https://developer.apple.com/services-account/QH65B2/downloadws/$ws.action" 2>/dev/null
+            head -c 110 /tmp/d_$ws; echo
+          done
