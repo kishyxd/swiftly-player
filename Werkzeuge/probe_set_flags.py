@@ -24,4 +24,4 @@ else:
     s = s.replace(anchor, anchor + "\n" + new_line, 1)
 
 open(P, "w", encoding="utf-8").write(s)
-print("set OTHER_SWIFT_FLAGS:", FLAGS[:160])
+print("set OTHER_SWIFT_FLAGS:", FLAGS[:200])
