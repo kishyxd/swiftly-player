@@ -38,16 +38,8 @@ jobs:
           NAME = ENV['NEW_APP_NAME']
 
           # ---- the portal client class ----
-          client_class = nil
-          [Spaceship::PortalClient, Spaceship::Portal::Client].each do |k|
-            begin
-              client_class = k
-              puts "CLIENT_CLASS #{k}"
-              break
-            rescue NameError
-              next
-            end
-          end
+          client_class = Spaceship::PortalClient
+          puts "CLIENT_CLASS #{client_class}"
           puts "CLIENT_METHODS " + client_class.instance_methods(false).sort.join(',')
 
           client = client_class.new(U, P)
