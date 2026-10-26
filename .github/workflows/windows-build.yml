@@ -226,7 +226,7 @@ jobs:
       - name: Nachweis
         shell: pwsh
         run: |
-          $exe = 'C:\swiftly\Windows\Output\FTVPlayer\bin\Swiftly.exe'
+          $exe = 'C:\swiftly\Windows\Output\FTVPlayer\bin\FTVPlayer.exe'
           if (-not (Test-Path $exe)) { throw "Die .exe fehlt: $exe" }
           $info = Get-Item $exe
           Write-Host "== .exe =="

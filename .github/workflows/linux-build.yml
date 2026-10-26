@@ -113,6 +113,11 @@ jobs:
           mkdir -p ausgabe
           # The binary and everything SwiftPM put next to it.
           cp -a "$BAUORDNER/." ausgabe/
+          # **The program is `ftv-player`**, the name the desktop file
+          # starts and the name the package installs it under. The module
+          # name stays `SwiftlyLinux` - a dash is not valid in one - but
+          # the name the user sees and double-clicks is FTV's.
+          mv ausgabe/SwiftlyLinux ausgabe/ftv-player
           # The resources that live next to the *program* in an installation
           # (`Platform.bundled` walks up from the executable).
           cp -a Linux/Resources ausgabe/Resources
@@ -127,11 +132,11 @@ jobs:
         run: |
           set -euo pipefail
           echo "== ldd =="
-          ldd ausgabe/SwiftlyLinux
+          ldd ausgabe/ftv-player
           echo "== file =="
-          file ausgabe/SwiftlyLinux
+          file ausgabe/ftv-player
           echo "== Groesse =="
-          ls -l ausgabe/SwiftlyLinux
+          ls -l ausgabe/ftv-player
           du -sh ausgabe
           # **What the app answers when it is asked for its version.**
           # It is a GTK program, so it needs a display; `xvfb-run` gives it
@@ -139,9 +144,9 @@ jobs:
           # its window instead - which is the proof that the binary runs and
           # finds its libraries. The timeout stops it again.
           echo "== Start (xvfb) =="
-          timeout 20 xvfb-run -a ausgabe/SwiftlyLinux --version 2>&1 | head -20 || true
+          timeout 20 xvfb-run -a ausgabe/ftv-player --version 2>&1 | head -20 || true
           echo "== Das Programm nennt seine Version im Fenster: =="
-          strings ausgabe/SwiftlyLinux | grep -i "FTV Player 1\.0" | head -3 || true
+          strings ausgabe/ftv-player | grep -i "FTV Player 1\.0" | head -3 || true
 
       - name: Artefakt hochladen
         uses: actions/upload-artifact@v4
