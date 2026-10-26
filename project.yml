@@ -177,7 +177,7 @@ targets:
         # hard-coded plist value is not translated; it appears as written. Since
         # `CFBundleDevelopmentRegion` is `en`, this sentence must be English
         # too.
-        NSLocalNetworkUsageDescription: Swiftly looks for your Jellyfin server
+        NSLocalNetworkUsageDescription: FTV Player looks for your Jellyfin server
           on your home network. Without this, the app cannot reach a server at
           an address like 192.168.1.5.
         # Otherwise App Store Connect asks about export compliance on every
@@ -214,6 +214,26 @@ targets:
         # Without entitlements the keychain refuses writes (-34018) and the
         # login would be lost on every launch.
         CODE_SIGN_ENTITLEMENTS: Sources/iOS/Swiftly.entitlements
+        # **The constraint solver needs more room on this target.**
+        #
+        # `PlayerScreen.swift` has one view expression the solver cannot
+        # finish: "the compiler is unable to type-check this expression in
+        # reasonable time". It is not a bug in the code - upstream ships the
+        # identical expression and builds it on the author's Mac. The solver
+        # has a fixed budget, and a CI runner is slower than that Mac, so the
+        # budget runs out here and not there.
+        #
+        # The lever is the SCOPE threshold: how many constraint scopes the
+        # solver may create for one expression before it gives up. Raising it
+        # for THIS TARGET ONLY is what matters - applied to the whole project
+        # it also reaches the JellyfinKit package, whose own expressions then
+        # run out of budget instead (33 files, same error).
+        #
+        # The trail threshold goes with it: the solver's trail is the record of
+        # what it has tried, and a bigger scope needs a bigger trail.
+        #
+        # These change no behaviour. They only let the compiler finish.
+        OTHER_SWIFT_FLAGS: "$(inherited) -Xfrontend -solver-scope-threshold=1000 -Xfrontend -solver-trail-threshold=100000000"
 
   Swiftly-tvOS:
     type: application
@@ -448,7 +468,7 @@ targets:
         # hard-coded plist value is not translated; it appears as written. Since
         # `CFBundleDevelopmentRegion` is `en`, this sentence must be English
         # too.
-        NSLocalNetworkUsageDescription: Swiftly looks for your Jellyfin server
+        NSLocalNetworkUsageDescription: FTV Player looks for your Jellyfin server
           on your home network. Without this, the app cannot reach a server at
           an address like 192.168.1.5.
     settings:
@@ -766,7 +786,7 @@ targets:
         # hard-coded plist value is not translated; it appears as written. Since
         # `CFBundleDevelopmentRegion` is `en`, this sentence must be English
         # too.
-        NSLocalNetworkUsageDescription: Swiftly looks for your Jellyfin server
+        NSLocalNetworkUsageDescription: FTV Player looks for your Jellyfin server
           on your home network. Without this, the app cannot reach a server at
           an address like 192.168.1.5.
         ITSAppUsesNonExemptEncryption: false
