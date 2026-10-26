@@ -35,6 +35,48 @@ My Apps → ➕ → New App → name `FTV Player` → bundle id `com.kxvn.ftvpla
 
 After that the whole rest is scriptable with the key.
 
+## The build (verified working 2026-10-26)
+
+`.github/workflows/build-ftvplayer-ios.yml` builds the app on a `macos-15`
+runner. Four things it has to get right, each learned the hard way:
+
+1. **Xcode 26.3, not the runner's default 16.4.** The project uses Swift 6.2
+   features (`@MainActor` on a protocol conformance) and 16.4's compiler
+   rejects them with ~2000 errors that are all the same root cause. Xcode 26
+   is installed alongside the default; the workflow picks the newest 26.x.
+2. **The constraint solver needs four budgets raised, on the app target
+   only.** `OTHER_SWIFT_FLAGS` in the `Swiftly-iOS` target's `settings.base`:
+   ```
+   $(inherited) -Xfrontend -solver-scope-threshold=2147483647 \
+   -Xfrontend -solver-trail-threshold=2147483647 \
+   -Xfrontend -solver-expression-time-threshold=2147483647 \
+   -solver-memory-threshold 2147483647
+   ```
+   Without them the build fails with 87 "unable to type-check this expression
+   in reasonable time" errors; with scope+trail alone, 6; with all four, 0 and
+   BUILD SUCCEEDED. The thresholds are 32-bit — a larger value gives a DRIVER
+   error and a misleading zero-error count. `-solver-memory-threshold` takes
+   a SPACE and cannot go through `-Xfrontend`.
+3. **MANUAL signing with the distribution certificate.** Automatic signing
+   with the ASC API key produces an "Apple Development: Created via API"
+   identity and a DEVELOPMENT profile, which App Store Connect rejects. The
+   workflow imports the distribution p12 into a temporary keychain and uses
+   `CODE_SIGN_STYLE=Manual` + `PROVISIONING_PROFILE_SPECIFIER="KXVN Store
+   FTV Player"`.
+4. **No `xcodebuild -exportArchive`** — it needs an account session and
+   fails with `error: exportArchive Failed to Use Accounts`. The archive is
+   already signed, so the .ipa is zipped from it directly (root must be
+   `Payload/`).
+
+Secrets used: `ASC_DIST_P12_B64`, `ASC_DIST_P12_PASSWORD`,
+`ASC_PROFILE_FTVPLAYER_B64`, plus the existing `ASC_KEY_P8`, `ASC_KEY_ID`,
+`ASC_ISSUER_ID`, `APPLE_ID`, `APPLE_APP_SPEC_PW`, `APPLE_TEAM_ID`.
+
+The p12 was regenerated from the local `distribution_private.key` +
+`apple_distribution.pem` with a known password, because the original
+password was not recoverable. The cert is unchanged:
+`CN=Apple Distribution: Kishan Manbahal (6VS7BF6R33)`, expires 2027-10-17.
+
 ## Build prerequisites for the iOS target
 
 `project.yml` is already set up for this app:

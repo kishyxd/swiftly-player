@@ -214,6 +214,23 @@ targets:
         # Without entitlements the keychain refuses writes (-34018) and the
         # login would be lost on every launch.
         CODE_SIGN_ENTITLEMENTS: Sources/iOS/Swiftly.entitlements
+        # **Manual signing with the distribution certificate.**
+        #
+        # Automatic signing (with the App Store Connect API key) produces an
+        # "Apple Development: Created via API" identity and a DEVELOPMENT
+        # profile. App Store Connect rejects that: a store upload needs the
+        # distribution certificate and the App Store profile.
+        #
+        # These belong HERE, on the app target, and not on the xcodebuild
+        # command line: a PROVISIONING_PROFILE_SPECIFIER on the command line
+        # applies to EVERY target, and the framework packages (JellyfinKit,
+        # Lottie) do not take a profile:
+        #   error: JellyfinKit_JellyfinKit does not support provisioning
+        #   profiles ... but provisioning profile KXVN Store FTV Player has
+        #   been manually specified
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "Apple Distribution: Kishan Manbahal (6VS7BF6R33)"
+        PROVISIONING_PROFILE_SPECIFIER: "KXVN Store FTV Player"
         # **The constraint solver needs more room on this target.**
         #
         # `PlayerScreen.swift` has one view expression the solver cannot

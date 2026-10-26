@@ -162,6 +162,14 @@ jobs:
       - name: Build
         run: |
           set -euo pipefail
+          # The identity and the profile come from the project (the app
+          # target's own settings), NOT from this command line: a
+          # PROVISIONING_PROFILE_SPECIFIER on the command line applies to
+          # EVERY target, and the framework packages (JellyfinKit, Lottie)
+          # do not take a profile:
+          #   error: JellyfinKit_JellyfinKit does not support provisioning
+          #   profiles ... but provisioning profile KXVN Store FTV Player
+          #   has been manually specified
           xcodebuild \
             -project Swiftly.xcodeproj \
             -scheme Swiftly-iOS \
@@ -169,9 +177,6 @@ jobs:
             -destination 'generic/platform=iOS' \
             -archivePath "$RUNNER_TEMP/ftvplayer.xcarchive" \
             DEVELOPMENT_TEAM=6VS7BF6R33 \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="Apple Distribution: Kishan Manbahal (6VS7BF6R33)" \
-            PROVISIONING_PROFILE_SPECIFIER="KXVN Store FTV Player" \
             archive
           echo "=== the archive"
           ls -la "$RUNNER_TEMP/ftvplayer.xcarchive/Products/Applications/"
