@@ -1,0 +1,64 @@
+name: Upload-to-TestFlight
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/upload-testflight.yml']
+  workflow_dispatch:
+    inputs:
+      ipa_url:
+        description: 'The url of the ipa to upload'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  upload:
+    runs-on: macos-14
+    steps:
+      - name: Get the ipa
+        run: |
+          mkdir -p work && cd work
+          if [ -n "${{ inputs.ipa_url }}" ]; then
+            echo "### downloading ${{ inputs.ipa_url }}"
+            curl -sSL -o ftv.ipa "${{ inputs.ipa_url }}"
+          else
+            echo "::error::no ipa_url given"
+            exit 1
+          fi
+          ls -la ftv.ipa
+          file ftv.ipa
+
+      - name: Probe the identity
+        run: |
+          cd work
+          unzip -o -q ftv.ipa -d probe
+          plutil -extract CFBundleIdentifier raw probe/Payload/*.app/Info.plist
+          plutil -extract CFBundleDisplayName raw probe/Payload/*.app/Info.plist
+          plutil -extract CFBundleShortVersionString raw probe/Payload/*.app/Info.plist
+          plutil -extract CFBundleVersion raw probe/Payload/*.app/Info.plist
+          ls probe/Payload/*.app/embedded.mobileprovision
+
+      - name: Upload to App Store Connect
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPEC_PW: ${{ secrets.APPLE_APP_SPEC_PW }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          cd work
+          xcrun altool --upload-app --file ftv.ipa --type ios \
+            -u "$APPLE_ID" -p "$APPLE_APP_SPEC_PW" --team-id "$APPLE_TEAM_ID" 2>&1 | tee upload.log
+          if ! grep -q "No errors uploading" upload.log; then
+            echo "::error::the upload did not succeed"
+            exit 1
+          fi
+          echo "### UPLOAD CONFIRMED"
+
+      - name: Keep the ipa
+        uses: actions/upload-artifact@v4
+        with:
+          name: ftv-testflight-ipa
+          path: work/ftv.ipa
+          retention-days: 7
