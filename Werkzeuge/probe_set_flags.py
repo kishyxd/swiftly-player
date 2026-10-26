@@ -6,7 +6,8 @@ PROBE ONLY. usage: probe_set_flags.py <flags string>
 import re
 import sys
 
-P = "/home/ai/projects/swiftly-src/project.yml"
+# relative, so it works both on the VPS and in a CI checkout
+P = "project.yml"
 
 FLAGS = sys.argv[1] if len(sys.argv) > 1 else ""
 
