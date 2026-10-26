@@ -29,7 +29,9 @@ jobs:
           cat > /tmp/lane.rb <<'RUBY'
           require 'spaceship'
           begin
-            Spaceship::Portal.apple_portal
+            # The portal client: spaceship's own login, with the
+            # app-specific password and the 2FA skipped.
+            Spaceship::Portal.login(ENV['FASTLANE_USER'], ENV['FASTLANE_PASSWORD'])
             puts 'PORTAL_OK'
             apps = Spaceship::Portal.app_ids
             puts "APPIDS_COUNT #{apps.size}"
