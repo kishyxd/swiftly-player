@@ -1,0 +1,94 @@
+name: ASC-Key-Hunt
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/asc-key-hunt.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  hunt:
+    runs-on: macos-14
+    env:
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPEC_PW: ${{ secrets.APPLE_APP_SPEC_PW }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+    steps:
+      - name: The hunt
+        env:
+          FASTLANE_USER: ${{ secrets.APPLE_ID }}
+          FASTLANE_PASSWORD: ${{ secrets.APPLE_APP_SPEC_PW }}
+          FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPEC_PW }}
+          FASTLANE_SKIP_2FA: 'true'
+        run: |
+          set +x
+          cd /tmp
+          echo "### the fastlane version"
+          fastlane --version 2>&1 | tail -3
+
+          cat > /tmp/hunt.rb <<'RUBY'
+          require 'fastlane'
+          require 'spaceship'
+
+          U = ENV['FASTLANE_USER']
+          P = ENV['FASTLANE_PASSWORD']
+
+          # ---- 1. the portal session (this got past auth before) ----
+          begin
+            Spaceship::Portal.login(U, P)
+            puts "PORTAL_LOGIN_OK"
+            puts "PORTAL_SESSION_PRESENT #{!Spaceship::Portal.session.nil? rescue 'unknown'}"
+          rescue => e
+            puts "PORTAL_FAIL #{e.class}: #{e.message.to_s[0,300]}"
+          end
+
+          # ---- 2. the portal client and its keys ----
+          begin
+            pc = Spaceship::PortalClient.new
+            puts "PORTALCLIENT_NEW_OK"
+            begin
+              keys = pc.list_keys
+              puts "LIST_KEYS #{keys.size}"
+              keys.each do |k|
+                puts "KEY #{k.respond_to?(:kid) ? k.kid : k.to_s} | #{k.respond_to?(:name) ? k.name : ''} | #{k.respond_to?(:can_download) ? k.can_download : ''}"
+              end
+            rescue => e
+              puts "LIST_KEYS_FAIL #{e.class}: #{e.message.to_s[0,300]}"
+            end
+          rescue => e
+            puts "PORTALCLIENT_FAIL #{e.class}: #{e.message.to_s[0,300]}"
+          end
+
+          # ---- 3. the ConnectAPI token from the user + app password ----
+          begin
+            token = Spaceship::ConnectAPI::Token.create(user: U, password: P)
+            puts "TOKEN_CREATE_OK #{token.inspect[0,120]}"
+            Spaceship::ConnectAPI.token = token
+            apps = Spaceship::ConnectAPI::App.all
+            puts "APPS #{apps.size}"
+            apps.each { |a| puts "APP #{a.apple_id} | #{a.name} | #{a.bundle_id}" }
+          rescue => e
+            puts "TOKEN_FAIL #{e.class}: #{e.message.to_s[0,300]}"
+          end
+
+          # ---- 4. the connect api keys, if any key material is present ----
+          begin
+            ks = Spaceship::ConnectAPI::Key.all
+            puts "CONNECTAPI_KEYS #{ks.size}"
+            ks.each { |k| puts "CKEY #{k.kid} | #{k.name}" }
+          rescue => e
+            puts "CONNECTAPI_KEYS_FAIL #{e.class}: #{e.message.to_s[0,300]}"
+          end
+          RUBY
+          ruby /tmp/hunt.rb 2>&1 | tee a1.txt | tail -80
+
+      - name: The output
+        uses: actions/upload-artifact@v4
+        with:
+          name: asc-key-hunt
+          path: /tmp/a1.txt
+          retention-days: 7
+          if-no-files-found: warn
