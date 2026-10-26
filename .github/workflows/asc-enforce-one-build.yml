@@ -135,12 +135,16 @@ jobs:
               print(f"GROUP {g['attributes']['name']} removed {len(expired_ids)} -> {r.status_code}")
               time.sleep(1)
 
-          # 3. verify
+          # 3. verify - read the group relationships directly, the list
+          # endpoint does not inline the build relationship data
           print("=== VERIFY ===")
           for b in get("/v1/builds", {"filter[app]": APP, "limit": 200})["data"]:
               a = b["attributes"]
               print(f"  {a['version']:<8} expired={a['expired']}")
           for g in get("/v1/betaGroups", {"filter[app]": APP, "limit": 50})["data"]:
-              rel = [x["id"] for x in g.get("relationships", {}).get("builds", {}).get("data", [])]
+              gid = g["id"]
+              rel = get(f"/v1/betaGroups/{gid}/relationships/builds").get("data", [])
               print(f"  GROUP {g['attributes']['name']}: {len(rel)} builds")
+              for x in rel:
+                  print(f"      {x['id']}")
           PY
