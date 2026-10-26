@@ -1,0 +1,68 @@
+name: ASC-Session
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/asc-session.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  session:
+    runs-on: macos-14
+    steps:
+      - name: The session routes
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPEC_PW: ${{ secrets.APPLE_APP_SPEC_PW }}
+        run: |
+          set +x
+          cd /tmp
+          echo "### 1. the idmsa signin (the app-specific password)"
+          curl -s -c /tmp/c1.txt -o /tmp/r1.json -w 'HTTP %{http_code}\n' -X POST \
+            'https://idmsa.apple.com/appleauth/auth/signin' \
+            -H 'Content-Type: application/json' -H 'Accept: application/json' \
+            -d "{\"accountName\":\"$APPLE_ID\",\"password\":\"$APPLE_APP_SPEC_PW\",\"rememberMe\":true}"
+          head -c 500 /tmp/r1.json; echo
+
+          echo "### 2. the idmsa with the account password field as the app-specific one"
+          curl -s -c /tmp/c2.txt -o /tmp/r2.json -w 'HTTP %{http_code}\n' -X POST \
+            'https://idmsa.apple.com/appleauth/auth/signin' \
+            -H 'Content-Type: application/json' -H 'Accept: application/json' \
+            -H 'X-Apple-I-MD: 1' -H 'X-Apple-I-MD-RINFO: 1' \
+            -d "{\"accountName\":\"$APPLE_ID\",\"password\":\"$APPLE_APP_SPEC_PW\",\"rememberMe\":true,\"attempt\":\"4Y\"}"
+          head -c 500 /tmp/r2.json; echo
+
+          echo "### 3. the transporter's own token endpoint, following the redirect"
+          curl -s -L -c /tmp/c3.txt -b /tmp/c3.txt -o /tmp/r3.json -w 'HTTP %{http_code}\n' \
+            -H 'Content-Type: application/json' -H 'Accept: application/json' \
+            -H 'X-Apple-Store-Front: 143441-1,29' -H 'X-Apple-I-MD: 1' \
+            -H 'X-Apple-Client-Application: iTMSTransporter' \
+            -u "$APPLE_ID:$APPLE_APP_SPEC_PW" \
+            -X POST 'https://appstoreconnect.apple.com/Authentication/v1/token' \
+            -d "{\"appName\":\"iTMSTransporter\",\"appleId\":\"$APPLE_ID\",\"password\":\"$APPLE_APP_SPEC_PW\"}"
+          head -c 400 /tmp/r3.json; echo
+          echo "--- the cookies ---"
+          grep -v '^#' /tmp/c3.txt | head -8
+
+          echo "### 4. the portal's own auth check with those cookies"
+          curl -s -b /tmp/c3.txt -o /tmp/r4.html -w 'HTTP %{http_code}\n' \
+            'https://developer.apple.com/account/resources/profile/profile.action'
+          head -c 300 /tmp/r4.html; echo
+
+          echo "### 5. the ruby and fastlane availability"
+          ruby --version 2>&1 | head -1
+          gem --version 2>&1 | head -1
+          which fastlane bundle 2>&1 | head -3
+
+          echo "### 6. the altool validation of a new bundle id (does it create the record?)"
+          echo "  (the next workflow)"
+
+      - name: The output
+        uses: actions/upload-artifact@v4
+        with:
+          name: asc-session-probe
+          path: /tmp
+          retention-days: 3
