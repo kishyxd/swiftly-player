@@ -220,20 +220,36 @@ targets:
         # finish: "the compiler is unable to type-check this expression in
         # reasonable time". It is not a bug in the code - upstream ships the
         # identical expression and builds it on the author's Mac. The solver
-        # has a fixed budget, and a CI runner is slower than that Mac, so the
+        # has fixed budgets, and a CI runner is slower than that Mac, so the
         # budget runs out here and not there.
         #
-        # The lever is the SCOPE threshold: how many constraint scopes the
-        # solver may create for one expression before it gives up. Raising it
-        # for THIS TARGET ONLY is what matters - applied to the whole project
-        # it also reaches the JellyfinKit package, whose own expressions then
-        # run out of budget instead (33 files, same error).
+        # Four budgets, all at their maximum:
+        #   scope    how many constraint scopes one expression may get
+        #   trail    the solver's record of what it has tried
+        #   time     the wall clock it may spend on one expression
+        #   memory   the memory it may use
         #
-        # The trail threshold goes with it: the solver's trail is the record of
-        # what it has tried, and a bigger scope needs a bigger trail.
+        # All four are needed. Measured 2026-10-26 on a macos-15 runner with
+        # Xcode 26.3: with none of them the build fails with 87 such errors;
+        # with scope and trail alone, 6; with all four, 0 and BUILD SUCCEEDED.
+        #
+        # The thresholds are 32-bit, so 2147483647 is the ceiling. A larger
+        # value gives "error: Invalid value ... in '-solver-trail-threshold=...'"
+        # from the swift DRIVER, and the build then reports ZERO `: error:`
+        # lines - which reads as "the type-check error is gone" when the
+        # compile never ran. Check for that driver error before believing a
+        # clean count.
+        #
+        # `-solver-memory-threshold` takes a SPACE, not `=`, and cannot go
+        # through `-Xfrontend` (which takes exactly one argument) - hence the
+        # plain flag.
+        #
+        # The flag is on THIS TARGET only. On the xcodebuild command line it
+        # would reach every target, including the JellyfinKit package, whose
+        # own expressions then run out of budget instead.
         #
         # These change no behaviour. They only let the compiler finish.
-        OTHER_SWIFT_FLAGS: "$(inherited) -Xfrontend -solver-scope-threshold=1000 -Xfrontend -solver-trail-threshold=100000000"
+        OTHER_SWIFT_FLAGS: "$(inherited) -Xfrontend -solver-scope-threshold=2147483647 -Xfrontend -solver-trail-threshold=2147483647 -Xfrontend -solver-expression-time-threshold=2147483647 -solver-memory-threshold 2147483647"
 
   Swiftly-tvOS:
     type: application
