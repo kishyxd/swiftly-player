@@ -21,11 +21,11 @@ jobs:
       matrix:
         include:
           - os: macos-15
-            xcode: ''
+            xcode: '26.3'
           - os: macos-15
-            xcode: '16.4'
-          - os: macos-26
-            xcode: ''
+            xcode: '26.2'
+          - os: macos-15
+            xcode: '26.0'
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
