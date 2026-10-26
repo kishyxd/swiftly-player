@@ -1,0 +1,69 @@
+name: ASC-Portal-Real
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/asc-portal-real.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  portal:
+    runs-on: macos-14
+    env:
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPEC_PW: ${{ secrets.APPLE_APP_SPEC_PW }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+    steps:
+      - name: The spaceship layout and the portal session
+        env:
+          FASTLANE_USER: ${{ secrets.APPLE_ID }}
+          FASTLANE_PASSWORD: ${{ secrets.APPLE_APP_SPEC_PW }}
+          FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPEC_PW }}
+          FASTLANE_SKIP_2FA: 'true'
+        run: |
+          set +x
+          cd /tmp
+          echo "### the spaceship file layout"
+          find /opt/homebrew/lib/ruby/gems/3.3.0/gems/fastlane-2.238.0/spaceship/lib -maxdepth 2 -name '*.rb' | head -30
+
+          cat > /tmp/p.rb <<'RUBY'
+          require 'fastlane'
+          require 'spaceship'
+          puts "SPACESHIP_CONSTANTS " + Spaceship.constants.grep(/Portal|Tunes|Connect/).sort.join(',')
+
+          U = ENV['FASTLANE_USER']
+          P = ENV['FASTLANE_PASSWORD']
+
+          # ---- the portal client, with the ASC key fetch disabled ----
+          begin
+            # The old portal client: this is what reads app ids, devices,
+            # certificates and provisioning profiles.
+            c = Spaceship::Portal::Client.new(U, P)
+            c.login
+            puts "PORTAL_LOGIN_OK"
+            %w[app_ids devices certificates profiles].each do |m|
+              begin
+                items = c.send(m)
+                puts "LIST #{m} #{items.size}"
+                items.first(10).each do |x|
+                  puts "ITEM #{m} " + x.respond_to?(:to_h) ? x.to_h.inspect : x.to_s
+                end
+              rescue => e
+                puts "LIST_FAIL #{m} #{e.class}: #{e.message.to_s[0,200]}"
+              end
+            end
+          rescue => e
+            puts "PORTAL_FAIL #{e.class}: #{e.message.to_s[0,400]}"
+          end
+          RUBY
+          ruby /tmp/p.rb 2>&1 | tee a1.txt | tail -60
+
+      - name: The output
+        uses: actions/upload-artifact@v4
+        with:
+          name: asc-portal-real
+          path: /tmp
+          retention-days: 3
