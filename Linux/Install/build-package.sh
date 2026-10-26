@@ -23,7 +23,7 @@ state="${4:-1}"
 if [ "$state" = "1" ]; then debVersion="$version"; else debVersion="$version-$state"; fi
 source="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
-PROGRAM="swiftly-jellyfin"
+PROGRAM="ftv-player"
 ID="de.paulherter.swiftly"
 mkdir -p "$out"
 
@@ -121,32 +121,32 @@ Comment: libVLC and
  vlc and gtk4) and keep their own licenses (LGPL-2.1-or-later). The source
  code of libVLC is available from VideoLAN, https://www.videolan.org/vlc/,
  and the written offer is in THIRD-PARTY-NOTICES.md. The full license
- texts are in /usr/share/doc/swiftly-jellyfin/LICENSES/.
+ texts are in /usr/share/doc/ftv-player/LICENSES/.
 
 Files: *
 Copyright: Paul Herter
 License: MPL-2.0
  This Source Code Form is subject to the terms of the Mozilla Public
  License, v. 2.0. The full text is in /usr/share/common-licenses/MPL-2.0
- and in /usr/share/doc/swiftly-jellyfin/LICENSE.
+ and in /usr/share/doc/ftv-player/LICENSE.
 
-Files: usr/lib/swiftly-jellyfin/Resources/Fonts/*
+Files: usr/lib/ftv-player/Resources/Fonts/*
 Copyright: 2020 The Inter Project Authors (https://github.com/rsms/inter)
 License: OFL-1.1
  This Font Software is licensed under the SIL Open Font License, Version
  1.1. The full text is in
- /usr/share/doc/swiftly-jellyfin/LICENSES/OFL-1.1-Inter.txt.
+ /usr/share/doc/ftv-player/LICENSES/OFL-1.1-Inter.txt.
 
-Files: usr/lib/swiftly-jellyfin/librlottie.so*
+Files: usr/lib/ftv-player/librlottie.so*
 Copyright: Samsung Electronics Co., Ltd. and the rlottie authors
 License: MIT
- The full text is in /usr/share/doc/swiftly-jellyfin/LICENSES/MIT.txt.
+ The full text is in /usr/share/doc/ftv-player/LICENSES/MIT.txt.
 
 License: LGPL-2.1+
  The libraries libVLC and GTK 4, which this program uses, are licensed
  under the GNU Lesser General Public License, version 2.1 or (at your
  option) any later version. The full text is in
- /usr/share/doc/swiftly-jellyfin/LICENSES/LGPL-2.1-or-later.txt and in
+ /usr/share/doc/ftv-player/LICENSES/LGPL-2.1-or-later.txt and in
  /usr/share/common-licenses/LGPL-2.1.
 CR
 }

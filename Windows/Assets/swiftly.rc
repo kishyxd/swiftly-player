@@ -1,3 +1,3 @@
 // Program icon and the details Windows shows in the file dialog.
 // ID 1: Windows uses the icon with the lowest ID as the program icon.
-1 ICON "swiftly.ico"
+1 ICON "FTVPlayer.ico"

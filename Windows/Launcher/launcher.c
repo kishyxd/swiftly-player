@@ -50,31 +50,31 @@ typedef struct {
 } Texte;
 
 static const Texte deutsch = {
-    L"Swiftly startet …",
+    L"FTV Player startet …",
     L"Beim ersten Start prüft Windows die App. Das kann bis zu einer Minute dauern.",
     L"%d s",
-    L"Swiftly läuft noch, hat nach zwei Minuten aber kein Fenster offen. Im Protokoll steht, wie weit es gekommen ist.",
-    L"Swiftly wurde beendet, bevor ein Fenster aufging.",
+    L"FTV Player läuft noch, hat nach zwei Minuten aber kein Fenster offen. Im Protokoll steht, wie weit es gekommen ist.",
+    L"FTV Player wurde beendet, bevor ein Fenster aufging.",
     L"Code 0x%08lX. Zuletzt: %s",
-    L"Eine Datei fehlt. Installier Swiftly am besten neu.",
-    L"Swiftly ließ sich nicht starten (Fehler %lu).",
+    L"Eine Datei fehlt. Installier FTV Player am besten neu.",
+    L"FTV Player ließ sich nicht starten (Fehler %lu).",
     L"Protokoll öffnen",
     L"Schließen",
-    L"bin\\Swiftly.exe fehlt. Installier Swiftly am besten neu.",
+    L"bin\\FTVPlayer.exe fehlt. Installier FTV Player am besten neu.",
 };
 
 static const Texte englisch = {
-    L"Starting Swiftly …",
+    L"Starting FTV Player …",
     L"On first launch, Windows checks the app. This can take up to a minute.",
     L"%d s",
-    L"Swiftly is still running but has no window after two minutes. The log shows how far it got.",
-    L"Swiftly quit before its window opened.",
+    L"FTV Player is still running but has no window after two minutes. The log shows how far it got.",
+    L"FTV Player quit before its window opened.",
     L"Code 0x%08lX. Last step: %s",
-    L"A file is missing. Reinstalling Swiftly should fix it.",
-    L"Swiftly couldn't be started (error %lu).",
+    L"A file is missing. Reinstalling FTV Player should fix it.",
+    L"FTV Player couldn't be started (error %lu).",
     L"Open log",
     L"Close",
-    L"bin\\Swiftly.exe is missing. Reinstalling Swiftly should fix it.",
+    L"bin\\FTVPlayer.exe is missing. Reinstalling FTV Player should fix it.",
 };
 
 static const Texte *T = &englisch;
@@ -175,7 +175,7 @@ static void protokollOeffnen(void) {
     wchar_t roaming[MAX_PATH], dir[MAX_PATH];
     DWORD n = GetEnvironmentVariableW(L"APPDATA", roaming, MAX_PATH);
     if (n == 0 || n >= MAX_PATH) return;
-    _snwprintf_s(dir, _countof(dir), _TRUNCATE, L"%s\\Swiftly", roaming);
+    _snwprintf_s(dir, _countof(dir), _TRUNCATE, L"%s\\FTVPlayer", roaming);
     CreateDirectoryW(dir, NULL);
     _snwprintf_s(protokollPfad, _countof(protokollPfad), _TRUNCATE, L"%s\\swiftly.log", dir);
     _snwprintf_s(altPfad, _countof(altPfad), _TRUNCATE, L"%s\\swiftly.alt.log", dir);
@@ -392,7 +392,7 @@ static void bauen(HWND h) {
     grossesSymbol = (HICON)LoadImageW(inst, MAKEINTRESOURCEW(1), IMAGE_ICON, S(48), S(48), 0);
 
     int links = S(88), breite = S(460) - links - S(24);
-    HWND titelzeile = CreateWindowW(L"STATIC", L"Swiftly", WS_CHILD | WS_VISIBLE | SS_NOPREFIX,
+    HWND titelzeile = CreateWindowW(L"STATIC", L"FTV Player", WS_CHILD | WS_VISIBLE | SS_NOPREFIX,
                                     links, S(20), S(200), S(28), h, NULL, inst, NULL);
     zeileSekunden = CreateWindowW(L"STATIC", L"", WS_CHILD | SS_RIGHT | SS_NOPREFIX,
                                   links + breite - S(80), S(26), S(80), S(20), h, NULL, inst, NULL);
@@ -506,7 +506,7 @@ int WINAPI wWinMain(HINSTANCE h, HINSTANCE vorher, PWSTR befehl, int zeigen) {
     GetModuleFileNameW(NULL, ordner, MAX_PATH);
     wchar_t *schnitt = wcsrchr(ordner, L'\\');
     if (schnitt) *schnitt = 0;
-    _snwprintf_s(programm, _countof(programm), _TRUNCATE, L"%s\\bin\\Swiftly.exe", ordner);
+    _snwprintf_s(programm, _countof(programm), _TRUNCATE, L"%s\\bin\\FTVPlayer.exe", ordner);
     const wchar_t *rest = restDerBefehlszeile();
     size_t laenge = wcslen(programm) + wcslen(rest) + 8;
     kindBefehl = (wchar_t *)HeapAlloc(GetProcessHeap(), 0, laenge * sizeof(wchar_t));
@@ -539,7 +539,7 @@ int WINAPI wWinMain(HINSTANCE h, HINSTANCE vorher, PWSTR befehl, int zeigen) {
     k.hInstance = h;
     k.hCursor = LoadCursorW(NULL, IDC_APPSTARTING);
     k.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
-    k.lpszClassName = L"SwiftlyStart";
+    k.lpszClassName = L"FTVPlayerStart";
     k.hIcon = (HICON)LoadImageW(h, MAKEINTRESOURCEW(1), IMAGE_ICON, GetSystemMetrics(SM_CXICON),
                                 GetSystemMetrics(SM_CYICON), 0);
     k.hIconSm = (HICON)LoadImageW(h, MAKEINTRESOURCEW(1), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
@@ -549,7 +549,7 @@ int WINAPI wWinMain(HINSTANCE h, HINSTANCE vorher, PWSTR befehl, int zeigen) {
     /* The size is only known after the DPI, so create with a placeholder and
  * adjust afterwards. */
     DWORD stil = WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
-    HWND f = CreateWindowExW(0, L"SwiftlyStart", L"Swiftly", stil, CW_USEDEFAULT, CW_USEDEFAULT,
+    HWND f = CreateWindowExW(0, L"FTVPlayerStart", L"FTV Player", stil, CW_USEDEFAULT, CW_USEDEFAULT,
                              100, 100, NULL, NULL, h, NULL);
     if (!f) return 1;
     RECT r = { 0, 0, S(460), S(194) };
@@ -565,7 +565,7 @@ int WINAPI wWinMain(HINSTANCE h, HINSTANCE vorher, PWSTR befehl, int zeigen) {
     AllowSetForegroundWindow(ASFW_ANY);
 
     if (GetFileAttributesW(programm) == INVALID_FILE_ATTRIBUTES) {
-        protokolliere(L"bin\\Swiftly.exe fehlt");
+        protokolliere(L"bin\\FTVPlayer.exe fehlt");
         fehlerZeigen(T->programmFehlt, L"");
     } else {
         SetTimer(f, TAKT_ID, 250, NULL);

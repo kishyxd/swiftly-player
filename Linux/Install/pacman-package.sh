@@ -23,7 +23,7 @@ out="${3:?Ausgabeverzeichnis fehlt}"
 state="${4:-1}"
 source="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
-PROGRAM="swiftly-jellyfin"
+PROGRAM="ftv-player"
 ID="de.paulherter.swiftly"
 work="$(mktemp -d)"
 mkdir -p "$out" "$work/inhalt"

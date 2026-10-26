@@ -24,7 +24,7 @@
 	     jedem Start verloren. -->
 	<key>keychain-access-groups</key>
 	<array>
-		<string>$(AppIdentifierPrefix)de.paulherter.swiftly</string>
+		<string>$(AppIdentifierPrefix)com.kxvn.ftvplayer</string>
 	</array>
 </dict>
 </plist>

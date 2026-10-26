@@ -7,7 +7,7 @@
 # usual way; if the toolchain is already installed via swiftly under $HOME,
 # set SWIFT=/path/to/swift and makepkg uses it.
 
-pkgname=swiftly-jellyfin
+pkgname=ftv-player
 pkgver=1.0.6
 pkgrel=1
 pkgdesc="Jellyfin-Client, der niemals transkodiert"

@@ -8,7 +8,7 @@
 	</array>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.de.paulherter.swiftly</string>
+		<string>group.com.kxvn.ftvplayer</string>
 	</array>
 </dict>
 </plist>

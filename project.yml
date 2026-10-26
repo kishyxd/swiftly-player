@@ -1,6 +1,6 @@
 name: Swiftly
 options:
-  bundleIdPrefix: de.paulherter
+  bundleIdPrefix: com.kxvn
   # German is the source language; English comes from the catalog. Both ship
   # with the app.
   developmentLanguage: de
@@ -185,7 +185,7 @@ targets:
         SKIncludeConsumableInAppPurchaseHistory: true
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: de.paulherter.swiftly
+        PRODUCT_BUNDLE_IDENTIFIER: com.kxvn.ftvplayer
         # iPhone and iPad. The former reasons to exclude iPad are resolved:
         # PortraitUpsideDown is in the orientations above, and views read their
         # width instead of hard-wiring three columns (`Stil.spalten(fuer:)`).
@@ -401,7 +401,7 @@ targets:
         # lasts only until the next `xcodegen generate`, and the Top Shelf would
         # lead nowhere.
         CFBundleURLTypes:
-          - CFBundleURLName: de.paulherter.swiftly
+          - CFBundleURLName: com.kxvn.ftvplayer
             CFBundleURLSchemes:
               - swiftly
         UIBackgroundModes:
@@ -446,8 +446,8 @@ targets:
           an address like 192.168.1.5.
     settings:
       base:
-        MARKETING_VERSION: "1.0.10"
-        PRODUCT_BUNDLE_IDENTIFIER: de.paulherter.swiftly
+        MARKETING_VERSION: "1.0.9"
+        PRODUCT_BUNDLE_IDENTIFIER: com.kxvn.ftvplayer
         # Same reason as on iOS: without the access group the keychain refuses
         # writes (-34018) and the login would be lost on every launch.
         CODE_SIGN_ENTITLEMENTS: Sources/tvOS/Swiftly.entitlements
@@ -512,8 +512,8 @@ targets:
           NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShelfProvider
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: de.paulherter.swiftly.topshelf
-        MARKETING_VERSION: "1.0.10"
+        PRODUCT_BUNDLE_IDENTIFIER: com.kxvn.ftvplayer.topshelf
+        MARKETING_VERSION: "1.0.9"
         CODE_SIGN_ENTITLEMENTS: Sources/TopShelf/TopShelf.entitlements
 
   # The Mac version.
@@ -711,7 +711,14 @@ targets:
         # 16 and 128 sizes; 32, 256, 512 and 1024 are missing, and the Dock
         # needs the large ones. The one next to it is built with `iconutil` from
         # the same ten images and is complete.
-        CFBundleIconFile: Swiftly
+        #
+        # **It is `FTVPlayer.icns`, and the CI copies it over the catalog's
+        # `AppIcon.icns` in the built bundle.** `actool` writes a partial
+        # Info.plist with `CFBundleIconName` and `CFBundleIconFile` = `AppIcon`,
+        # and Xcode's merge lets it win over the key written here, so the
+        # Dock read the small one. The complete file now sits under both
+        # names, so whichever key the system reads, the icon is the owner's.
+        CFBundleIconFile: FTVPlayer
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         # No light theme - the design is built for dark, and without this macOS
@@ -766,10 +773,10 @@ targets:
         # **No separate Mac build number.** All three platforms share the global
         # counter; two places for the same number are one too many. It must stay
         # higher than any build already uploaded for the Mac.
-        # So that the file itself is also called "Swiftly.app" and not after the
+        # So that the file itself is also called "FTVPlayer.app" and not after the
         # build target - see `CFBundleName`.
-        PRODUCT_NAME: Swiftly
-        PRODUCT_BUNDLE_IDENTIFIER: de.paulherter.swiftly
+        PRODUCT_NAME: FTVPlayer
+        PRODUCT_BUNDLE_IDENTIFIER: com.kxvn.ftvplayer
         # Same reason as on iOS and tvOS: without the access group the keychain
         # refuses writes (-34018) and the login would be lost on every launch.
         CODE_SIGN_ENTITLEMENTS: Sources/macOS/Swiftly.entitlements

@@ -214,7 +214,7 @@ if ($LASTEXITCODE -ne 0) { throw "rc.exe fuer das Startprogramm fehlgeschlagen (
 $vorher = $ErrorActionPreference
 $ErrorActionPreference = 'SilentlyContinue'
 & cl.exe /nologo /O1 /W4 /MT /utf-8 /DUNICODE /D_UNICODE `
-    "/Fo$spZiel\" "/Fe$spZiel\Swiftly.exe" (Join-Path $sp 'launcher.c') `
+    "/Fo$spZiel\" "/Fe$spZiel\FTVPlayer.exe" (Join-Path $sp 'launcher.c') `
     (Join-Path $spZiel 'launcher.res') `
     /link /SUBSYSTEM:WINDOWS /MANIFEST:NO user32.lib gdi32.lib comctl32.lib shell32.lib ole32.lib 2>&1 |
     Tee-Object -FilePath (Join-Path $spZiel 'bau.log') | Out-Null

@@ -17,7 +17,7 @@ import Glibc
 /// touched.
 enum OldRun {
 
-    private static let program = "swiftly-jellyfin"
+    private static let program = "ftv-player"
     private static let identifier = "de.paulherter.swiftly"
 
     /// Runs before `g_application_run`. Returns if startup may proceed; otherwise

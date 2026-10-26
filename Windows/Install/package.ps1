@@ -22,7 +22,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $hier = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
-if (-not $Ziel) { $Ziel = Join-Path $hier 'Output\Swiftly' }
+if (-not $Ziel) { $Ziel = Join-Path $hier 'Output\FTVPlayer' }
 function Sag($t) { Write-Host "==> $t" -ForegroundColor Green }
 
 $bau = Join-Path $hier ".build\$Konfiguration"
@@ -44,14 +44,14 @@ if (Test-Path $Ziel) { Remove-Item -Recurse -Force $Ziel }
 New-Item -ItemType Directory -Force -Path "$Ziel\bin","$Ziel\share","$Ziel\lib" | Out-Null
 
 Sag 'Programm'
-Copy-Item (Join-Path $bau 'SwiftlyWindows.exe') "$Ziel\bin\Swiftly.exe"
+Copy-Item (Join-Path $bau 'SwiftlyWindows.exe') "$Ziel\bin\FTVPlayer.exe"
 
 # **The launcher sits one level above `bin`** and starts `bin\Swiftly.exe` from
 # there. Shortcuts point to it, not to the app; otherwise nothing is shown for
 # 20 s on first start.
-$startprogramm = Join-Path $hier '.build\launcher\Swiftly.exe'
+$startprogramm = Join-Path $hier '.build\launcher\FTVPlayer.exe'
 if (-not (Test-Path $startprogramm)) { throw "Startprogramm fehlt: erst .\build.ps1" }
-Copy-Item $startprogramm "$Ziel\Swiftly.exe"
+Copy-Item $startprogramm "$Ziel\FTVPlayer.exe"
 
 Sag 'GTK'
 Copy-Item "$Gtk\bin\*.dll" "$Ziel\bin" -Force
@@ -132,7 +132,7 @@ if ($dumpbin) {
     }
     $erreicht = @{}
     $offen = New-Object System.Collections.Queue
-    $wurzeln = @("$Ziel\bin\Swiftly.exe")
+    $wurzeln = @("$Ziel\bin\FTVPlayer.exe")
     $wurzeln += (Get-ChildItem "$Ziel\bin\plugins","$Ziel\lib" -Recurse -Filter *.dll | ForEach-Object FullName)
     foreach ($w in $wurzeln) {
         foreach ($d in (Importe $w)) {
@@ -160,17 +160,22 @@ Copy-Item (Join-Path $hier 'Resources') "$Ziel\Resources" -Recurse -Force
 foreach ($l in 'components.json','LGPL-2.1-or-later.txt') {
     if (-not (Test-Path "$Ziel\Resources\Licenses\$l")) { throw "Lizenzdatei fehlt: Resources\Licenses\$l - erst build.ps1 laufen lassen." }
 }
+Copy-Item (Join-Path $hier 'Assets\FTVPlayer.ico') "$Ziel\FTVPlayer.ico" -Force
 Copy-Item (Join-Path (Split-Path -Parent $hier) 'THIRD-PARTY-NOTICES.md') "$Ziel\THIRD-PARTY-NOTICES.md" -Force
 Copy-Item (Join-Path (Split-Path -Parent $hier) 'LICENSE') "$Ziel\LICENSE.txt" -Force
 
 # A shortcut one level up, so nobody has to look in `bin`.
 Sag 'Verknuepfung'
 $wsh = New-Object -ComObject WScript.Shell
-$vk = $wsh.CreateShortcut((Join-Path $Ziel 'Swiftly.lnk'))
-$vk.TargetPath = "$Ziel\Swiftly.exe"
-$vk.WorkingDirectory = $Ziel
-$vk.IconLocation = "$Ziel\Swiftly.exe,0"
-$vk.Description = 'Jellyfin-Client, der niemals transkodiert'
+# **The target is relative to the shortcut.** An absolute path is the
+# build machine's (`C:\swiftly\Windows\Output\FTVPlayer`), and the
+# shortcut is then broken on every other computer. Relative, it works
+# wherever the folder is unpacked.
+$vk = $wsh.CreateShortcut((Join-Path $Ziel 'FTV Player.lnk'))
+$vk.TargetPath = 'FTVPlayer.exe'
+$vk.WorkingDirectory = '.'
+$vk.IconLocation = 'FTVPlayer.exe,0'
+$vk.Description = 'FTV Player - Filme und Serien vom eigenen Jellyfin-Server, ohne Transkodierung'
 $vk.Save()
 
 $groesse = [math]::Round(((Get-ChildItem $Ziel -Recurse -File | Measure-Object Length -Sum).Sum / 1MB))

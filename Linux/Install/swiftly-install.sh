@@ -25,12 +25,12 @@ main() {
 
 BRANCH="${SWIFTLY_ZWEIG:-main}"
 ORIGIN="${SWIFTLY_HERKUNFT:-https://github.com/paulherter/swiftly-player.git}"
-WORK="${XDG_CACHE_HOME:-$HOME/.cache}/swiftly-jellyfin"
+WORK="${XDG_CACHE_HOME:-$HOME/.cache}/ftv-player"
 TARGET="$HOME/.local"
 # **Not `NAME`.** `/etc/os-release` sets its own `NAME`, which is sourced
 # right here. Using `NAME` would name the app "CachyOS Linux" and create a
 # directory with a space in it.
-PROGRAM="swiftly-jellyfin"
+PROGRAM="ftv-player"
 ID="de.paulherter.swiftly"
 SOURCE_URL="${SWIFTLY_QUELLE:-https://paulherter.github.io/swiftly-player}"
 # The fingerprint is pinned, not just the keyring: this verifies that the
@@ -194,7 +194,7 @@ if [ "${from_source:-0}" = "0" ]; then
         # the icon would then raise it instead of the freshly installed version.
         # Only processes running from a Swiftly directory are ended; settings are
         # kept.
-        if pkill -f '/swiftly-jellyfin/swiftly-jellyfin( |$)' 2>/dev/null; then
+        if pkill -f '/ftv-player/ftv-player( |$)' 2>/dev/null; then
             quiet "Eine laufende aeltere Swiftly-Kopie wurde beendet — jetzt neu starten."
         fi
         say "Fertig."

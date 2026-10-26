@@ -14,13 +14,13 @@
 ; DLLs, and until then nothing appeared on screen for about 23 s. The launcher
 ; shows a loading window meanwhile; see `Windows\Launcher\launcher.c`.
 
-#define Name "Swiftly"
+#define Name "FTV Player"
 #define Fassung "1.0.6"
 ; Build number, same as `Fassung.bau` in Linux/Sources/SwiftlyLinux/Version.swift.
 #define Bau "1"
 #define Herausgeber "Paul Herter"
 #define Netz "https://github.com/paulherter/swiftly-player"
-#define Programm "Swiftly.exe"
+#define Programm "FTVPlayer.exe"
 
 [Setup]
 AppId={{8E2F1C74-3D9A-4B10-9C7E-5A6B2D8F0E31}
@@ -35,7 +35,7 @@ DefaultGroupName={#Name}
 DisableProgramGroupPage=yes
 LicenseFile=..\..\LICENSE
 OutputDir=..\Output
-OutputBaseFilename=Swiftly-{#Fassung}-Setup
+OutputBaseFilename=FTVPlayer-{#Fassung}-Setup
 SetupIconFile=..\Assets\swiftly.ico
 UninstallDisplayIcon={app}\{#Programm}
 Compression=lzma2/max
@@ -62,7 +62,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopsymbol"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "..\Output\Swiftly\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\Output\FTVPlayer\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 ; Updating over 1.0.2 would otherwise leave behind the DLLs that `package.ps1`
 ; now omits; they would not be loaded, but the folder would stay full.
