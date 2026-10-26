@@ -48,6 +48,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: The ipa
+        env:
+          # gh needs a token to read a run's artifacts
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           # the artifact from the build run
