@@ -39,7 +39,14 @@ settings:
     CURRENT_PROJECT_VERSION: "30"
     # Same identifier as in the free-account days: Apple converted the personal
     # team into the paid one instead of creating a second one.
-    DEVELOPMENT_TEAM: 63L6TSM2Y9
+    #
+    # **This is the KXVN paid team, NOT the upstream author's.** Upstream ships
+    # 63L6TSM2Y9; the FTV Player build is signed with Kishan's distribution
+    # certificate, whose team id is 6VS7BF6R33. A mismatch here means the
+    # automatic signing picks the wrong identity and the store profile
+    # (application-identifier 6VS7BF6R33.com.kxvn.ftvplayer) will not match
+    # the entitlement the build embeds.
+    DEVELOPMENT_TEAM: 6VS7BF6R33
     CODE_SIGN_STYLE: Automatic
     SWIFT_STRICT_CONCURRENCY: complete
     # **The FTV edition.** This build is the FTV app: it starts on the KXVN server

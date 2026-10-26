@@ -1,0 +1,207 @@
+name: Build-FTVPlayer-iOS
+
+# Builds the Swiftly-based FTV Player app (com.kxvn.ftvplayer) for iOS and
+# uploads it to App Store Connect.
+#
+# The Vendor/VLCKit.xcframework (2.7 GB) is NOT in the repository. This
+# workflow fetches the official VideoLAN build and links it. For the patched
+# build (working MKV-over-HTTP seeking) see Werkzeuge/vlckit-build/ — that is
+# a long source build and is not done here.
+#
+# ONE BUILD AT A TIME (owner rule 2026-10-26): the app record must hold
+# exactly one live version and one live build.
+#
+# Signing uses the App Store Connect API key directly (Xcode 13+ supports
+# -authenticationKeyPath). No .p12 password, no manual profile handling.
+
+on:
+  workflow_dispatch:
+    inputs:
+      upload:
+        description: 'Upload the built ipa to App Store Connect'
+        type: boolean
+        default: true
+      vlckit_source:
+        description: 'official (fast, MKV seek bug) | patched (slow, correct)'
+        type: choice
+        options: [official, patched]
+        default: official
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ftvplayer-ios-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: macos-15
+    env:
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPEC_PW: ${{ secrets.APPLE_APP_SPEC_PW }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      NEW_BUNDLE_ID: com.kxvn.ftvplayer
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: XcodeGen
+        run: brew install xcodegen
+
+      - name: The ASC key
+        run: |
+          set -euo pipefail
+          set +x
+          mkdir -p "$RUNNER_TEMP/asc"
+          echo "$ASC_KEY_P8" | base64 -d > "$RUNNER_TEMP/asc/AuthKey_${ASC_KEY_ID}.p8"
+          chmod 600 "$RUNNER_TEMP/asc/AuthKey_${ASC_KEY_ID}.p8"
+          ls -la "$RUNNER_TEMP/asc/"
+
+      - name: The VLCKit framework
+        env:
+          VLCKIT_SOURCE: ${{ inputs.vlckit_source }}
+        run: |
+          set -euo pipefail
+          mkdir -p Vendor
+          if [ "$VLCKIT_SOURCE" = "patched" ]; then
+            echo "::group::the patched framework"
+            # Clones VideoLAN's VLCKit, applies the patches in
+            # Werkzeuge/vlckit-patches/ and builds the three platform slices.
+            # A long job (hours) and a lot of disk.
+            # usage: build-all.sh <VLCKit-checkout> <logdir> <output.xcframework>
+            bash Werkzeuge/vlckit-build/build-all.sh \
+              "$PWD/.vlckit" "$RUNNER_TEMP/vlckit-logs" \
+              "$PWD/Vendor/VLCKit-gepatcht.xcframework"
+          else
+            echo "::group::the official framework"
+            # The official build has a known bug: MKV over HTTP discards the
+            # index, so a seek reads from the start of the file.
+            bash Werkzeuge/vlckit-fetch.sh
+            # The project links the patched name. Rename the official one onto
+            # it so the build works without the multi-hour source build.
+            # A real directory, not a symlink: xcodebuild resolves a framework
+            # path more reliably as a directory.
+            rm -rf Vendor/VLCKit-gepatcht.xcframework
+            mv Vendor/VLCKit.xcframework Vendor/VLCKit-gepatcht.xcframework
+          fi
+          ls -la Vendor/
+
+      - name: The project
+        run: xcodegen generate
+
+      - name: Build
+        run: |
+          set -euo pipefail
+          export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+          xcodebuild \
+            -project Swiftly.xcodeproj \
+            -scheme Swiftly-iOS \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/ftvplayer.xcarchive" \
+            -authenticationKeyPath "$RUNNER_TEMP/asc/AuthKey_${ASC_KEY_ID}.p8" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            DEVELOPMENT_TEAM=6VS7BF6R33 \
+            CODE_SIGN_STYLE=Automatic \
+            -allowProvisioningUpdates \
+            archive
+          echo "=== the archive"
+          ls -la "$RUNNER_TEMP/ftvplayer.xcarchive/Products/Applications/"
+
+      - name: The ipa
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/opts.plist" <<'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>teamID</key><string>6VS7BF6R33</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+            <key>destination</key><string>upload</string>
+          </dict>
+          </plist>
+          PLIST
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/ftvplayer.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/opts.plist" \
+            -exportPath "$RUNNER_TEMP/ipa"
+          ls -la "$RUNNER_TEMP/ipa/"
+
+      - name: The identity
+        run: |
+          set -euo pipefail
+          rm -rf probe && mkdir -p probe
+          unzip -q -o "$RUNNER_TEMP/ipa/ftvplayer.ipa" -d probe
+          APP=$(ls -d probe/Payload/*.app)
+          echo "bundle:      $(plutil -extract CFBundleIdentifier raw "$APP/Info.plist")"
+          echo "display:     $(plutil -extract CFBundleDisplayName raw "$APP/Info.plist")"
+          echo "version:     $(plutil -extract CFBundleShortVersionString raw "$APP/Info.plist")"
+          echo "build:       $(plutil -extract CFBundleVersion raw "$APP/Info.plist")"
+          echo "profile:     $(ls "$APP/embedded.mobileprovision" 2>/dev/null || echo MISSING)"
+          # the bundle id must be the new one, not the plezy one
+          test "$(plutil -extract CFBundleIdentifier raw "$APP/Info.plist")" = "com.kxvn.ftvplayer"
+
+      - name: Upload
+        if: ${{ inputs.upload == true }}
+        run: |
+          set -euo pipefail
+          set +x
+          # The upload only needs the app-specific password. It does NOT need
+          # a portal session (the portal session path is dead).
+          xcrun altool --upload-app --file "$RUNNER_TEMP/ipa/ftvplayer.ipa" --type ios \
+            -u "$APPLE_ID" -p "$APPLE_APP_SPEC_PW" --team-id "$APPLE_TEAM_ID" 2>&1 | tee upload.log
+          # Trust ONLY the literal success line. A broad error scan marks a
+          # successful upload as a failure.
+          grep -q "No errors uploading" upload.log || {
+            echo "::error::the upload did not succeed"; exit 1; }
+          echo "UPLOAD_OK"
+
+      - name: The one build rule
+        if: ${{ inputs.upload == true }}
+        run: |
+          set -euo pipefail
+          set +x
+          python3 - <<'PY'
+          import base64, os, time
+          import jwt, requests
+
+          raw = base64.b64decode(os.environ['ASC_KEY_P8'])
+          now = int(time.time())
+          token = jwt.encode(
+              {"iss": os.environ['ASC_ISSUER_ID'], "iat": now,
+               "exp": now + 1200, "aud": "appstoreconnect-v1"},
+              raw, algorithm="ES256",
+              headers={"kid": os.environ['ASC_KEY_ID'], "typ": "JWT"})
+          B = "https://api.appstoreconnect.apple.com"
+          H = {"Authorization": f"Bearer {token}"}
+
+          apps = requests.get(B + "/v1/apps", headers=H,
+                              params={"filter[bundleId]": "com.kxvn.ftvplayer"},
+                              timeout=60).json().get("data", [])
+          if not apps:
+              print("NO_APP_RECORD - create it in App Store Connect first")
+              raise SystemExit(0)
+          app = apps[0]
+          print(f"APP {app['id']} {app['attributes']['name']}")
+
+          builds = requests.get(B + "/v1/builds", headers=H,
+                                params={"filter[app]": app["id"], "limit": 200},
+                                timeout=60).json()["data"]
+          for b in builds:
+              a = b["attributes"]
+              print(f"  {a['version']} expired={a['expired']} {b['id']}")
+          PY
+
+      - name: Keep the ipa
+        uses: actions/upload-artifact@v4
+        with:
+          name: ftvplayer-ipa
+          path: ${{ runner.temp }}/ipa
+          retention-days: 7
