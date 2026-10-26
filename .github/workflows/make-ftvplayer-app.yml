@@ -1,0 +1,139 @@
+name: Make-FTVPlayer-App
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/make-ftvplayer-app.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  create:
+    runs-on: macos-14
+    env:
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPEC_PW: ${{ secrets.APPLE_APP_SPEC_PW }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      NEW_BUNDLE_ID: com.kxvn.ftvplayer
+      NEW_APP_NAME: FTV Player
+    steps:
+      - name: The portal client, the identifier and the profile
+        env:
+          FASTLANE_USER: ${{ secrets.APPLE_ID }}
+          FASTLANE_PASSWORD: ${{ secrets.APPLE_APP_SPEC_PW }}
+          FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPEC_PW }}
+          FASTLANE_SKIP_2FA: 'true'
+        run: |
+          set +x
+          cd /tmp
+          cat > /tmp/mk.rb <<'RUBY'
+          require 'fastlane'
+          require 'spaceship'
+
+          U = ENV['FASTLANE_USER']
+          P = ENV['FASTLANE_PASSWORD']
+          BID = ENV['NEW_BUNDLE_ID']
+          NAME = ENV['NEW_APP_NAME']
+
+          # ---- the portal client class ----
+          client_class = nil
+          [Spaceship::PortalClient, Spaceship::Portal::Client].each do |k|
+            begin
+              client_class = k
+              puts "CLIENT_CLASS #{k}"
+              break
+            rescue NameError
+              next
+            end
+          end
+          puts "CLIENT_METHODS " + client_class.instance_methods(false).sort.join(',')
+
+          client = client_class.new(U, P)
+          begin
+            client.login
+            puts "LOGIN_OK"
+          rescue => e
+            puts "LOGIN_FAIL #{e.class}: #{e.message.to_s[0,300]}"
+          end
+
+          # ---- what is there already ----
+          begin
+            ids = client.app_ids
+            puts "APPIDS #{ids.size}"
+            ids.each { |a| puts "APPID #{a.bundle_id} | #{a.name} | #{a.app_id}" }
+          rescue => e
+            puts "APPIDS_FAIL #{e.class}: #{e.message.to_s[0,200]}"
+          end
+          begin
+            certs = client.certificates
+            puts "CERTS #{certs.size}"
+            certs.each { |c| puts "CERT #{c.id} | #{c.name} | #{c.certificate_type}" }
+          rescue => e
+            puts "CERTS_FAIL #{e.class}: #{e.message.to_s[0,200]}"
+          end
+          begin
+            devs = client.devices
+            puts "DEVICES #{devs.size}"
+            devs.each { |d| puts "DEVICE #{d.udid} | #{d.name}" }
+          rescue => e
+            puts "DEVICES_FAIL #{e.class}: #{e.message.to_s[0,200]}"
+          end
+
+          # ---- the identifier for the new app ----
+          existing = nil
+          begin
+            existing = client.app_ids.find { |a| a.bundle_id == BID }
+          rescue => e
+            puts "FIND_FAIL #{e.class}"
+          end
+          if existing
+            puts "APPID_EXISTS #{existing.bundle_id} | #{existing.name} | #{existing.app_id}"
+          else
+            begin
+              made = Spaceship::Portal.app_id.create!(name: NAME, bundle_id: BID)
+              puts "APPID_CREATED #{made.bundle_id} | #{made.name} | #{made.app_id}"
+            rescue => e
+              puts "APPID_CREATE_FAIL #{e.class}: #{e.message.to_s[0,400]}"
+            end
+          end
+
+          # ---- the store profile for it ----
+          begin
+            profs = client.profiles
+            puts "PROFILES #{profs.size}"
+            profs.each { |p| puts "PROFILE #{p.name} | #{p.profile_type} | #{p.expiration_date} | #{p.app_id}" }
+          rescue => e
+            puts "PROFILES_FAIL #{e.class}: #{e.message.to_s[0,200]}"
+          end
+
+          # ---- create the App Store Connect distribution profile ----
+          begin
+            app_id = Spaceship::Portal.app_id.find { |a| a.bundle_id == BID }
+            cert = Spaceship::Portal.certificate.find { |c| c.certificate_type == 'distribution' }
+            puts "PROFILE_INPUTS app_id=#{app_id && app_id.app_id} cert=#{cert && cert.id}"
+            if app_id && cert
+              prof = Spaceship::Portal.provisioning_profile.create!(
+                name: 'KXVN Store FTV Player',
+                profile_type: 'app-store',
+                app_id: app_id.app_id,
+                certificate_id: cert.id
+              )
+              puts "PROFILE_CREATED #{prof.name} | #{prof.profile_type} | #{prof.expiration_date}"
+              File.binwrite('/tmp/ftvplayer.mobileprovision', prof.download)
+              puts "PROFILE_DOWNLOADED #{File.size('/tmp/ftvplayer.mobileprovision')}"
+            end
+          rescue => e
+            puts "PROFILE_CREATE_FAIL #{e.class}: #{e.message.to_s[0,500]}"
+          end
+          RUBY
+          ruby /tmp/mk.rb 2>&1 | tee a1.txt | tail -70
+
+      - name: The new profile
+        uses: actions/upload-artifact@v4
+        with:
+          name: ftvplayer-profile
+          path: /tmp/ftvplayer.mobileprovision
+          retention-days: 7
+          if-no-files-found: warn
