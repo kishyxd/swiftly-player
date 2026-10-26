@@ -2387,6 +2387,11 @@ private struct TimeRow: View {
     /// **With chapters its name comes before the time**, in the same capsule: one line,
     /// not two, so the box does not get taller and the bottom edge stays where it was
     /// set. A long name is truncated, not the time.
+    /// **The content is its own functions.** The whole box was one expression: an
+    /// `if let` image, a stack, a capsule, a position. The type checker needs
+    /// minutes for that on a slow machine and then gives up with "unable to
+    /// type-check this expression in reasonable time". Split into three
+    /// smaller expressions it compiles in seconds, and the result is the same.
     private var previewBox: some View {
         GeometryReader { g in
             let image = preview(position)
@@ -2397,49 +2402,65 @@ private struct TimeRow: View {
             // At the edge the box stays fully on the bar.
             let half = image != nil ? width / 2 : max(name.isEmpty ? 40 : boxWidth / 2, 40)
             let x = min(max(g.size.width * share, half), max(g.size.width - half, half))
-            VStack(spacing: 6) {
-                if let image {
-                    Image(decorative: image, scale: 1)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: width, height: height)
-                        .clipShape(RoundedRectangle(cornerRadius: Theme.corner, style: .continuous))
-                        // Borders are `Theme.rand`. Before: white 35%, a second number for the same role.
-                        .overlay(RoundedRectangle(cornerRadius: Theme.corner, style: .continuous)
-                            .strokeBorder(Theme.margin, lineWidth: 1))
-                }
-                HStack(spacing: 6) {
-                    if !name.isEmpty {
-                        Text(verbatim: name)
-                            .font(.system(size: font))
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-                    }
-                    Text(PlayTime.text(position))
-                        // Only the page title carries Bold, so Semibold here. The size stays `mass.zeit`, which scales with the window size.
-                        .font(.system(size: font, weight: .semibold).monospacedDigit())
-                        .layoutPriority(1)
-                }
-                .foregroundStyle(Theme.font)
-                // **Its own surface because no scrim lies here.** The time sat bare over the
-                // trickplay still: over a white image 1.09:1, threshold 4.5. On `Theme.reason` at
-                // 0.82 (same opacity as the tech badge) it is 10.93:1, over any still.
-                .padding(.horizontal, 8)
-                .padding(.vertical, 3)
-                .background(Capsule().fill(Theme.reason.opacity(0.82)))
-            }
-            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { boxWidth = $0 }
-            // At most as wide as the preview image, otherwise a long chapter name would push the capsule past the edge of the bar.
-            .frame(maxWidth: width)
-            .fixedSize(horizontal: false, vertical: true)
-            // Bottom edge just above the hit area; the bar itself sits in its middle.
-            // `font + 6`: the capsule around the time has 3 points of air top and bottom.
-            // Without the 6 the box would slip down by 3 points; the bottom edge should stay
-            // where it was set.
-            .position(x: x, y: -((image == nil ? 0 : height + 6) + font + 6) / 2 - 2)
+            previewContent(image: image, name: name, width: width, height: height)
+                .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { boxWidth = $0 }
+                // At most as wide as the preview image, otherwise a long chapter name would push the capsule past the edge of the bar.
+                .frame(maxWidth: width)
+                .fixedSize(horizontal: false, vertical: true)
+                // Bottom edge just above the hit area; the bar itself sits in its middle.
+                // `font + 6`: the capsule around the time has 3 points of air top and bottom.
+                // Without the 6 the box would slip down by 3 points; the bottom edge should stay
+                // where it was set.
+                .position(x: x, y: -((image == nil ? 0 : height + 6) + font + 6) / 2 - 2)
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+
+    /// The box's content: the trickplay image over the time.
+    @ViewBuilder
+    private func previewContent(image: CGImage?, name: String, width: CGFloat, height: CGFloat) -> some View {
+        VStack(spacing: 6) {
+            if let image {
+                previewImage(image, width: width, height: height)
+            }
+            previewCaption(name: name)
+        }
+    }
+
+    /// The trickplay still, with its border.
+    private func previewImage(_ image: CGImage, width: CGFloat, height: CGFloat) -> some View {
+        Image(decorative: image, scale: 1)
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .frame(width: width, height: height)
+            .clipShape(RoundedRectangle(cornerRadius: Theme.corner, style: .continuous))
+            // Borders are `Theme.rand`. Before: white 35%, a second number for the same role.
+            .overlay(RoundedRectangle(cornerRadius: Theme.corner, style: .continuous)
+                .strokeBorder(Theme.margin, lineWidth: 1))
+    }
+
+    /// The chapter name and the time, in one capsule.
+    private func previewCaption(name: String) -> some View {
+        HStack(spacing: 6) {
+            if !name.isEmpty {
+                Text(verbatim: name)
+                    .font(.system(size: font))
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+            }
+            Text(PlayTime.text(position))
+                // Only the page title carries Bold, so Semibold here. The size stays `mass.zeit`, which scales with the window size.
+                .font(.system(size: font, weight: .semibold).monospacedDigit())
+                .layoutPriority(1)
+        }
+        .foregroundStyle(Theme.font)
+        // **Its own surface because no scrim lies here.** The time sat bare over the
+        // trickplay still: over a white image 1.09:1, threshold 4.5. On `Theme.reason` at
+        // 0.82 (same opacity as the tech badge) it is 10.93:1, over any still.
+        .padding(.horizontal, 8)
+        .padding(.vertical, 3)
+        .background(Capsule().fill(Theme.reason.opacity(0.82)))
     }
 }
 
