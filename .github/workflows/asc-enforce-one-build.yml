@@ -120,9 +120,11 @@ jobs:
           print(f"EXPIRED_OK {ok} FAILED {bad}")
 
           # 2. drop the expired builds from every beta group
+          #    (read the group relationships endpoint - the list endpoint
+          #     does not inline the build relationship data)
           for g in get("/v1/betaGroups", {"filter[app]": APP, "limit": 50})["data"]:
               gid = g["id"]
-              rel = [x["id"] for x in g.get("relationships", {}).get("builds", {}).get("data", [])]
+              rel = [x["id"] for x in get(f"/v1/betaGroups/{gid}/relationships/builds").get("data", [])]
               expired_ids = [b["id"] for b in builds
                              if b["attributes"]["version"] not in KEEP and b["id"] in rel]
               if not expired_ids:
