@@ -1,0 +1,84 @@
+name: probe3
+
+# The last compile error is a Swift type-checker timeout in
+# Sources/iOS/PlayerScreen.swift ("the compiler is unable to type-check this
+# expression in reasonable time"). The constraint solver's budget is a wall
+# clock limit, so it fires on a slow CI runner and not on the author's Mac.
+#
+# Two candidate fixes, tested head to head:
+#   A) the frontend flag that raises the solver's time threshold
+#   B) the same flag plus -Onone (no optimization) to see if the optimizer is
+#      what pushes it over
+#
+# The source is upstream's, unmodified in both cases.
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ftvplayer-probe3
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: threshold-1000
+            extra: '-Xfrontend -solver-expression-time-threshold=1000'
+          - name: threshold-1000-onone
+            extra: '-Xfrontend -solver-expression-time-threshold=1000 -Onone'
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: The Xcode
+        run: |
+          set -euo pipefail
+          XCODE_APP=$(ls -1d /Applications/Xcode_26.*.app 2>/dev/null \
+                      | grep -vE '\.0\.app$' | sort -V | tail -1)
+          echo "using $XCODE_APP"
+          sudo xcode-select -s "$XCODE_APP"
+          echo "DEVELOPER_DIR=$XCODE_APP/Contents/Developer" >> "$GITHUB_ENV"
+          xcodebuild -version
+
+      - name: XcodeGen
+        run: brew install xcodegen
+
+      - name: The framework
+        run: |
+          set -euo pipefail
+          mkdir -p Vendor
+          bash Werkzeuge/vlckit-fetch.sh
+          rm -rf Vendor/VLCKit-gepatcht.xcframework
+          mv Vendor/VLCKit.xcframework Vendor/VLCKit-gepatcht.xcframework
+
+      - name: The project
+        run: xcodegen generate
+
+      - name: The compile
+        env:
+          EXTRA: ${{ matrix.extra }}
+        run: |
+          set -uo pipefail
+          set +e
+          # OTHER_SWIFT_FLAGS is the per-target setting, so it reaches the
+          # compiler without a command line. The frontend flag raises the
+          # constraint solver's wall-clock budget, which is what fires here.
+          xcodebuild \
+            -project Swiftly.xcodeproj \
+            -scheme Swiftly-iOS \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -skipPackagePluginValidation \
+            CODE_SIGNING_ALLOWED=NO \
+            "OTHER_SWIFT_FLAGS=\$(inherited) $EXTRA" \
+            build 2>&1 | tee build.log
+          echo "=== BUILD VERDICT"
+          grep -E '\*\* BUILD (SUCCEEDED|FAILED) \*\*' build.log | tail -1
+          echo "=== the error count"
+          grep -cE ': error:' build.log || echo 0
+          echo "=== the errors"
+          grep -E ': error:' build.log | sed 's/^/ERR /' | sort -u | head -20
+          exit 0

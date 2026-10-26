@@ -51,6 +51,26 @@ jobs:
       - name: XcodeGen
         run: brew install xcodegen
 
+      - name: The Xcode
+        run: |
+          set -euo pipefail
+          # The runner's DEFAULT Xcode is 16.4, and the project does NOT
+          # compile with it: the sources use Swift 6.2 features
+          # (`@MainActor` on a protocol conformance) that 16.4's compiler
+          # rejects with "unknown attribute 'MainActor'". That produces
+          # ~2000 errors, none of them a real bug.
+          #
+          # Xcode 26 is installed alongside the default. Pick the newest
+          # 26.x that is present.
+          XCODE_APP=$(ls -1d /Applications/Xcode_26.*.app 2>/dev/null \
+                      | grep -vE '\.0\.app$' | sort -V | tail -1)
+          [ -n "$XCODE_APP" ] || XCODE_APP=$(ls -1d /Applications/Xcode_26*.app | sort -V | tail -1)
+          echo "using $XCODE_APP"
+          sudo xcode-select -s "$XCODE_APP"
+          export DEVELOPER_DIR="$XCODE_APP/Contents/Developer"
+          echo "DEVELOPER_DIR=$DEVELOPER_DIR" >> "$GITHUB_ENV"
+          xcodebuild -version
+
       - name: The ASC key
         run: |
           set -euo pipefail
@@ -95,7 +115,6 @@ jobs:
       - name: Build
         run: |
           set -euo pipefail
-          export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
           xcodebuild \
             -project Swiftly.xcodeproj \
             -scheme Swiftly-iOS \
