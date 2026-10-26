@@ -1,0 +1,89 @@
+name: ASC-Portal
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/asc-portal.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  key:
+    runs-on: macos-14
+    env:
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPEC_PW: ${{ secrets.APPLE_APP_SPEC_PW }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+    steps:
+      - name: The portal session
+        env:
+          FASTLANE_USER: ${{ secrets.APPLE_ID }}
+          FASTLANE_PASSWORD: ${{ secrets.APPLE_APP_SPEC_PW }}
+          FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPEC_PW }}
+          FASTLANE_SKIP_2FA: 'true'
+        run: |
+          set +x
+          cd /tmp
+          cat > /tmp/lane.rb <<'RUBY'
+          require 'spaceship'
+          U = ENV['FASTLANE_USER']
+          P = ENV['FASTLANE_PASSWORD']
+
+          # ---- A. the classic portal client, without the ASC key fetch ----
+          begin
+            c = Spaceship::Portal::Client.new(U, P)
+            c.login
+            puts "A_PORTAL_SESSION_OK"
+            begin
+              ids = c.app_ids
+              puts "A_APPIDS #{ids.size}"
+              ids.first(12).each { |a| puts "A_APPID #{a.bundle_id} | #{a.name} | #{a.app_id}" }
+            rescue => e
+              puts "A_APPIDS_FAIL #{e.class}: #{e.message.to_s[0,200]}"
+            end
+            begin
+              devs = c.devices
+              puts "A_DEVICES #{devs.size}"
+              devs.first(8).each { |d| puts "A_DEVICE #{d.udid} | #{d.name}" }
+            rescue => e
+              puts "A_DEVICES_FAIL #{e.class}: #{e.message.to_s[0,200]}"
+            end
+            begin
+              certs = c.certificates
+              puts "A_CERTS #{certs.size}"
+              certs.first(8).each { |x| puts "A_CERT #{x.id} | #{x.name} | #{x.certificate_type}" }
+            rescue => e
+              puts "A_CERTS_FAIL #{e.class}: #{e.message.to_s[0,200]}"
+            end
+            begin
+              profs = c.profiles
+              puts "A_PROFILES #{profs.size}"
+              profs.first(10).each { |x| puts "A_PROFILE #{x.name} | #{x.profile_type} | #{x.expiration_date} | #{x.app_id}" }
+            rescue => e
+              puts "A_PROFILES_FAIL #{e.class}: #{e.message.to_s[0,200]}"
+            end
+          rescue => e
+            puts "A_PORTAL_FAIL #{e.class}: #{e.message.to_s[0,300]}"
+          end
+
+          # ---- B. the legacy iTunes Connect client (basic auth) ----
+          begin
+            Spaceship::TunesConnect.login(U, P)
+            puts "B_TC_OK"
+            apps = Spaceship::TunesConnect::Application.all
+            puts "B_APPS #{apps.size}"
+            apps.first(12).each { |a| puts "B_APP #{a.apple_id} | #{a.name} | #{a.bundle_id}" }
+          rescue => e
+            puts "B_TC_FAIL #{e.class}: #{e.message.to_s[0,300]}"
+          end
+          RUBY
+          ruby /tmp/lane.rb 2>&1 | tail -80 | tee a1.txt
+
+      - name: The output
+        uses: actions/upload-artifact@v4
+        with:
+          name: asc-portal-probe
+          path: /tmp
+          retention-days: 3
