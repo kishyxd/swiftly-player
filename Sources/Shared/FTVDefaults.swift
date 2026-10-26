@@ -32,6 +32,17 @@ enum FTVDefaults {
     /// A name of its own, so it cannot collide with a setting key.
     private static let appliedKey = "ftv.startingSettings.written"
 
+    /// The version of the FTV starting settings.
+    ///
+    /// **The first version is not the last.** The forward skip was thirty seconds
+    /// and is now ten; the home page gained the "Collections" row and the genres.
+    /// An install that already has the settings of the first version gets the
+    /// changes - but only where it has not made a choice of its own.
+    private static let versionKey = "ftv.startingSettings.version"
+
+    /// The current version of the FTV starting settings.
+    private static let currentVersion = 2
+
     /// Writes the FTV starting settings, once, on the first launch.
     ///
     /// Does nothing outside an FTV build, and nothing on an install that has already
@@ -41,24 +52,51 @@ enum FTVDefaults {
         // target (project.yml), which is where it can be read; the package that
         // holds the values does not see it.
         #if FTV_EDITION
-        guard store.object(forKey: appliedKey) == nil else { return }
+        let version = store.integer(forKey: versionKey)
+        guard version < currentVersion else { return }
 
-        // **Only the keys the user has never set.** A setting that is already in
-        // the store belongs to the user, whatever the FTV defaults say.
-        if store.object(forKey: "immerDirectPlay") == nil {
-            store.set(FTVEdition.alwaysDirectPlay, forKey: "immerDirectPlay")
+        // **A fresh install gets the whole list; an install that already has the
+        // first version gets only what changed** - and only where the value is
+        // still the one FTV wrote.
+        let fresh = store.object(forKey: appliedKey) == nil
+        if fresh {
+            // **Only the keys the user has never set.** A setting that is already
+            // in the store belongs to the user, whatever the FTV defaults say.
+            if store.object(forKey: "immerDirectPlay") == nil {
+                store.set(FTVEdition.alwaysDirectPlay, forKey: "immerDirectPlay")
+            }
+            if store.object(forKey: "bitratenGrenze") == nil {
+                store.set(FTVEdition.bitratesLimit, forKey: "bitratenGrenze")
+            }
+            if store.object(forKey: "fortschritt") == nil {
+                store.set(FTVEdition.progressOnTiles, forKey: "fortschritt")
+            }
+            if store.object(forKey: "zurueckSek") == nil {
+                store.set(FTVEdition.backSeconds, forKey: "zurueckSek")
+            }
         }
-        if store.object(forKey: "bitratenGrenze") == nil {
-            store.set(FTVEdition.bitratesLimit, forKey: "bitratenGrenze")
-        }
-        if store.object(forKey: "fortschritt") == nil {
-            store.set(FTVEdition.progressOnTiles, forKey: "fortschritt")
-        }
-        if store.object(forKey: "zurueckSek") == nil {
-            store.set(FTVEdition.backSeconds, forKey: "zurueckSek")
-        }
-        if store.object(forKey: "vorSek") == nil {
+
+        // **The forward skip was thirty seconds and is now ten.**
+        //
+        // On a fresh install it is simply written where the user has nothing;
+        // on an install that already carries the FTV settings it is only
+        // changed where it still is the thirty seconds FTV wrote - a user who
+        // set another value keeps it.
+        if fresh {
+            if store.object(forKey: "vorSek") == nil {
+                store.set(FTVEdition.forwardSeconds, forKey: "vorSek")
+            }
+        } else if (store.object(forKey: "vorSek") as? Int) == 30 {
             store.set(FTVEdition.forwardSeconds, forKey: "vorSek")
+        }
+
+        // **The genres of the home page**, as chips above the rows. Both are new
+        // keys, so an install that already has them keeps its own choice.
+        if store.object(forKey: "startGenres") == nil {
+            store.set(FTVEdition.startGenres, forKey: "startGenres")
+        }
+        if store.object(forKey: "genreChips") == nil {
+            store.set(FTVEdition.genreChips, forKey: "genreChips")
         }
 
         // **The accent colour** is not a plain setting: it lives in the look
@@ -73,6 +111,7 @@ enum FTVDefaults {
         }
 
         store.set(true, forKey: appliedKey)
+        store.set(currentVersion, forKey: versionKey)
         #endif
     }
 }

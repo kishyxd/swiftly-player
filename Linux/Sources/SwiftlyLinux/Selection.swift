@@ -176,11 +176,22 @@ struct Choices: Codable {
     /// Which rows are hidden.
     var startOut: [String] = []
     /// The chosen genres, as separate rows below or as chips on top.
+    /// **The FTV edition starts with the server's own genres** (`FTVEdition` in
+    /// the package), the same value the other platforms start with.
+    #if FTV_EDITION
+    var startGenres: [String] = FTVEdition.startGenres
+    #else
     var startGenres: [String] = []
+    #endif
     /// **Two forms of the same selection, not two sets.** The switch changes *how* the chosen
     /// genres appear, not *which*. An earlier attempt on Apple suddenly showed all of the
     /// server's genres as chips, and nobody understood why.
+    /// **The FTV edition starts with the genres as chips above the rows.**
+    #if FTV_EDITION
+    var genreChips = FTVEdition.genreChips
+    #else
     var genreChips = false
+    #endif
     /// **The chosen libraries and collections per server**, as the package's JSON
     /// (`StartLibraries`); IDs are valid only on their server. Stored as text so that a
     /// corrupt entry does not discard the whole file: reading is tolerant and never throws.
@@ -188,14 +199,35 @@ struct Choices: Codable {
     /// The active server's choice, in home-page order.
     var startLibraries: [StartLibrary] {
         get {
-            StartLibraries.read(startLibrariesPerServer[activeServer]?.data(using: .utf8))
+            if let raw = startLibrariesPerServer[activeServer] {
+                return StartLibraries.read(raw.data(using: .utf8))
+            }
+            #if FTV_EDITION
+            // **The FTV server's "Collections" library is the first row of the home
+            // page**, until the user picks the rows themselves.
+            //
+            // Only where the server has no choice of its own yet: a stored list -
+            // even an empty one - is the user's, and stays.
+            if let url = URL(string: activeServer), FTVEdition.isFTVServer(url) {
+                return FTVEdition.collectionsLibraries
+            }
+            #endif
+            return []
         }
         set {
             guard !activeServer.isEmpty else { return }
             let clean = StartLibraries.clean(newValue)
+            #if FTV_EDITION
+            // **An empty choice is stored as an empty list**, not as "not set":
+            // the FTV edition has a default (the "Collections" row), and a user
+            // who removes it must not get it back.
+            startLibrariesPerServer[activeServer] =
+                StartLibraries.data(clean).flatMap { String(data: $0, encoding: .utf8) } ?? "[]"
+            #else
             if clean.isEmpty { startLibrariesPerServer[activeServer] = nil; return }
             startLibrariesPerServer[activeServer] =
                 StartLibraries.data(clean).flatMap { String(data: $0, encoding: .utf8) }
+            #endif
         }
     }
 
@@ -256,9 +288,15 @@ struct Choices: Codable {
                        .decodeIfPresent(Bool.self, forKey: .nextAutomatic)) ?? nil
         nextAutomaticSelected = w(.nextAutomaticSelected, Bool?.none)
             ?? (alt == false ? false : nil)
+        #if FTV_EDITION
+        backSeconds        = w(.backSeconds, FTVEdition.backSeconds)
+        forwardSeconds            = w(.forwardSeconds, FTVEdition.forwardSeconds)
+        progressOnTiles  = w(.progressOnTiles, FTVEdition.progressOnTiles)
+        #else
         backSeconds        = w(.backSeconds, 10)
         forwardSeconds            = w(.forwardSeconds, 30)
         progressOnTiles  = w(.progressOnTiles, true)
+        #endif
         titleAsLogo           = w(.titleAsLogo, false)
         fillFrame           = w(.fillFrame, false)
         remainingTimeAsEnd        = w(.remainingTimeAsEnd, false)
@@ -277,8 +315,13 @@ struct Choices: Codable {
         savedGenre            = w(.savedGenre, "")
         startRails            = w(.startRails, [])
         startOut               = w(.startOut, [])
+        #if FTV_EDITION
+        startGenres            = w(.startGenres, FTVEdition.startGenres)
+        genreChips             = w(.genreChips, FTVEdition.genreChips)
+        #else
         startGenres            = w(.startGenres, [])
         genreChips             = w(.genreChips, false)
+        #endif
         startLibrariesPerServer = w(.startLibrariesPerServer, [String: String]())
         sortingPerPlace        = w(.sortingPerPlace, [:])
         filterPerPlace            = w(.filterPerPlace, [:])

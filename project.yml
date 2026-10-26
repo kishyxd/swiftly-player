@@ -109,7 +109,10 @@ targets:
         # iPad Pro does not need the key, according to Apple.
         CADisableMinimumFrameDurationOnPhone: true
         CFBundleDevelopmentRegion: en
-        CFBundleDisplayName: Swiftly
+        # **The name under the icon is the FTV one**, not the upstream one. The
+        # bundle identifier stays as it is: it is part of the keychain and of
+        # every build that was ever signed with it.
+        CFBundleDisplayName: FTV Player
         CFBundleShortVersionString: $(MARKETING_VERSION)
         # Without a color, white flashes briefly before the launch animation.
         UILaunchScreen:
@@ -379,7 +382,7 @@ targets:
         # Not via `options.developmentLanguage`: that is the project's source
         # language and stays German.
         CFBundleDevelopmentRegion: en
-        CFBundleDisplayName: Swiftly
+        CFBundleDisplayName: FTV Player
         CFBundleShortVersionString: $(MARKETING_VERSION)
         # **Without this the app falls back to 1 while the Top Shelf is at 2.**
         # Xcode warns at build time and App Store Connect rejects the upload: an
@@ -485,7 +488,7 @@ targets:
         # Not via `options.developmentLanguage`: that is the project's source
         # language and stays German.
         CFBundleDevelopmentRegion: en
-        CFBundleDisplayName: Swiftly Top Shelf
+        CFBundleDisplayName: FTV Top Shelf
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         # **Needed here too, although the extension fetches nothing itself.**
@@ -693,15 +696,15 @@ targets:
         # The number is a **build setting** (`CURRENT_PROJECT_VERSION`), not a
         # literal key here: this block becomes the Info.plist, where a literal
         # would be ignored in favor of the project value.
-        CFBundleDisplayName: Swiftly
-        # **The bundle name is "Swiftly", not "Swiftly-macOS".**
+        CFBundleDisplayName: FTV Player
+        # **The bundle name is "FTV Player", not "FTV Player-macOS".**
         #
         # Apple rejected a build over this (guideline 5.2.5): the displayed name
         # contained a term for an Apple product. On the Mac `CFBundleName`
         # appears in the menu bar and under the icon in Finder; without this
         # line it falls back to the target name. `CFBundleDisplayName` alone is
         # not enough, as the Mac does not read it everywhere.
-        CFBundleName: Swiftly
+        CFBundleName: FTV Player
         # **The icon additionally as a complete `.icns`.**
         #
         # The `AppIcon.icns` Xcode generates from the catalog contains only the

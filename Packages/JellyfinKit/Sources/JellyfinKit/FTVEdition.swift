@@ -66,10 +66,45 @@ public enum FTVEdition {
     /// watched in the grid, not only in the detail page.
     public static var progressOnTiles: Bool { true }
 
-    /// **Ten seconds back, thirty seconds forward.** The upstream values; they are
-    /// written down here so the whole starting configuration stands in one list.
+    /// **Ten seconds back and ten seconds forward.** The forward skip was thirty
+    /// seconds upstream; the FTV edition skips ten in both directions, so a step
+    /// back and a step forward undo each other.
     public static var backSeconds: Int { 10 }
-    public static var forwardSeconds: Int { 30 }
+    public static var forwardSeconds: Int { 10 }
+
+    // MARK: - The home page
+
+    /// **The genres the home page starts with**, in the order they are shown.
+    ///
+    /// They are the FTV server's own genres, spelled exactly as the server spells
+    /// them: the home page matches them by name, and a name the server does not
+    /// know simply brings no row.
+    public static var startGenres: [String] {
+        ["Action & Adventure", "Animation", "Comedy", "Horror", "Drama"]
+    }
+
+    /// **The genres as a row of chips above the rows**, not as rows of their own.
+    ///
+    /// The two are one choice, not two: the switch changes how the chosen genres
+    /// appear, not which.
+    public static var genreChips: Bool { true }
+
+    /// **The FTV server's "Collections" library as the first row of the home page.**
+    ///
+    /// The ID is the server's own, in the form the API hands it out. The row
+    /// belongs to the server, so it is only added when the FTV server is the one
+    /// in use; another server keeps its own empty home page.
+    public static var collectionsLibraries: [StartLibrary] {
+        [StartLibrary(id: "9d7ad6afe9afa2dab1a2f6e00ad28fa6", name: "Collections")]
+    }
+
+    /// **Whether this address is the FTV media server.**
+    ///
+    /// By host, so that `ftv.kxvn.io`, `https://ftv.kxvn.io` and
+    /// `https://ftv.kxvn.io/` are all the same server.
+    public static func isFTVServer(_ url: URL?) -> Bool {
+        url?.host?.lowercased() == "ftv.kxvn.io"
+    }
 
     /// **The accent colour the FTV edition starts with.**
     ///

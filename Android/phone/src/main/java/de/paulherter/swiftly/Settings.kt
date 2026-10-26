@@ -105,6 +105,26 @@ class Settings(store: Store) {
     private var librariesRaw: String? = null
     private var librariesLoaded = false
     private fun librariesKey() = "startBibliotheken|" + serverKey()
+
+    /**
+     * Whether the server in use is the FTV media server.
+     *
+     * By host, as on the other platforms: `ftv.kxvn.io`, `https://ftv.kxvn.io`
+     * and `https://ftv.kxvn.io/` are all the same server.
+     */
+    private fun isFTVServer(): Boolean = host(serverKey()) == host(BuildConfig.FTV_SERVER)
+
+    /**
+     * The host of an address, or an empty string when it has none.
+     *
+     * **Without a scheme too**: an address the user typed as `ftv.kxvn.io` is
+     * the same server as one that came in as `https://ftv.kxvn.io`.
+     */
+    private fun host(address: String): String {
+        var rest = address.trim().lowercase()
+        for (schema in listOf("https://", "http://")) if (rest.startsWith(schema)) rest = rest.removePrefix(schema)
+        return rest.substringBefore('/').substringBefore(':')
+    }
     /** After an account or server switch: read the new server's choice. */
     fun librariesNewRead() { librariesLoaded = false; librariesState.intValue++ }
     /**
@@ -117,6 +137,14 @@ class Settings(store: Store) {
         get() {
             librariesState.intValue
             if (!librariesLoaded) { librariesRaw = a.rememberValue(librariesKey()); librariesLoaded = true }
+            // **The FTV server's "Collections" library is the first row of the home
+            // page**, until the user picks the rows themselves.
+            //
+            // Only where the server has no choice of its own yet: a stored list -
+            // even an empty one - is the user's, and stays.
+            if (librariesRaw == null && BuildConfig.FTV_MODE && isFTVServer()) {
+                FTVDefaults.FTV_COLLECTIONS?.let { return listOf(it) }
+            }
             return librariesRaw?.let { raw ->
                 runCatching { JSONArray(raw) }.getOrNull()?.let { j ->
                     (0 until j.length()).mapNotNull { i ->

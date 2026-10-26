@@ -1,10 +1,12 @@
 # module	type	kind	keys -- written by Werkzeuge/codable-keys-check.py --update
+Android	AccentJSON	codable	id,light,main,on,quiet,warning
 Android	AccountResponse	codable	aktiv,bild,kennung,name
 Android	AccountResponse.CodingKeys	codingkey	aktiv,bild,kennung,name
 Android	AccountSwitchResponse	codable	bahn,landung,ring,ringEnde,tausch,wachsen,wechsel,zielgroesse
 Android	AccountSwitchResponse.CodingKeys	codingkey	bahn,landung,ring,ringEnde,tausch,wachsen,wechsel,zielgroesse
 Android	BufferResponse	codable	netz,text,wert
 Android	BufferResponse.CodingKeys	codingkey	netz,text,wert
+Android	CatalogJSON	codable	accents,glows,looks
 Android	ChapterBarsResponse	codable	fang,stuecke
 Android	ChapterBarsResponse.CodingKeys	codingkey	fang,stuecke
 Android	CorePlayer.Step	codable	art,titel,wert
@@ -24,6 +26,7 @@ Android	EpisodesResponse.CodingKeys	codingkey	ab,bild,fortschritt,gesehen,id,lau
 Android	EventResponse	codable	art,id,text
 Android	ExtraResponse	codable	bild,id,laufzeit,name
 Android	ExtraResponse.CodingKeys	codingkey	bild,id,laufzeit,name
+Android	FTVHomeJSON	codable	backSeconds,collections,forwardSeconds,genreChips,genres,seerr,server
 Android	FieldResponse	codable	aehnliche,extras
 Android	FieldResponse.CodingKeys	codingkey	aehnliche,extras
 Android	FileResponse	codable	container,hatUntertitel,ton,untertitel,video
@@ -62,6 +65,7 @@ Android	Kern.OfferingEntry	codable	name,rubrik,wert
 Android	Kern.OfferingEntry.CodingKeys	codingkey	name,rubrik,wert
 Android	Kern.OfferingResponse	codable	eintraege,hatBestand,istMenue,kennung,wahl
 Android	Kern.OfferingResponse.CodingKeys	codingkey	eintraege,hatBestand,istMenue,kennung,wahl
+Android	Kern.Out@Looks.swift	codable	giftLook,valid
 Android	Kern.QualityResponse	codable	id,plakette,zeile
 Android	Kern.QualityResponse.CodingKeys	codingkey	id,plakette,zeile
 Android	Kern.SectionPagesResponse	codable	gesamt,gesiebt,nochMehr,titel
@@ -71,8 +75,10 @@ Android	LabelResponse	codable	filter,sortierung
 Android	LabelResponse.CodingKeys	codingkey	filter,sortierung
 Android	LabelResponse.Record	codable	text,wert
 Android	LabelResponse.Record.CodingKeys	codingkey	text,wert
+Android	LookJSON	codable	accent,defaultGlow,glowColor,glowTint,iconName,id,isGift,logoGradient,nameKey,season
 Android	OfferingReply	codable	art,bild,folgeNr,geraet,id,itemID,name,serie,staffelNr,stelle,stelleText,titelzeile
 Android	OfferingReply.CodingKeys	codingkey	art,bild,folgeNr,geraet,id,itemID,name,serie,staffelNr,stelle,stelleText,titelzeile
+Android	PaletteJSON	codable	accent,glow,glowColor,glowOpacity,glowTint,iconName,logoGradient,look,markColor
 Android	PeoplePagesResponse	codable	banner,beschreibung,bild,geboren,gestoert,ort,titel,tmdb
 Android	PeoplePagesResponse.CodingKeys	codingkey	banner,beschreibung,bild,geboren,gestoert,ort,titel,tmdb
 Android	PersonResponse	codable	bild,id,name,rolle
@@ -85,6 +91,7 @@ Android	RailsResponse	codable	bibliothek,kacheln,name,quer,sammlung,titelSchlues
 Android	RailsResponse.CodingKeys	codingkey	bibliothek,kacheln,name,quer,sammlung,titelSchluessel
 Android	RemoteCommandResponse	codable	art,wert
 Android	RemoteCommandResponse.CodingKeys	codingkey	art,wert
+Android	SeasonJSON	codable	fromDay,fromMonth,id,toDay,toMonth
 Android	SeasonResponse	codable	id,name
 Android	SeerrDetailResponse	codable	aehnliches,anfragbar,beschreibung,besetzung,bewertung,genres,laufzeit,staffeln,stand
 Android	SeerrDetailResponse.CodingKeys	codingkey	aehnliches,anfragbar,beschreibung,besetzung,bewertung,genres,laufzeit,staffeln,stand
@@ -119,8 +126,8 @@ Android	TechResponse	codable	beschaedigt,dekodiert,demuxer,eingang,gezeigt,lauf,
 Android	TechResponse.CodingKeys	codingkey	beschaedigt,dekodiert,demuxer,eingang,gezeigt,lauf,soll,spruenge,tonVerloren,verworfen,vorratKiB,vorratSekunden,zeigt
 Android	TechRow	codable	art,kopf,schluessel,text
 Android	TechRow.CodingKeys	codingkey	art,kopf,schluessel,text
-Android	TickResponse	codable	angebot,angebotstext,countdown,countdownLaenge,countdownRest,einblendung,ladeschirmWeg,nach,position,spurenAnwenden,weiterschalten
-Android	TickResponse.CodingKeys	codingkey	angebot,angebotstext,countdown,countdownLaenge,countdownRest,einblendung,ladeschirmWeg,nach,position,spurenAnwenden,weiterschalten
+Android	TickResponse	codable	angebot,angebotstext,autoUeberspringen,countdown,countdownLaenge,countdownRest,einblendung,ladeschirmWeg,nach,position,spurenAnwenden,weiterschalten
+Android	TickResponse.CodingKeys	codingkey	angebot,angebotstext,autoUeberspringen,countdown,countdownLaenge,countdownRest,einblendung,ladeschirmWeg,nach,position,spurenAnwenden,weiterschalten
 Android	TileResponse	codable	angabenzeile,beschreibung,bewertung,folgenname,fortschritt,freigabe,gesehen,id,kulisse,laufzeitSekunden,marke,markenzahl,name,plakat,positionSekunden,quer,restzeit,typ,unterzeile,weiterschauenzeile
 Android	TileResponse.CodingKeys	codingkey	angabenzeile,beschreibung,bewertung,folgenname,fortschritt,freigabe,gesehen,id,kulisse,laufzeitSekunden,marke,markenzahl,name,plakat,positionSekunden,quer,restzeit,typ,unterzeile,weiterschauenzeile
 Android	TitleResponse	codable	beschreibung,bewertung,darsteller,datei,fortschritt,fortsetzenAb,fortsetzenText,freigabe,gemerkt,gesehen,id,jahrLaufzeit,kopfbild,kulisse,logo,lossless,methode,name,nebenzeile,planDa,regie,restzeit,trailer,typ
@@ -135,6 +142,8 @@ Android	TrackSelectionResponse	codable	ton,untertitel
 Android	TrackSelectionResponse.CodingKeys	codingkey	ton,untertitel
 Android	TrickplayReply	codable	anzahl,breite,hoehe,intervall,kachelnBreit,kachelnHoch
 Android	TrickplayReply.CodingKeys	codingkey	anzahl,breite,hoehe,intervall,kachelnBreit,kachelnHoch
+Android	TryOnAnswer	codable	accepted,palette,result,shown,state
+Android	TryOnState	codable	owned,pending,preview,saved,supporter
 Apple	AppCommand	raw	downloads,einstellungen,filme,lauter,leiser,merkliste,serien,spielPause,spielUmschalten,spielVollbild,spielVor,spielZurueck,start,stumm,suche,zurueck
 Apple	CommunityTarget	raw	bewerten,discord,fehler
 Apple	LicenseComponent	codable	gruppe,id,name,notiz,plattformen,quelle,spdx,texte,urheber,version
@@ -198,8 +207,8 @@ Kit	HomeStore	codable	bibliotheken,fassung,gattungsreihen,naechsteFolge,neueFilm
 Kit	HomeStore.CodingKeys	codingkey	bibliotheken,fassung,gattungsreihen,naechsteFolge,neueFilme,neueSerien,weiterschauen,zuletzt
 Kit	HomeStore.Rail	codable	items,name
 Kit	ImageKind	raw	Backdrop,Logo,Primary,Thumb
-Kit	Item	codable	BackdropImageTags,ChildCount,CollectionType,CommunityRating,CriticRating,ExtraType,Genres,Id,ImageTags,IndexNumber,LocalTrailerCount,MediaSources,Name,OfficialRating,Overview,ParentBackdropImageTags,ParentBackdropItemId,ParentIndexNumber,ParentLogoImageTag,ParentThumbImageTag,ParentThumbItemId,People,PremiereDate,ProductionLocations,ProductionYear,ProviderIds,RemoteTrailers,RunTimeTicks,SeasonId,SeriesId,SeriesName,SeriesPrimaryImageTag,Studios,Taglines,Type,UserData
-Kit	Item.CodingKeys	codingkey	BackdropImageTags,ChildCount,CollectionType,CommunityRating,CriticRating,ExtraType,Genres,Id,ImageTags,IndexNumber,LocalTrailerCount,MediaSources,Name,OfficialRating,Overview,ParentBackdropImageTags,ParentBackdropItemId,ParentIndexNumber,ParentLogoImageTag,ParentThumbImageTag,ParentThumbItemId,People,PremiereDate,ProductionLocations,ProductionYear,ProviderIds,RemoteTrailers,RunTimeTicks,SeasonId,SeriesId,SeriesName,SeriesPrimaryImageTag,Studios,Taglines,Type,UserData
+Kit	Item	codable	BackdropImageTags,ChildCount,CollectionType,CommunityRating,CriticRating,ExtraType,Genres,Id,ImageTags,IndexNumber,LocalTrailerCount,MediaSources,MediaType,Name,OfficialRating,Overview,ParentBackdropImageTags,ParentBackdropItemId,ParentIndexNumber,ParentLogoImageTag,ParentThumbImageTag,ParentThumbItemId,People,PremiereDate,ProductionLocations,ProductionYear,ProviderIds,RemoteTrailers,RunTimeTicks,SeasonId,SeriesId,SeriesName,SeriesPrimaryImageTag,Studios,Taglines,Type,UserData
+Kit	Item.CodingKeys	codingkey	BackdropImageTags,ChildCount,CollectionType,CommunityRating,CriticRating,ExtraType,Genres,Id,ImageTags,IndexNumber,LocalTrailerCount,MediaSources,MediaType,Name,OfficialRating,Overview,ParentBackdropImageTags,ParentBackdropItemId,ParentIndexNumber,ParentLogoImageTag,ParentThumbImageTag,ParentThumbItemId,People,PremiereDate,ProductionLocations,ProductionYear,ProviderIds,RemoteTrailers,RunTimeTicks,SeasonId,SeriesId,SeriesName,SeriesPrimaryImageTag,Studios,Taglines,Type,UserData
 Kit	ItemsResponse	codable	Items,TotalRecordCount
 Kit	ItemsResponse.CodingKeys	codingkey	Items,TotalRecordCount
 Kit	JellyfinClient.Body@JellyfinClient.swift	codable	AudioStreamIndex,AutoOpenLiveStream,DeviceProfile,EnableDirectPlay,EnableDirectStream,EnableTranscoding,MaxStreamingBitrate,SubtitleStreamIndex,UserId
@@ -282,7 +291,8 @@ Kit	SupportStatus.Source	raw	key,store
 Kit	SupportTip	raw	de.paulherter.swiftly.tip.cake,de.paulherter.swiftly.tip.coffee,de.paulherter.swiftly.tip.movie
 Kit	SupportUsage	codable	firstLaunch,watchedSeconds
 Kit	SupportUsage.CodingKeys	codingkey	firstLaunch,watchedSeconds
-Kit	SupporterKey.Failure	raw	badEncoding,badName,badPublicKey,badSignature,empty,testKey,tooLong,tooShort,unknownApp,unsupportedVersion,wrongApp,wrongPrefix
+Kit	SupporterKey.Failure	raw	badEncoding,badName,badPublicKey,badSignature,empty,expired,testKey,tooLong,tooShort,unknownApp,unknownPlan,unsupportedVersion,wrongApp,wrongPrefix
+Kit	SupporterKeyKeeper.Answer	codable	key,state
 Kit	SyncPlayCommand.Art	raw	Pause,Seek,Stop,Unpause
 Kit	SyncPlayGroup.Keys	codingkey	GroupId,GroupName,LastUpdatedAt,Participants,State
 Kit	SyncPlayGroup.Phase	raw	Idle,Paused,Playing,Waiting
@@ -328,7 +338,7 @@ Linux	Cache.RememberSlip	codable	fassung,serverURL,servername
 Linux	Cache.RememberSlip.CodingKeys	codingkey	fassung,serverURL,servername
 Linux	Cache.Stored	codable	benutzerID,benutzername,serverURL,servername,token
 Linux	Cache.Stored.CodingKeys	codingkey	benutzerID,benutzername,serverURL,servername,token
-Linux	Choices.CodingKeys	codingkey	bibliothekJeGattung,bildfuellend,bitratenGrenze,discordAnzeigen,discordHinweisGezeigt,downloadsAn,fensterBreite,fensterHoehe,fensterMaximiert,fertigGeschaut,filterJeOrt,fortschrittAufKacheln,genreChips,immerDirectPlay,lautstaerke,lautstaerkeDavor,merkgattung,naechsteAutomatischGewaehlt,neuzugaengeGetrennt,nurUeberWLAN,oberflaeche,pufferstufe,restzeitAlsEnde,sortierungJeOrt,startAus,startBibliothekenJeServer,startGenres,startReihen,suchverlauf,suchverlaufJeKonto,technikschild,titelAlsLogo,tonSprache,untertitelAutomatisch,untertitelSprache,vorSekunden,wiedergabeJeServer,zurueckSekunden
+Linux	Choices.CodingKeys	codingkey	bibliothekJeGattung,bildfuellend,bitratenGrenze,discordAnzeigen,discordHinweisGezeigt,downloadsAn,fensterBreite,fensterHoehe,fensterMaximiert,fertigGeschaut,filterJeOrt,fortschrittAufKacheln,genreChips,immerDirectPlay,introAbspannAuto,lautstaerke,lautstaerkeDavor,merkgattung,naechsteAutomatischGewaehlt,neuzugaengeGetrennt,nurUeberWLAN,oberflaeche,pufferstufe,restzeitAlsEnde,sortierungJeOrt,startAus,startBibliothekenJeServer,startGenres,startReihen,suchverlauf,suchverlaufJeKonto,technikschild,titelAlsLogo,tonSprache,untertitelAutomatisch,untertitelSprache,vorSekunden,wiedergabeJeServer,zurueckSekunden
 Linux	Choices.OldKey	codingkey	naechsteAutomatisch
 Linux	LicenseComponent	codable	gruppe,id,name,notiz,plattformen,quelle,spdx,texte,urheber,version
 Linux	LicenseComponent.CodingKeys	codingkey	gruppe,id,name,notiz,plattformen,quelle,spdx,texte,urheber,version

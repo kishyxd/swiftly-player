@@ -223,7 +223,18 @@ final class AppModel {
             ?? store.object(forKey: "immerDirectPlay") as? Bool ?? true
         bitratesLimit = store.object(forKey: "bitratenGrenze" + k) as? Int
             ?? store.integer(forKey: "bitratenGrenze")
-        startLibraries = StartLibraries.read(store.data(forKey: "startBibliotheken" + k))
+        let storedLibraries = store.data(forKey: "startBibliotheken" + k)
+        startLibraries = StartLibraries.read(storedLibraries)
+        #if FTV_EDITION
+        // **The FTV server's "Collections" library is the first row of the home
+        // page**, until the user picks the rows themselves.
+        //
+        // Only where the server has no choice of its own yet: a stored list -
+        // even an empty one - is the user's, and stays.
+        if storedLibraries == nil, FTVEdition.isFTVServer(session?.serverURL) {
+            startLibraries = FTVEdition.collectionsLibraries
+        }
+        #endif
     }
 
     private func remember(_ value: Any, _ name: String) {

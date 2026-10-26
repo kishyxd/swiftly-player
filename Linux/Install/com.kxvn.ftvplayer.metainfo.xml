@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
   <id>com.kxvn.ftvplayer</id>
-  <name>Swiftly</name>
+  <name>FTV Player</name>
   <summary>Jellyfin client that never transcodes</summary>
   <summary xml:lang="de">Jellyfin-Client, der niemals transkodiert</summary>
   <metadata_license>CC0-1.0</metadata_license>
@@ -11,12 +11,12 @@
   </developer>
   <description>
     <p>
-      Swiftly plays everything on your Jellyfin server as Direct Play or
+      FTV Player plays everything on your Jellyfin server as Direct Play or
       Direct Stream. The server never re-encodes, so the picture stays
       untouched and the machine stays quiet.
     </p>
     <p xml:lang="de">
-      Swiftly spielt alles auf deinem Jellyfin-Server als Direct Play oder
+      FTV Player spielt alles auf deinem Jellyfin-Server als Direct Play oder
       Direct Stream. Der Server rechnet nie um — das Bild bleibt, wie es ist,
       und die Kiste bleibt leise.
     </p>
