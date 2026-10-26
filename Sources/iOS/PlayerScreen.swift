@@ -2394,14 +2394,18 @@ private struct TimeRow: View {
     /// smaller expressions it compiles in seconds, and the result is the same.
     private var previewBox: some View {
         GeometryReader { g in
-            let image = preview(position)
+            // **Every binding carries its type.** Without them the solver has
+            // to work out `min(max(Double, 0), 1)` — a Double next to integer
+            // literals — and it explores that overload set for every use in the
+            // closure. That is the type-checker timeout, not the view.
+            let image: CGImage? = preview(position)
             let width: CGFloat = pad ? 200 : 160
-            let height = width * 9 / 16
-            let share = duration > 0 ? min(max(position / duration, 0), 1) : 0
-            let name = ChapterBar.chapter(at: position, in: chapter)?.name ?? ""
+            let height: CGFloat = width * 9 / 16
+            let share: Double = duration > 0 ? min(max(position / duration, 0), 1) : 0
+            let name: String = ChapterBar.chapter(at: position, in: chapter)?.name ?? ""
             // At the edge the box stays fully on the bar.
-            let half = image != nil ? width / 2 : max(name.isEmpty ? 40 : boxWidth / 2, 40)
-            let x = min(max(g.size.width * share, half), max(g.size.width - half, half))
+            let half: CGFloat = image != nil ? width / 2 : max(name.isEmpty ? 40 : boxWidth / 2, 40)
+            let x: CGFloat = min(max(g.size.width * share, half), max(g.size.width - half, half))
             previewContent(image: image, name: name, width: width, height: height)
                 .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { boxWidth = $0 }
                 // At most as wide as the preview image, otherwise a long chapter name would push the capsule past the edge of the bar.
