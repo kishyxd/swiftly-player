@@ -276,26 +276,11 @@ jobs:
               a = b["attributes"]
               print(f"  {a['version']} expired={a['expired']} {b['id']}")
 
-          # The owner's rule: exactly ONE version and ONE build per app.
-          # Keep the newest build; expire every older one so the app does
-          # not carry a pile of parallel builds. Expiry is one-way (Apple
-          # returns 409 if you try to un-expire), so this only ever touches
-          # builds OLDER than the newest - never the newest itself.
-          live = [b for b in builds if not b["attributes"].get("expired")]
-          live.sort(key=lambda b: int(b["attributes"]["version"]))
-          keep = live[-1] if live else None
-          for b in live[:-1]:
-              a = b["attributes"]
-              print(f"  expiring the older build {a['version']} {b['id']}")
-              r = requests.patch(B + f"/v1/builds/{b['id']}", headers=H,
-                                 json={"data": {"type": "builds", "id": b["id"],
-                                                "attributes": {"expired": True}}},
-                                 timeout=60)
-              print(f"    the status: {r.status_code}")
-              if r.status_code >= 300:
-                  print(f"    the body: {r.text[:300]}")
-          if keep:
-              print(f"  keeping {keep['attributes']['version']}")
+          # NOTE: this step is a READ-ONLY check. It deliberately does NOT
+          # expire anything. Expiry is one-way (Apple returns 409 if you try
+          # to un-expire) and the owner owns every expiry decision. If the
+          # list shows more than one live build, the owner is told and
+          # decides what to expire - the agent does not.
           PY
 
       - name: Keep the ipa
