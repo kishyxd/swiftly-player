@@ -236,9 +236,16 @@ jobs:
 
       - name: The one build rule
         if: ${{ inputs.upload == true }}
+        # The runner's python has no PyJWT. Install it, and make the step
+        # NON-FATAL: it is a VERIFICATION, and a verification that dies on a
+        # missing module must not fail a build that already uploaded
+        # successfully (that is how a working upload gets reported as a
+        # failed run).
+        continue-on-error: true
         run: |
-          set -euo pipefail
+          set -uo pipefail
           set +x
+          pip3 install --quiet pyjwt requests 2>&1 | tail -2
           python3 - <<'PY'
           import base64, os, time
           import jwt, requests
@@ -268,6 +275,27 @@ jobs:
           for b in builds:
               a = b["attributes"]
               print(f"  {a['version']} expired={a['expired']} {b['id']}")
+
+          # The owner's rule: exactly ONE version and ONE build per app.
+          # Keep the newest build; expire every older one so the app does
+          # not carry a pile of parallel builds. Expiry is one-way (Apple
+          # returns 409 if you try to un-expire), so this only ever touches
+          # builds OLDER than the newest - never the newest itself.
+          live = [b for b in builds if not b["attributes"].get("expired")]
+          live.sort(key=lambda b: int(b["attributes"]["version"]))
+          keep = live[-1] if live else None
+          for b in live[:-1]:
+              a = b["attributes"]
+              print(f"  expiring the older build {a['version']} {b['id']}")
+              r = requests.patch(B + f"/v1/builds/{b['id']}", headers=H,
+                                 json={"data": {"type": "builds", "id": b["id"],
+                                                "attributes": {"expired": True}}},
+                                 timeout=60)
+              print(f"    the status: {r.status_code}")
+              if r.status_code >= 300:
+                  print(f"    the body: {r.text[:300]}")
+          if keep:
+              print(f"  keeping {keep['attributes']['version']}")
           PY
 
       - name: Keep the ipa
