@@ -1,0 +1,141 @@
+name: FTV Android
+
+# The FTV (Plezy-based) Android build, signed with the KXVN keystore.
+#
+# Why this repo: the ANDROID_* secrets (the KXVN keystore and its passwords)
+# exist HERE and cannot be read back out of GitHub, so they cannot be copied
+# into another repository. The signed build has to run where the secrets are.
+# The FTV (Plezy) source is checked out from kishyxd/plezy at the 1.1.0 tag.
+#
+# The key is verified below: the APK must come out with
+# CN=FTV Media, O=KXVN - the same key the already-installed FTV app was
+# signed with, or an installed FTV cannot upgrade over it in place.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ci/ftv-android]
+
+concurrency:
+  group: ftv-android-${{ github.ref }}-${{ github.run_id }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build the signed FTV APKs
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      # the same Flutter the upstream Plezy Build workflow uses - a different
+      # version would resolve a different dependency set
+      FLUTTER_VERSION: "3.47.1"
+      FTV_REF: "refs/heads/main"
+      RELEASE_DART_DEFINES: --dart-define=ENABLE_UPDATE_CHECK=false --dart-define=FTV_SERVER=https://ftv.kxvn.io --dart-define=FTV_SEERR_URL=https://request.kxvn.io --dart-define=GIT_COMMIT=${{ github.sha }} --dart-define=SENTRY_ENVIRONMENT=github --dart-define=ENABLE_DONATIONS=false
+    steps:
+      - name: Check out the FTV source
+        uses: actions/checkout@v4
+        with:
+          repository: kishyxd/plezy
+          ref: ${{ env.FTV_REF }}
+          path: ftv
+          persist-credentials: false
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+          pub-cache: false
+
+      - name: Cache Pub dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+          key: ${{ runner.os }}-${{ runner.arch }}-pub-${{ hashFiles('ftv/pubspec.yaml', 'ftv/pubspec.lock') }}
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('ftv/**/*.gradle*', 'ftv/**/gradle-wrapper.properties') }}
+
+      - name: Verify the source identity
+        working-directory: ftv
+        run: |
+          grep '^version:' pubspec.yaml
+          grep -E 'applicationId' android/app/build.gradle.kts
+          grep -oE 'android:label="[^"]*"' android/app/src/main/AndroidManifest.xml
+
+      - name: Install dependencies
+        working-directory: ftv
+        run: flutter pub get --enforce-lockfile --no-example
+
+      - name: Configure Android signing
+        working-directory: ftv
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
+          cat > android/key.properties << EOF
+          storePassword=${{ secrets.ANDROID_STORE_PASSWORD }}
+          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+          storeFile=upload-keystore.jks
+          EOF
+
+      - name: Build the split APKs
+        working-directory: ftv
+        run: flutter build apk --release --split-per-abi ${{ env.RELEASE_DART_DEFINES }} --dart-define=SENTRY_DIST=github-android-apk --obfuscate --split-debug-info=debug-info/android-apk --extra-gen-snapshot-options=--save-obfuscation-map=debug-info/android-apk/obfuscation.map.json
+
+      - name: Build the universal APK (both ABIs, installs on every Fire TV / Android)
+        working-directory: ftv
+        run: flutter build apk --release ${{ env.RELEASE_DART_DEFINES }} --dart-define=SENTRY_DIST=github-android-apk --obfuscate --split-debug-info=debug-info/android-apk --extra-gen-snapshot-options=--save-obfuscation-map=debug-info/android-apk/obfuscation.map.json
+
+      - name: Clean up the keystore
+        if: always()
+        working-directory: ftv
+        run: rm -f android/app/upload-keystore.jks android/key.properties
+
+      - name: Verify the signature
+        working-directory: ftv
+        run: |
+          # The APK must be signed with the KXVN key, or an installed FTV
+          # cannot upgrade over it in place.
+          set -euo pipefail
+          for f in build/app/outputs/flutter-apk/*.apk; do
+            echo "  $f"
+            apksigner verify --print-certs "$f" | head -4
+          done
+          apksigner verify --print-certs build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
+            | grep -q "CN=FTV Media, O=KXVN" \
+            || { echo "::error::the APK is not signed with the KXVN key"; exit 1; }
+          echo "  the signature is the KXVN key"
+
+      - name: Package the APKs
+        working-directory: ftv
+        run: |
+          tar -czf ftv-android-arm64-v8a.tar.gz -C build/app/outputs/flutter-apk app-arm64-v8a-release.apk --transform 's/app-arm64-v8a-release.apk/ftv.apk/'
+          tar -czf ftv-android-armeabi-v7a.tar.gz -C build/app/outputs/flutter-apk app-armeabi-v7a-release.apk --transform 's/app-armeabi-v7a-release.apk/ftv.apk/'
+          tar -czf ftv-android-x86_64.tar.gz -C build/app/outputs/flutter-apk app-x86_64-release.apk --transform 's/app-x86_64-release.apk/ftv.apk/'
+          tar -czf ftv-android-universal.tar.gz -C build/app/outputs/flutter-apk app-release.apk --transform 's/app-release.apk/ftv.apk/'
+
+      - name: Upload the APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: ftv-android-apk
+          path: |
+            ftv/ftv-android-arm64-v8a.tar.gz
+            ftv/ftv-android-armeabi-v7a.tar.gz
+            ftv/ftv-android-x86_64.tar.gz
+            ftv/ftv-android-universal.tar.gz
