@@ -2,9 +2,10 @@ name: ASC-Cleanup
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths: ['.github/workflows/asc-cleanup.yml']
+  # NO PUSH TRIGGER. This workflow used to fire on any push that touched
+  # this very file, so the "safe" edit of changing the workflow ARMED the
+  # expiry path (2026-10-26: it expired FTV builds 1171, 1170, 1167 and 157).
+  # It is now manual-only.
 
 permissions:
   contents: write
@@ -204,28 +205,13 @@ jobs:
           say "DROP_COUNT #{drop.size}"
           drop.each { |b| say "DROP #{b['id']} | build=#{b['attributes']['version']} | #{b['attributes']['processingState']}" }
 
-          # ================= 7. expire the rest =================
-          say '### 7. expiring the rest'
-          ok = 0
-          bad = 0
-          drop.each do |b|
-            begin
-              rr = asc(:patch, "/v1/builds/#{b['id']}", token, {
-                'data' => { 'type' => 'builds', 'id' => b['id'], 'attributes' => { 'expired' => true } }
-              })
-              if rr.code.to_s.start_with?('2')
-                ok += 1
-                say "EXPIRED #{b['attributes']['version']} #{b['id']}"
-              else
-                bad += 1
-                say "EXPIRE_FAIL #{b['attributes']['version']} #{b['id']} http=#{rr.code} #{rr.body.to_s[0,120]}"
-              end
-            rescue => e
-              bad += 1
-              say "EXPIRE_ERR #{b['attributes']['version']} #{b['id']} #{e.class}: #{e.message.to_s[0,120]}"
-            end
-          end
-          say "EXPIRED_OK #{ok} FAILED #{bad}"
+          # ================= 7. REPORT ONLY =================
+          # Nothing is expired here. Expiry is ONE-WAY (Apple answers 409 on
+          # an un-expire) and the owner owns every expiry decision.
+          say '### 7. report only - nothing is expired by this workflow'
+          say "WOULD_DROP_COUNT #{drop.size}"
+          drop.each { |b| say "WOULD_DROP build=#{b['attributes']['version']} id=#{b['id']} state=#{b['attributes']['processingState']}" }
+          say 'EXPIRE_DISABLED owner-only'
 
           # ================= 8. verify =================
           say '### 8. the verification'

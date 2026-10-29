@@ -20,9 +20,11 @@ on:
         description: 'App Store Connect app id'
         required: false
         default: '6823967654'
-  schedule:
-    # 03:17 UTC daily - enforce the one-build rule even if nobody remembers
-    - cron: '17 3 * * *'
+  # NO SCHEDULE. A nightly cron used to live here and it expired the
+  # owner's TestFlight builds on a timer, without their say-so (2026-10-28:
+  # it expired FTV builds 1171, 1170, 1167 and 157 across two runs).
+  # Expiry is now OWNER-ONLY: run this workflow by hand, on purpose.
+  # Nothing expires automatically, ever.
 
 permissions:
   contents: read
@@ -95,47 +97,33 @@ jobs:
               a = b["attributes"]
               print(f"  {a['version']:<8} expired={a['expired']} state={a['processingState']} id={b['id']}")
 
-          # 1. expire every build that is not on the keep list
-          ok = bad = 0
-          for b in builds:
-              a = b["attributes"]
-              if a["version"] in KEEP:
-                  print(f"KEEP {a['version']} {b['id']}")
-                  continue
-              if a["expired"]:
-                  print(f"ALREADY_EXPIRED {a['version']}")
-                  continue
-              r = requests.patch(
-                  f"{B}/v1/builds/{b['id']}",
-                  headers={**H, "Content-Type": "application/json"},
-                  json={"data": {"type": "builds", "id": b["id"],
-                                 "attributes": {"expired": True}}}, timeout=60)
-              if r.status_code in (200, 204):
-                  print(f"EXPIRED {a['version']} {b['id']}")
-                  ok += 1
-              else:
-                  print(f"EXPIRE_FAIL {a['version']} {r.status_code} {r.text[:160]}")
-                  bad += 1
-              time.sleep(1)
-          print(f"EXPIRED_OK {ok} FAILED {bad}")
+          # 1. REPORT ONLY. Nothing is expired, ever.
+          #    Expiry is ONE-WAY: Apple answers 409 on an un-expire, so an
+          #    automated expiry is unrecoverable. The owner owns every
+          #    expiry decision. This workflow now only prints the build list
+          #    so the owner can see what is live and decide for himself.
+          print("=== REPORT ONLY - no build is expired by this workflow ===")
+          live = [b for b in builds if not b["attributes"]["expired"]]
+          print(f"LIVE_COUNT {len(live)}")
+          for b in live:
+              print(f"  LIVE {b['attributes']['version']} {b['id']}")
+          dead = [b for b in builds if b["attributes"]["expired"]]
+          print(f"EXPIRED_COUNT {len(dead)}")
+          for b in dead:
+              print(f"  EXPIRED {b['attributes']['version']} {b['id']}")
+          print("If the owner wants a build expired, he says so and it is done by hand.")
 
-          # 2. drop the expired builds from every beta group
+          # 2. REPORT the group membership. Nothing is added or removed:
+          #    group membership is the owner's decision.
           #    (read the group relationships endpoint - the list endpoint
           #     does not inline the build relationship data)
           for g in get("/v1/betaGroups", {"filter[app]": APP, "limit": 50})["data"]:
               gid = g["id"]
               rel = [x["id"] for x in get(f"/v1/betaGroups/{gid}/relationships/builds").get("data", [])]
-              expired_ids = [b["id"] for b in builds
-                             if b["attributes"]["version"] not in KEEP and b["id"] in rel]
-              if not expired_ids:
-                  print(f"GROUP {g['attributes']['name']} already clean")
-                  continue
-              r = requests.delete(
-                  f"{B}/v1/betaGroups/{gid}/relationships/builds",
-                  headers={**H, "Content-Type": "application/json"},
-                  json={"data": [{"type": "builds", "id": b} for b in expired_ids]}, timeout=60)
-              print(f"GROUP {g['attributes']['name']} removed {len(expired_ids)} -> {r.status_code}")
-              time.sleep(1)
+              print(f"GROUP {g['attributes']['name']} has {len(rel)} builds")
+              for x in rel:
+                  ver = next((b["attributes"]["version"] for b in builds if b["id"] == x), "?")
+                  print(f"      {ver} {x}")
 
           # 3. verify - read the group relationships directly, the list
           # endpoint does not inline the build relationship data
