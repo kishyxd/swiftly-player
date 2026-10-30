@@ -1082,6 +1082,8 @@ class PlayItem(
         overlay = "nichts"
         val spot = (if (vlcFree) player.time / 1000.0 else position).coerceAtLeast(0.0)
         app.doneWatch(spot, duration)
+        // The latch is handed over to the plan coroutine in the "gewechselt" branch.
+        var latchHeld = false
         try {
             val answer = JSONObject(withContext(Dispatchers.IO) { app.kern.episodeSwitch(id, spot).await() })
             app.toStop(answer.fieldText("nachmeldung"))
@@ -1094,7 +1096,17 @@ class PlayItem(
                     if (rest > 0) delay(rest)
                     if (new != null && !ended[0]) {
                         stopNow("Folgenwechsel")
-                        launch(playPlanRead(new), since)
+                        // **The latch may only fall once the new plan is in place.**
+                        //
+                        // `playPlanRead` sets `imageFree = false` and the new position; until that has
+                        // happened the player still holds the OLD media, so its clock and its length
+                        // are the finished episode's. A tick in that window reported them as the new
+                        // episode's position, and at ~90% of the runtime the server counts an episode
+                        // as watched. The new episode then ended at once and the app advanced again.
+                        //
+                        // So the latch is released by the completion of `playPlanRead`, not here.
+                        latchHeld = true
+                        launch(playPlanRead(new), since).invokeOnCompletion { switches = false }
                         cardsSwitch?.let { AppLog.writeOut("[Karte] Tausch nach ${SystemClock.elapsedRealtime() - it.beginning} ms") }
                     }
                 }
@@ -1105,7 +1117,8 @@ class PlayItem(
             hint = errorString(context, e)
             cardsSwitch?.let { cardsSwitch = it.copy(failed = true) }
         } finally {
-            switches = false
+            // Only when the latch was not handed over; otherwise the plan coroutine releases it.
+            if (!latchHeld) switches = false
         }
     }
 
