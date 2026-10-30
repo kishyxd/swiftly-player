@@ -1792,20 +1792,26 @@ class PlayItem(
             if (switches) { sharedReport(wish); continue }
             if (!firstFrameCheck()) streamCheck()
             delayCatchUp()
-            val length = (player.length / 1000.0).coerceAtLeast(0.0)
-            // During the rebuild the last good position, not VLC's time: after a drop that jumps to the end.
-            //
-            // **While the new media has no first frame, the player still holds the OLD one.**
+            // **While a media swap is queued or running, the player still holds the OLD media.**
             // Its clock and its length are then those of the finished episode. Reporting them
             // says "the episode is over" - the core sees position ~= length - so the app ends
-            // the NEW episode right away and sends that position to the server. The server
-            // counts an episode at ~90% of its runtime as watched, so the new episode was
-            // marked watched although nobody watched it, and the app advanced again: three
-            // episodes watched, none of them played.
+            // the NEW episode right away and the core sends that position to the server. The
+            // server counts an episode at ~90% of its runtime as watched, so the new episode was
+            // marked watched although nobody watched it, and the core then asks for another
+            // switch: three episodes watched, none of them played.
             //
-            // Until the first frame of the new media is there, the position is the one the
-            // plan set (`playPlanRead`), and that belongs to the new episode.
+            // `vlcFree` is false exactly while a job waits on the VLC thread (`vlcJobs`), and that
+            // is the swap: `stopNow()` queues the stop, `mediaOpen()` queues the new media.
+            // `endPoint()` and `pointNow()` already guard themselves the same way - the tick did
+            // not, and that is the whole bug.
+            //
+            // The first frame is not enough as a sign: the OLD media keeps delivering frames
+            // until the swap is through, and the core sees a picture and clears `imageFree`.
+            val swapping = !vlcFree
+            val length = (if (swapping) duration else player.length / 1000.0).coerceAtLeast(0.0)
+            // During the rebuild the last good position, not VLC's time: after a drop that jumps to the end.
             val reported = if (restoring) lastGoodPoint
+                else if (swapping) position
                 else if (imageFree) (player.time / 1000.0).coerceAtLeast(0.0)
                 else position
             val answer = JSONObject(app.kern.playbackTick(
@@ -1832,7 +1838,9 @@ class PlayItem(
             // After a seek the core returns the target position until VLC is there.
             if (!atPush && answer.has("position")) position = answer.getDouble("position")
             if (!restoring || length > 0) duration = length
-            if (imageFree && position > 0) app.playPoint = PlayRequest(plan?.itemId ?: wish.id, position)
+            // Only while the player really holds the media of this plan; otherwise the position
+            // belongs to the episode before it.
+            if (!swapping && imageFree && position > 0) app.playPoint = PlayRequest(plan?.itemId ?: wish.id, position)
             sessionReport()
             // If the card was up, it zooms into the picture on expiry (`toNextEpisode(fromCard: cardBefore)`).
             val cardBefore = overlay == "karte"
