@@ -196,6 +196,9 @@ class PlayerEngine(private val context: Context, val vlc: LibVLC, private val is
     /** Hand the media to VLC. Runs on the VLC thread; Media3 is down and the views are attached beforehand (main thread). */
     fun openVlc(media: Media) {
         vlcPlayer.media = media
+        // **The new media starts at zero.** libVLC keeps the old clock until the new media
+        // is parsed; a read in that window is the finished episode's time.
+        runCatching { vlcPlayer.time = 0 }
         vlcPlayer.videoScale = if (fillFrame) MediaPlayer.ScaleType.SURFACE_FIT_SCREEN else MediaPlayer.ScaleType.SURFACE_BEST_FIT
     }
 
@@ -227,6 +230,10 @@ class PlayerEngine(private val context: Context, val vlc: LibVLC, private val is
         val item = MediaItem.Builder().setUri(address).setSubtitleConfigurations(configs).build()
         reportedPlaying = false
         seen.clear()
+        // **The mirror must go with the old item.** `exoTime` is only ever written by the
+        // getter below, so it still held the previous episode's position here; a read before
+        // Media3 had prepared the new item would report the old episode's clock.
+        exoTime = 0
         e.setMediaItem(item, ((since ?: 0.0) * 1000).toLong().coerceAtLeast(0))
         e.prepare()
     }

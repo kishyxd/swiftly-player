@@ -1794,7 +1794,20 @@ class PlayItem(
             delayCatchUp()
             val length = (player.length / 1000.0).coerceAtLeast(0.0)
             // During the rebuild the last good position, not VLC's time: after a drop that jumps to the end.
-            val reported = if (restoring) lastGoodPoint else (player.time / 1000.0).coerceAtLeast(0.0)
+            //
+            // **While the new media has no first frame, the player still holds the OLD one.**
+            // Its clock and its length are then those of the finished episode. Reporting them
+            // says "the episode is over" - the core sees position ~= length - so the app ends
+            // the NEW episode right away and sends that position to the server. The server
+            // counts an episode at ~90% of its runtime as watched, so the new episode was
+            // marked watched although nobody watched it, and the app advanced again: three
+            // episodes watched, none of them played.
+            //
+            // Until the first frame of the new media is there, the position is the one the
+            // plan set (`playPlanRead`), and that belongs to the new episode.
+            val reported = if (restoring) lastGoodPoint
+                else if (imageFree) (player.time / 1000.0).coerceAtLeast(0.0)
+                else position
             val answer = JSONObject(app.kern.playbackTick(
                 if (restoring) maxOf(length, duration) else length, reported, showsImage[0], player.isPlaying,
                 player.audioTracksCount > 0, atPush, app.settings.introOutroAutomatic))
