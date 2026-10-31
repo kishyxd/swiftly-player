@@ -1313,12 +1313,18 @@ public final class Kern: @unchecked Sendable {
         // Then the old clock is dropped and the last good position is used instead.
         var reported = position
         var goodPoint = position
-        let planDuration = w.state.duration ?? 0
-        if planDuration > 0, position > planDuration + 20, duration > 0,
-           abs(position - duration) <= max(30.0, duration * 0.05) {
-            reported = w.state.position
-            goodPoint = w.state.position
-            log("Tick: Position \(Int(position)) s gehoert nicht zu diesem Titel (\(Int(planDuration)) s) - der alte Strom")
+        let lastGood = w.state.position
+        // The old media's clock sits at the old media's LENGTH - and the new episode is
+        // usually just as long, so "the position is bigger than the new runtime" proves
+        // nothing. What proves it: the position matches the length the platform reported
+        // (the old media) while the core's own position says the new item has just
+        // started (it is at the beginning). Watching the new episode to its real end is
+        // not caught: there the core's own position is at the end too.
+        if duration > 0, abs(position - duration) <= max(30.0, duration * 0.05),
+           lastGood < 60, position > lastGood + 30 {
+            reported = lastGood
+            goodPoint = lastGood
+            log("Tick: Position \(Int(position)) s ist der alte Strom (Ende \(Int(duration)) s) - der neue Titel steht auf \(Int(lastGood)) s")
         }
 
         let measurement = PlaybackTick.Reading(duration: duration, position: reported, goodPoint: goodPoint,
