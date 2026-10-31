@@ -1291,7 +1291,37 @@ public final class Kern: @unchecked Sendable {
         // no offer button, no second advance.
         guard _episodesSwitch.messagesAllowed else { barrier.unlock(); return "{}" }
         guard var w = _playback, _client != nil else { barrier.unlock(); return "{}" }
-        let measurement = PlaybackTick.Reading(duration: duration, position: position, goodPoint: position,
+
+        // **A position that does not fit the current item is not this item's position.**
+        //
+        // Right after a switch the player can still hold the OLD media for a moment, and
+        // then the clock it reports is the OLD episode's - the NEW episode gets reported
+        // at the old runtime. Two things break from that one number:
+        //   - the server counts the new episode at ~100% of its runtime and marks it
+        //     watched, although nobody watched it;
+        //   - the core itself sees "position ~= duration", thinks the new episode is
+        //     over and advances again - the app lands in the episode BEFORE the one it
+        //     came from, and the picture never changes.
+        //
+        // The platform cannot tell: it is reading its own player, and the old media is
+        // still in it. The core CAN tell, because it knows two numbers that do not fit
+        // together: the position belongs to the reported duration (the old media's
+        // length), and it does not fit the duration of the CURRENT plan (the new item's
+        // runtime, from the plan - not from the platform, which reports the old length
+        // during the swap too).
+        //
+        // Then the old clock is dropped and the last good position is used instead.
+        var reported = position
+        var goodPoint = position
+        let planDuration = w.state.duration ?? 0
+        if planDuration > 0, position > planDuration + 20, duration > 0,
+           abs(position - duration) <= max(30.0, duration * 0.05) {
+            reported = w.state.position
+            goodPoint = w.state.position
+            log("Tick: Position \(Int(position)) s gehoert nicht zu diesem Titel (\(Int(planDuration)) s) - der alte Strom")
+        }
+
+        let measurement = PlaybackTick.Reading(duration: duration, position: reported, goodPoint: goodPoint,
                                              showsImage: showsImage, seeksToStart: false, running: running,
                                              hasAudioTracks: hasAudioTracks)
         let job = PlaybackTick.compute(&w.state, measurement: measurement, restoring: false,
