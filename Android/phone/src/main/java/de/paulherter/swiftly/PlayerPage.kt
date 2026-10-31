@@ -592,8 +592,15 @@ class PlayItem(
                 is PlayerEngine.Event.Buffering -> buffers = e.percent < 100f
                 // **A dropped connection looks like end of file** (mirrors `stateSwitched` on iOS): if the last
                 // good position is well before the end, it was a dead stream, not the end.
-                PlayerEngine.Event.Ended -> { running = false; if (!teardown("Ende")) end[0] = true }
+                PlayerEngine.Event.Ended -> {
+                    // The media is done (or gone): the flag must not stay set, or the
+                    // position would never advance again.
+                    player.awaitingNewMedia = false
+                    running = false
+                    if (!teardown("Ende")) end[0] = true
+                }
                 PlayerEngine.Event.Error -> {
+                    player.awaitingNewMedia = false
                     // **Media3 fails: the same file with VLC**, the base layer then. The flag is set whenever it
                     // fails, before or after the first frame, so a title never goes back and forth between the engines.
                     val wasMedia3 = player.usesMedia3
@@ -1812,6 +1819,12 @@ class PlayItem(
             // During the rebuild the last good position, not VLC's time: after a drop that jumps to the end.
             val reported = if (restoring) lastGoodPoint
                 else if (swapping) position
+                // **The new media is set but does not play yet.** libVLC keeps the OLD
+                // media playing while the new stream is parsed, so the player's clock is
+                // the OLD episode's. The queue being empty proves nothing - the parse
+                // happens after the job ran. The engine knows when the new media really
+                // starts playing.
+                else if (player.awaitingNewMedia) position
                 else if (imageFree) (player.time / 1000.0).coerceAtLeast(0.0)
                 else position
             val answer = JSONObject(app.kern.playbackTick(
@@ -1840,7 +1853,7 @@ class PlayItem(
             if (!restoring || length > 0) duration = length
             // Only while the player really holds the media of this plan; otherwise the position
             // belongs to the episode before it.
-            if (!swapping && imageFree && position > 0) app.playPoint = PlayRequest(plan?.itemId ?: wish.id, position)
+            if (!swapping && !player.awaitingNewMedia && imageFree && position > 0) app.playPoint = PlayRequest(plan?.itemId ?: wish.id, position)
             sessionReport()
             // If the card was up, it zooms into the picture on expiry (`toNextEpisode(fromCard: cardBefore)`).
             val cardBefore = overlay == "karte"

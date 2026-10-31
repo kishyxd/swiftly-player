@@ -105,7 +105,11 @@ class PlayerEngine(private val context: Context, val vlc: LibVLC, private val is
         vlcPlayer.setEventListener { e ->
             if (usesMedia3) return@setEventListener
             when (e.type) {
-                MediaPlayer.Event.Playing -> h(Event.Playing)
+                MediaPlayer.Event.Playing -> {
+                    // The new media really plays now: its clock is the right one.
+                    awaitingNewMedia = false
+                    h(Event.Playing)
+                }
                 MediaPlayer.Event.Paused -> h(Event.Paused)
                 MediaPlayer.Event.Stopped -> h(Event.Stopped)
                 MediaPlayer.Event.Vout -> if (e.voutCount > 0) h(Event.Frame)
@@ -194,7 +198,20 @@ class PlayerEngine(private val context: Context, val vlc: LibVLC, private val is
     }
 
     /** Hand the media to VLC. Runs on the VLC thread; Media3 is down and the views are attached beforehand (main thread). */
+    /**
+     * **True from the moment a new media is set until it really plays.**
+     *
+     * libVLC keeps the OLD media playing while the new stream is parsed, and the old
+     * media's clock is the OLD episode's. Reading the player's time in that window
+     * reports the finished episode's position for the new one: the server counts the
+     * new episode at ~100% of its runtime and marks it watched, and the core sees
+     * "position ~= duration" and ends the new episode at once. The queue being empty
+     * says nothing - the parse happens after the job ran.
+     */
+    @Volatile var awaitingNewMedia = false
+
     fun openVlc(media: Media) {
+        awaitingNewMedia = true
         vlcPlayer.media = media
         // **The new media starts at zero.** libVLC keeps the old clock until the new media
         // is parsed; a read in that window is the finished episode's time.
@@ -229,6 +246,7 @@ class PlayerEngine(private val context: Context, val vlc: LibVLC, private val is
         }
         val item = MediaItem.Builder().setUri(address).setSubtitleConfigurations(configs).build()
         reportedPlaying = false
+        awaitingNewMedia = true
         seen.clear()
         // **The mirror must go with the old item.** `exoTime` is only ever written by the
         // getter below, so it still held the previous episode's position here; a read before
@@ -283,7 +301,11 @@ class PlayerEngine(private val context: Context, val vlc: LibVLC, private val is
         override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
             val e = exo ?: return
             updateMirror(e)
-            if (playWhenReady && e.playbackState == Player.STATE_READY && !reportedPlaying) { reportedPlaying = true; emit(Event.Playing) }
+            if (playWhenReady && e.playbackState == Player.STATE_READY && !reportedPlaying) {
+                    reportedPlaying = true
+                    awaitingNewMedia = false
+                    emit(Event.Playing)
+                }
             if (!playWhenReady && reportedPlaying) { reportedPlaying = false; emit(Event.Paused) }
         }
 
