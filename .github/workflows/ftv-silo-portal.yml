@@ -1,13 +1,12 @@
 name: FTV-Silo-Portal
 
-# Portal-side setup for FTV Silo, using the same spaceship session the
-# Make-FTVPlayer-App workflow uses:
+# Portal-side setup for FTV Silo:
 #   1. register the app group the app and its extensions share
 #   2. create the App Store Connect app record
 #
-# The App Store Connect API key cannot create app records or app groups
-# (the `apps` resource only allows GET/UPDATE, and there is no /v1/appGroups
-# resource), so this goes through the Developer Portal session.
+# The App Store Connect API key cannot create app records (the `apps` resource
+# only allows GET/UPDATE) and there is no /v1/appGroups resource, so this goes
+# through a Developer Portal session via spaceship / fastlane.
 
 on:
   workflow_dispatch:
@@ -64,31 +63,63 @@ jobs:
           SKU = ENV['NEW_SKU']
           GRP = ENV['NEW_APP_GROUP']
 
-          client = Spaceship::PortalClient.new(U, P)
-          begin
-            client.login
-            puts "LOGIN_OK"
-          rescue => e
-            puts "LOGIN_FAIL #{e.class}: #{e.message.to_s[0,300]}"
-          end
+          puts "FASTLANE #{Fastlane::VERSION}"
+          puts "SPACESHIP_CONSTANTS " + Spaceship.constants.sort.join(',')
 
-          # ---- 1. the app group ----
+          # ---- get a portal client however this fastlane wants one ----
+          client = nil
           begin
-            groups = Spaceship::Portal.app_group.all
-            puts "APP_GROUPS #{groups.size}"
-            groups.each { |g| puts "APP_GROUP #{g.group_id} | #{g.name} | #{g.id}" }
-            found = groups.find { |g| g.group_id == GRP }
-            if found
-              puts "APP_GROUP_EXISTS #{found.group_id} | #{found.id}"
-            else
+            client = Spaceship::PortalClient.new(U, P)
+            puts "PORTAL_CLIENT_NEW_ARGV"
+          rescue => e
+            puts "PORTAL_CLIENT_NEW_ARGV_FAIL #{e.class}: #{e.message.to_s[0,200]}"
+          end
+          if client.nil?
+            begin
+              client = Spaceship::PortalClient.login(U, P)
+              puts "PORTAL_CLIENT_LOGIN_CLASSMETHOD"
+            rescue => e
+              puts "PORTAL_CLIENT_LOGIN_FAIL #{e.class}: #{e.message.to_s[0,200]}"
+            end
+          end
+          if client.nil?
+            begin
+              c = Spaceship::PortalClient.new
+              puts "PORTAL_CLIENT_NEW_NOARGS methods=#{c.class.instance_methods(false).sort.join(',')}"
+              c.login(U, P)
+              client = c
+              puts "PORTAL_CLIENT_LOGIN_INSTANCE"
+            rescue => e
+              puts "PORTAL_CLIENT_NEW_NOARGS_FAIL #{e.class}: #{e.message.to_s[0,200]}"
+            end
+          end
+          if client.nil?
+            puts "NO_PORTAL_CLIENT"
+          else
+            puts "PORTAL_CLIENT_OK #{client.class}"
+            begin
+              ids = client.app_ids
+              puts "APPIDS #{ids.size}"
+              ids.each { |a| puts "APPID #{a.bundle_id} | #{a.name} | #{a.app_id}" }
+            rescue => e
+              puts "APPIDS_FAIL #{e.class}: #{e.message.to_s[0,200]}"
+            end
+            begin
+              groups = Spaceship::Portal.app_group.all
+              puts "APP_GROUPS #{groups.size}"
+              groups.each { |g| puts "APP_GROUP #{g.group_id} | #{g.name} | #{g.id}" }
+            rescue => e
+              puts "APP_GROUPS_FAIL #{e.class}: #{e.message.to_s[0,300]}"
+            end
+            begin
               made = Spaceship::Portal.app_group.create!(name: NAME, group_id: GRP)
               puts "APP_GROUP_CREATED #{made.group_id} | #{made.id}"
+            rescue => e
+              puts "APP_GROUP_CREATE_FAIL #{e.class}: #{e.message.to_s[0,400]}"
             end
-          rescue => e
-            puts "APP_GROUP_FAIL #{e.class}: #{e.message.to_s[0,400]}"
           end
 
-          # ---- 2. the App Store Connect app record ----
+          # ---- the App Store Connect app record ----
           begin
             apps = Spaceship::ConnectAPI::App.all
             puts "ASC_APPS #{apps.size}"
@@ -98,10 +129,7 @@ jobs:
               puts "ASC_APP_EXISTS #{existing.id} | #{existing.attributes['name']}"
             else
               made = Spaceship::ConnectAPI::App.create!(
-                name: NAME,
-                bundle_id: BID,
-                sku: SKU,
-                primary_locale: 'en-CA'
+                name: NAME, bundle_id: BID, sku: SKU, primary_locale: 'en-CA'
               )
               puts "ASC_APP_CREATED #{made.id} | #{made.attributes['name']} | #{made.attributes['bundleId']}"
             end
@@ -109,7 +137,11 @@ jobs:
             puts "ASC_APP_FAIL #{e.class}: #{e.message.to_s[0,600]}"
           end
           RUBY
-          ruby /tmp/mk.rb 2>&1 | tee a1.txt | tail -60
+          ruby /tmp/mk.rb 2>&1 | tee a1.txt | tail -70
+
+      - name: fastlane produce
+        if: contains(quote(fromJSON('[]')), 'never')
+        run: echo "skipped"
 
       - name: The output
         uses: actions/upload-artifact@v4
