@@ -1,0 +1,104 @@
+name: FTV-Silo-Android
+
+# Builds the FTV Silo Android APKs from the rebranded fork
+# (kishyxd/silo-android) and signs them with the KXVN release key.
+#
+# The FTV keystore lives only in this repository's secrets, so the build runs
+# here and checks the Silo source out of its fork. The fork stays public: the
+# upstream is AGPL-3.0-or-later, which requires the modified source to be
+# published.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Marketing version (e.g. 1.0.0)'
+        required: false
+        default: '1.0.0'
+      build_number:
+        description: 'Build number (integer, 0-999)'
+        required: false
+        default: '1'
+      variant:
+        description: 'Which app(s) to build'
+        required: false
+        default: 'both'
+        type: choice
+        options: [both, phone, tv]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the FTV Silo source
+        uses: actions/checkout@v4
+        with:
+          repository: kishyxd/silo-android
+          ref: main
+          path: silo-android
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up the Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install the SDK bits the build needs
+        run: |
+          sdkmanager --install "platforms;android-36" "build-tools;36.0.0" "platform-tools" || true
+          echo "ANDROID_HOME=$ANDROID_HOME"
+
+      - name: Write the KXVN signing key
+        run: |
+          set -euo pipefail
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > "$RUNNER_TEMP/kxvn.jks"
+          echo "SILO_RELEASE_KEYSTORE=$RUNNER_TEMP/kxvn.jks" >> "$GITHUB_ENV"
+          keytool -list -keystore "$RUNNER_TEMP/kxvn.jks" \
+            -storepass "${{ secrets.ANDROID_STORE_PASSWORD }}" \
+            -alias "${{ secrets.ANDROID_KEY_ALIAS }}" | head -5
+
+      - name: Build the APKs
+        working-directory: silo-android
+        env:
+          SILO_RELEASE_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          SILO_RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          SILO_RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          set -euo pipefail
+          TASKS=""
+          case "${{ inputs.variant }}" in
+            phone) TASKS=":androidApp:assembleRelease" ;;
+            tv)    TASKS=":androidTvApp:assembleRelease" ;;
+            *)     TASKS=":androidApp:assembleRelease :androidTvApp:assembleRelease" ;;
+          esac
+          ./gradlew \
+            -Dorg.gradle.jvmargs="-Xmx4g -Dfile.encoding=UTF-8" \
+            $TASKS \
+            "-PsiloVersionName=${{ inputs.version }}" \
+            "-PsiloBuildNumber=${{ inputs.build_number }}" \
+            "-PsiloVersionCode=${{ inputs.build_number }}" \
+            -PsiloReleaseChannel=release \
+            --no-daemon --max-workers=2
+
+      - name: Inspect the APKs
+        run: |
+          set -euo pipefail
+          find silo-android -name '*.apk' -path '*outputs*' | while read -r a; do
+            echo "### $a"
+            ls -la "$a"
+            "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump badging "$a" 2>/dev/null | head -4 || true
+            "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs "$a" 2>/dev/null | head -3 || true
+          done
+
+      - name: Upload the APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: ftv-silo-android-apk
+          path: |
+            silo-android/androidApp/build/outputs/apk/release/*.apk
+            silo-android/androidTvApp/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+          retention-days: 14
