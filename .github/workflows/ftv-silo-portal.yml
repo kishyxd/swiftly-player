@@ -139,10 +139,6 @@ jobs:
           RUBY
           ruby /tmp/mk.rb 2>&1 | tee a1.txt | tail -70
 
-      - name: fastlane produce
-        if: contains(quote(fromJSON('[]')), 'never')
-        run: echo "skipped"
-
       - name: The output
         uses: actions/upload-artifact@v4
         with:
