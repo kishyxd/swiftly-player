@@ -42,11 +42,13 @@ jobs:
         run: |
           set -euo pipefail
           cd "$RUNNER_TEMP"
-          gh run download "${{ inputs.build_run }}" -R kishyxd/silo-apple \
-            -n "${{ inputs.artifact }}" -D "$RUNNER_TEMP/unsigned"
-          find "$RUNNER_TEMP/unsigned" -name "*.ipa"
+          # dl.kxvn.io answers the runner with an error page; cdn.kxvn.io
+          # serves the file.
+          curl -sSL -o "$RUNNER_TEMP/unsigned.ipa" "https://cdn.kxvn.io/u/FTV-Silo-iOS-unsigned.ipa"
+          ls -la "$RUNNER_TEMP/unsigned.ipa"
+          unzip -t "$RUNNER_TEMP/unsigned.ipa" > /dev/null
           mkdir -p work && cd work
-          unzip -q -o "$RUNNER_TEMP/unsigned"/*.ipa
+          unzip -q -o "$RUNNER_TEMP/unsigned.ipa"
           ls -la Payload/
           /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' Payload/*.app/Info.plist
 
