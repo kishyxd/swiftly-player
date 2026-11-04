@@ -1,0 +1,142 @@
+name: FTV-Silo-ASC-App
+
+# Creates the "FTV Silo" app record in App Store Connect.
+#
+# The App Store Connect API key cannot create app records (the `apps` resource
+# only allows GET/UPDATE), so this uses the App Store Connect web session with
+# the app-specific password -- the same transporter-style session the other
+# workflows in this repo use.
+
+on:
+  workflow_dispatch:
+    inputs:
+      app_name:
+        description: 'The app name'
+        required: false
+        default: 'FTV Silo'
+      bundle_id:
+        description: 'The bundle id'
+        required: false
+        default: 'com.kxvn.ftvsilo'
+      sku:
+        description: 'The SKU'
+        required: false
+        default: 'ftvsilo'
+      locale:
+        description: 'The primary locale'
+        required: false
+        default: 'en-CA'
+
+permissions:
+  contents: write
+
+jobs:
+  create:
+    runs-on: macos-14
+    steps:
+      - name: The App Store Connect session
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPEC_PW: ${{ secrets.APPLE_APP_SPEC_PW }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set +x
+          cd /tmp
+          echo "### the transporter auth, the way altool does it"
+          curl -s -L -c /tmp/cj.txt -b /tmp/cj.txt -o /tmp/tok.json \
+            -w 'HTTP %{http_code}\n' \
+            -H 'Content-Type: application/json' -H 'Accept: application/json' \
+            -H 'X-Apple-Store-Front: 143441-1,29' \
+            -H 'X-Apple-I-MD: 1' -H 'X-Apple-I-MD-M: 1' \
+            -H 'X-Apple-I-MD-RINFO: 1' -H 'X-Apple-I-MD-RS: 1' \
+            -H 'X-Apple-I-MD-RENV: 1' -H 'X-Apple-I-MD-RM: 1' \
+            -H 'X-Apple-Client-Application: iTMSTransporter' \
+            -u "$APPLE_ID:$APPLE_APP_SPEC_PW" \
+            -X POST 'https://appstoreconnect.apple.com/Authentication/v1/token' \
+            -d "{\"appName\":\"iTMSTransporter\",\"appleId\":\"$APPLE_ID\",\"password\":\"$APPLE_APP_SPEC_PW\"}"
+          head -c 300 /tmp/tok.json; echo
+          echo "--- the cookies ---"
+          grep -v '^#' /tmp/cj.txt | head -8
+
+      - name: The existing apps (for the schema)
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPEC_PW: ${{ secrets.APPLE_APP_SPEC_PW }}
+        run: |
+          cd /tmp
+          curl -s -b /tmp/cj.txt -o /tmp/apps.json -w 'GET /iris/v1/apps HTTP %{http_code}\n' \
+            'https://appstoreconnect.apple.com/iris/v1/apps'
+          head -c 1500 /tmp/apps.json; echo
+          echo "### does the FTV Silo bundle already have a record?"
+          curl -s -b /tmp/cj.txt -o /tmp/bids.json -w 'GET /iris/v1/bundleIds HTTP %{http_code}\n' \
+            'https://appstoreconnect.apple.com/iris/v1/bundleIds'
+          python3 - <<'PY'
+          import json
+          try:
+              d=json.load(open('/tmp/apps.json'))
+              items=d.get('data') or []
+              print("apps:", len(items))
+              for a in items[:4]:
+                  at=a.get('attributes',{})
+                  print("   ", a.get('id'), at.get('name'), at.get('bundleId'), at.get('sku'))
+          except Exception as e:
+              print("apps parse:", e)
+          try:
+              d=json.load(open('/tmp/bids.json'))
+              for it in (d.get('data') or []):
+                  at=it.get('attributes',{})
+                  if 'ftvsilo' in json.dumps(at): print("   BID:", it.get('id'), at)
+          except Exception as e:
+              print("bids parse:", e)
+          PY
+
+      - name: Create the app record
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPEC_PW: ${{ secrets.APPLE_APP_SPEC_PW }}
+        run: |
+          cd /tmp
+          echo "### POST /iris/v1/apps"
+          cat > /tmp/app.json <<EOF
+          {
+            "data": {
+              "type": "apps",
+              "attributes": {
+                "name": "${{ inputs.app_name }}",
+                "bundleId": "${{ inputs.bundle_id }}",
+                "sku": "${{ inputs.sku }}",
+                "primaryLocale": "${{ inputs.locale }}",
+                "platform": "IOS"
+              },
+              "relationships": {
+                "primaryCategory": { "data": { "type": "appCategories", "id": "ENTERTAINMENT" } }
+              }
+            }
+          }
+          EOF
+          python3 -c "import json;json.load(open('/tmp/app.json'));print('   the payload is valid json')"
+          curl -s -b /tmp/cj.txt -o /tmp/created.json -w 'HTTP %{http_code}\n' \
+            -X POST -H 'Content-Type: application/json' \
+            -d @/tmp/app.json \
+            'https://appstoreconnect.apple.com/iris/v1/apps'
+          head -c 1200 /tmp/created.json; echo
+          echo "### the apps list after the create"
+          curl -s -b /tmp/cj.txt -o /tmp/apps2.json \
+            'https://appstoreconnect.apple.com/iris/v1/apps'
+          python3 - <<'PY'
+          import json
+          try:
+              d=json.load(open('/tmp/apps2.json'))
+              for a in (d.get('data') or []):
+                  at=a.get('attributes',{})
+                  print("   ", a.get('id'), "|", at.get('name'), "|", at.get('bundleId'), "|", at.get('sku'))
+          except Exception as e:
+              print("   parse:", e)
+          PY
+
+      - name: The output
+        uses: actions/upload-artifact@v4
+        with:
+          name: ftv-silo-asc-app
+          path: /tmp
+          retention-days: 7
