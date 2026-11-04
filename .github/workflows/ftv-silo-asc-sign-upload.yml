@@ -1,0 +1,176 @@
+name: FTV-Silo-ASC-Sign-Upload
+
+# Signs the unsigned FTV Silo iOS IPA with real codesign on the runner and
+# uploads it to App Store Connect.
+#
+# Why not zsign: zsign gives the app EXTENSIONS an application-identifier of
+# "***.<bundle id>", and App Store Connect rejects that with a 409
+# "Invalid Code Signing Entitlements". codesign computes the right
+# application-identifier per bundle, so it is used here.
+#
+# The entitlements are taken from the provisioning profile and the
+# application-identifier is rewritten per bundle. The profile grants no app
+# group, so none is requested.
+#
+# The build is NOT submitted for review. It is uploaded and left in the ASC
+# processing state.
+on:
+  workflow_dispatch:
+    inputs:
+      build_run:
+        description: "The silo-apple run that produced the unsigned IPA"
+        default: "41906615767"
+      artifact:
+        description: "The artifact name"
+        default: "Silo-iOS-unsigned-ipa"
+permissions:
+  contents: read
+jobs:
+  sign:
+    runs-on: macos-15
+    env:
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPEC_PW: ${{ secrets.APPLE_APP_SPEC_PW }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      ASC_DIST_P12_B64: ${{ secrets.ASC_DIST_P12_B64 }}
+      ASC_DIST_P12_PASSWORD: ${{ secrets.ASC_DIST_P12_PASSWORD }}
+      ASC_PROFILE_FTVSILO_B64: ${{ secrets.ASC_PROFILE_FTVSILO_B64 }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: The unsigned IPA
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          gh run download "${{ inputs.build_run }}" -R kishyxd/silo-apple \
+            -n "${{ inputs.artifact }}" -D "$RUNNER_TEMP/unsigned"
+          find "$RUNNER_TEMP/unsigned" -name "*.ipa"
+          mkdir -p work && cd work
+          unzip -q -o "$RUNNER_TEMP/unsigned"/*.ipa
+          ls -la Payload/
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' Payload/*.app/Info.plist
+
+      - name: The certificate
+        run: |
+          set -euo pipefail
+          set +x
+          KEYCHAIN="$RUNNER_TEMP/build.keychain"
+          KEYCHAIN_PW="$(uuidgen)"
+          echo "KEYCHAIN=$KEYCHAIN" >> "$GITHUB_ENV"
+          echo "KEYCHAIN_PW=$KEYCHAIN_PW" >> "$GITHUB_ENV"
+          security create-keychain -p "$KEYCHAIN_PW" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PW" "$KEYCHAIN"
+          echo "$ASC_DIST_P12_B64" | base64 -d > "$RUNNER_TEMP/dist.p12"
+          security import "$RUNNER_TEMP/dist.p12" \
+            -k "$KEYCHAIN" -P "$ASC_DIST_P12_PASSWORD" \
+            -T /usr/bin/codesign -T /usr/bin/security
+          security set-key-partition-list \
+            -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PW" "$KEYCHAIN" > /dev/null
+          security list-keychain -d user -s "$KEYCHAIN"
+          rm -f "$RUNNER_TEMP/dist.p12"
+          security find-identity -v -p codesigning
+
+      - name: The profile
+        run: |
+          set -euo pipefail
+          set +x
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          echo "$ASC_PROFILE_FTVSILO_B64" | base64 -d \
+            > "$HOME/Library/MobileDevice/Provisioning Profiles/ftvsilo.mobileprovision"
+          security cms -D -i "$HOME/Library/MobileDevice/Provisioning Profiles/ftvsilo.mobileprovision" \
+            > "$RUNNER_TEMP/profile.plist"
+          /usr/libexec/PlistBuddy -c 'Print :Name' "$RUNNER_TEMP/profile.plist"
+          /usr/libexec/PlistBuddy -c 'Print :TeamIdentifier:0' "$RUNNER_TEMP/profile.plist"
+          /usr/libexec/PlistBuddy -c 'Print :ExpirationDate' "$RUNNER_TEMP/profile.plist"
+
+      - name: The entitlements per bundle
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/work"
+          python3 - <<'PY'
+          import plistlib, subprocess, os, glob, json
+          prof = plistlib.load(open("/Users/runner/work/_temp/profile.plist", "rb"))
+          base = prof.get("Entitlements") or {}
+          team = (prof.get("TeamIdentifier") or [""])[0]
+          print("the team:", team)
+          print("the profile's entitlements:", json.dumps(base, default=str))
+          bundles = []
+          for root, dirs, files in os.walk("Payload"):
+              if root.endswith(".app") or root.endswith(".appex"):
+                  if root not in bundles:
+                      bundles.append(root)
+          os.makedirs("ent", exist_ok=True)
+          out = []
+          for b in sorted(bundles):
+              info = plistlib.load(open(os.path.join(b, "Info.plist"), "rb"))
+              bid = info.get("CFBundleIdentifier")
+              ent = dict(base)
+              ent["application-identifier"] = "%s.%s" % (team, bid)
+              p = "ent/%s.plist" % bid
+              plistlib.dump(ent, open(p, "wb"))
+              print("  ", b, "->", p, "application-identifier:", ent["application-identifier"])
+              out.append((b, p))
+          json.dump(out, open("ent/plan.json", "w"))
+          PY
+          cat ent/plan.json
+
+      - name: Sign
+        run: |
+          set -euo pipefail
+          set +x
+          cd "$RUNNER_TEMP/work"
+          IDENTITY=$(security find-identity -v -p codesigning | grep 'Apple Distribution' | head -1 | sed 's/.*"\(.*\)"/\1/')
+          echo "the identity: $IDENTITY"
+          PROFILE="$HOME/Library/MobileDevice/Provisioning Profiles/ftvsilo.mobileprovision"
+          # The frameworks and the extensions first, the app last.
+          for B in $(find Payload -name "*.framework" -o -name "*.dylib" | sort -r); do
+            codesign --force --sign "$IDENTITY" --timestamp=none \
+              --generate-entitlement-der "$B" > /dev/null 2>&1 || \
+            codesign --force --sign "$IDENTITY" "$B"
+          done
+          for B in $(find Payload -name "*.appex" | sort -r); do
+            BID=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$B/Info.plist")
+            cp "$PROFILE" "$B/embedded.mobileprovision"
+            codesign --force --sign "$IDENTITY" --timestamp=none \
+              --entitlements "ent/$BID.plist" --generate-entitlement-der "$B"
+            echo "signed $B"
+          done
+          APP=$(find Payload -maxdepth 1 -name "*.app" | head -1)
+          BID=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist")
+          cp "$PROFILE" "$APP/embedded.mobileprovision"
+          codesign --force --sign "$IDENTITY" --timestamp=none \
+            --entitlements "ent/$BID.plist" --generate-entitlement-der "$APP"
+          echo "signed $APP"
+          codesign --verify --deep --strict "$APP" && echo "the signature verifies"
+
+      - name: The IPA
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/work"
+          rm -f "$RUNNER_TEMP/FTV-Silo.ipa"
+          zip -qry "$RUNNER_TEMP/FTV-Silo.ipa" Payload
+          ls -la "$RUNNER_TEMP/FTV-Silo.ipa"
+          rm -rf probe && mkdir probe && unzip -q -o "$RUNNER_TEMP/FTV-Silo.ipa" -d probe
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' probe/Payload/*.app/Info.plist
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' probe/Payload/*.app/Info.plist
+          codesign --display --entitlements - probe/Payload/*.app 2>/dev/null | head -20
+
+      - name: Upload to App Store Connect
+        run: |
+          set -euo pipefail
+          set +x
+          xcrun altool --upload-app --file "$RUNNER_TEMP/FTV-Silo.ipa" --type ios \
+            -u "$APPLE_ID" -p "$APPLE_APP_SPEC_PW" --team-id "$APPLE_TEAM_ID" 2>&1 | tee "$RUNNER_TEMP/upload.log"
+          # Trust ONLY the literal success line. A broad error scan marks a
+          # successful upload as a failure.
+          grep -q "No errors uploading" "$RUNNER_TEMP/upload.log" || {
+            echo "::error::the upload did not succeed"; exit 1; }
+          echo "UPLOAD_OK"
+
+      - name: The outcome
+        run: |
+          {
+            echo "### the upload log"
+            tail -30 "$RUNNER_TEMP/upload.log" || true
+          } >> "$GITHUB_STEP_SUMMARY"
