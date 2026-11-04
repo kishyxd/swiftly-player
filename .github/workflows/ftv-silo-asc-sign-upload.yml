@@ -35,6 +35,7 @@ jobs:
       ASC_DIST_P12_B64: ${{ secrets.ASC_DIST_P12_B64 }}
       ASC_DIST_P12_PASSWORD: ${{ secrets.ASC_DIST_P12_PASSWORD }}
       ASC_PROFILE_FTVSILO_B64: ${{ secrets.ASC_PROFILE_FTVSILO_B64 }}
+      ASC_PROFILE_FTVSILO_WILDCARD_B64: ${{ secrets.ASC_PROFILE_FTVSILO_WILDCARD_B64 }}
     steps:
       - uses: actions/checkout@v4
 
@@ -80,8 +81,12 @@ jobs:
           mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
           echo "$ASC_PROFILE_FTVSILO_B64" | base64 -d \
             > "$HOME/Library/MobileDevice/Provisioning Profiles/ftvsilo.mobileprovision"
+          echo "$ASC_PROFILE_FTVSILO_WILDCARD_B64" | base64 -d \
+            > "$HOME/Library/MobileDevice/Provisioning Profiles/ftvsilo-wildcard.mobileprovision"
           security cms -D -i "$HOME/Library/MobileDevice/Provisioning Profiles/ftvsilo.mobileprovision" \
             > "$RUNNER_TEMP/profile.plist"
+          security cms -D -i "$HOME/Library/MobileDevice/Provisioning Profiles/ftvsilo-wildcard.mobileprovision" \
+            > "$RUNNER_TEMP/profile-wildcard.plist"
           /usr/libexec/PlistBuddy -c 'Print :Name' "$RUNNER_TEMP/profile.plist"
           /usr/libexec/PlistBuddy -c 'Print :TeamIdentifier:0' "$RUNNER_TEMP/profile.plist"
           /usr/libexec/PlistBuddy -c 'Print :ExpirationDate' "$RUNNER_TEMP/profile.plist"
@@ -96,7 +101,9 @@ jobs:
           python3 - <<'PY'
           import plistlib, subprocess, os, glob, json
           prof = plistlib.load(open("/Users/runner/work/_temp/profile.plist", "rb"))
+          wild = plistlib.load(open("/Users/runner/work/_temp/profile-wildcard.plist", "rb"))
           base = prof.get("Entitlements") or {}
+          wild_base = wild.get("Entitlements") or {}
           # macOS's `security cms -D` redacts the team identifier as "***".
           # The real one has to go back in, or App Store Connect rejects the
           # signature with "Invalid Code Signing Entitlements".
@@ -125,8 +132,16 @@ jobs:
           for b in sorted(bundles):
               info = plistlib.load(open(os.path.join(b, "Info.plist"), "rb"))
               bid = info.get("CFBundleIdentifier")
-              ent = dict(base)
+              is_app = b.endswith(".app")
+              # The APP uses the explicit profile. The EXTENSIONS need the
+              # wildcard one, because the explicit profile does not authorise
+              # TEAMID.com.kxvn.ftvsilo.DownloadsActivity.
+              src = base if is_app else wild_base
+              ent = dict(src)
               ent["application-identifier"] = "%s.%s" % (team, bid)
+              if not is_app:
+                  # The wildcard profile grants no push entitlement.
+                  ent.pop("aps-environment", None)
               p = "ent/%s.plist" % bid
               plistlib.dump(ent, open(p, "wb"))
               print("  ", b, "->", p, "application-identifier:", ent["application-identifier"])
@@ -149,9 +164,10 @@ jobs:
               --generate-entitlement-der "$B" > /dev/null 2>&1 || \
             codesign --force --sign "$IDENTITY" "$B"
           done
+          WILDCARD="$HOME/Library/MobileDevice/Provisioning Profiles/ftvsilo-wildcard.mobileprovision"
           for B in $(find Payload -name "*.appex" | sort -r); do
             BID=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$B/Info.plist")
-            cp "$PROFILE" "$B/embedded.mobileprovision"
+            cp "$WILDCARD" "$B/embedded.mobileprovision"
             codesign --force --sign "$IDENTITY" --timestamp=none \
               --entitlements "ent/$BID.plist" --generate-entitlement-der "$B"
             echo "signed $B"
