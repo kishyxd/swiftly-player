@@ -1,0 +1,63 @@
+name: FTV-Silo-Portal-Raw
+
+# Last attempt at the app record + app group, using the Developer Portal's
+# own HTTP API with a session cookie instead of spaceship.
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  raw:
+    runs-on: macos-14
+    env:
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPEC_PW: ${{ secrets.APPLE_APP_SPEC_PW }}
+      NEW_APP_NAME: FTV Silo
+      NEW_BUNDLE_ID: com.kxvn.ftvsilo
+      NEW_SKU: ftvsilo
+      NEW_APP_GROUP: group.com.kxvn.ftvsilo
+    steps:
+      - name: The portal session and the calls
+        run: |
+          set +x
+          cd /tmp
+          echo "### 1. the portal login"
+          curl -s -c /tmp/pc.txt -b /tmp/pc.txt -o /tmp/login.json -w 'login HTTP %{http_code}\n' \
+            -X POST -H 'Content-Type: application/json' \
+            -d "{\"accountName\":\"$APPLE_ID\",\"password\":\"$APPLE_APP_SPEC_PW\",\"appSpecificPassword\":\"$APPLE_APP_SPEC_PW\"}" \
+            'https://developer.apple.com/services-account/v1/auth/login'
+          head -c 300 /tmp/login.json; echo
+          echo "--- the cookies ---"
+          grep -v '^#' /tmp/pc.txt | head -6
+
+          echo "### 2. the app groups"
+          for PATHNAME in appGroups appGroups/new; do
+            printf "   POST /services-account/v1/%-16s -> " "$PATHNAME"
+            curl -s -b /tmp/pc.txt -c /tmp/pc.txt -o /tmp/g.json -w '%{http_code}\n' \
+              -X POST -H 'Content-Type: application/json' \
+              -d "{\"name\":\"$NEW_APP_NAME\",\"groupId\":\"$NEW_APP_GROUP\",\"id\":\"$NEW_APP_GROUP\"}" \
+              "https://developer.apple.com/services-account/v1/$PATHNAME"
+            head -c 260 /tmp/g.json; echo
+          done
+
+          echo "### 3. the app record"
+          for PATHNAME in apps apps/new; do
+            printf "   POST /services-account/v1/%-10s -> " "$PATHNAME"
+            curl -s -b /tmp/pc.txt -c /tmp/pc.txt -o /tmp/a.json -w '%{http_code}\n' \
+              -X POST -H 'Content-Type: application/json' \
+              -d "{\"name\":\"$NEW_APP_NAME\",\"bundleId\":\"$NEW_BUNDLE_ID\",\"sku\":\"$NEW_SKU\",\"platform\":\"IOS\",\"primaryLocale\":\"en-CA\"}" \
+              "https://developer.apple.com/services-account/v1/$PATHNAME"
+            head -c 320 /tmp/a.json; echo
+          done
+
+          echo "### 4. what the session can see"
+          curl -s -b /tmp/pc.txt -o /tmp/apps.json -w '   GET /services-account/v1/apps -> %{http_code}\n' \
+            'https://developer.apple.com/services-account/v1/apps'
+          head -c 700 /tmp/apps.json; echo
+
+      - name: The output
+        uses: actions/upload-artifact@v4
+        with:
+          name: ftv-silo-portal-raw
+          path: /tmp
+          retention-days: 7
