@@ -26,17 +26,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: The API key
-        env:
-          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
-          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-        run: |
-          set -euo pipefail
-          # ASC_KEY_P8 is stored base64 encoded. altool needs the PEM.
-          echo "$ASC_KEY_P8" | base64 -d > "$RUNNER_TEMP/asc_key.p8"
-          echo "   the key is $(wc -c < "$RUNNER_TEMP/asc_key.p8") bytes"
-          head -1 "$RUNNER_TEMP/asc_key.p8"
-
       - name: Fetch the IPA
         run: |
           set -euo pipefail
@@ -47,14 +36,25 @@ jobs:
           echo "   the IPA is a valid zip"
 
       - name: Upload to App Store Connect
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPEC_PW: ${{ secrets.APPLE_APP_SPEC_PW }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           set -euo pipefail
+          set +x
+          # altool authenticates with the Apple ID and the app-specific
+          # password. That is the form that has actually uploaded for this
+          # account; the API-key form fails the JWT step.
           xcrun altool --upload-app \
             --file "$RUNNER_TEMP/ftv-silo.ipa" \
             --type ios \
-            --apiKey "$RUNNER_TEMP/asc_key.p8" \
-            --apiIssuer "${{ secrets.ASC_ISSUER_ID }}" 2>&1 | tee "$RUNNER_TEMP/altool.log"
-          grep -E "(Upload succeeded|error:|ERROR)" "$RUNNER_TEMP/altool.log" || true
+            -u "$APPLE_ID" -p "$APPLE_APP_SPEC_PW" --team-id "$APPLE_TEAM_ID" 2>&1 | tee "$RUNNER_TEMP/altool.log"
+          # Trust ONLY the literal success line. A broad error scan marks a
+          # successful upload as a failure.
+          grep -q "No errors uploading" "$RUNNER_TEMP/altool.log" || {
+            echo "::error::the upload did not succeed"; exit 1; }
+          echo "UPLOAD_OK"
 
       - name: The outcome
         run: |
