@@ -28,12 +28,22 @@ jobs:
 
       - name: Fetch the IPA
         run: |
-          set -euo pipefail
-          curl -sL --retry 3 -o "$RUNNER_TEMP/ftv-silo.ipa" "${{ inputs.ipa_url }}"
-          ls -la "$RUNNER_TEMP/ftv-silo.ipa"
-          # An IPA is a zip. If it does not unzip, it is an error page.
-          unzip -t "$RUNNER_TEMP/ftv-silo.ipa" > /dev/null
-          echo "   the IPA is a valid zip"
+          set -uo pipefail
+          for U in "${{ inputs.ipa_url }}" "https://cdn.kxvn.io/u/FTV-Silo-iOS.ipa"; do
+            echo "### trying $U"
+            curl -sSL -o "$RUNNER_TEMP/ftv-silo.ipa" "$U"
+            SIZE=$(stat -f%z "$RUNNER_TEMP/ftv-silo.ipa" 2>/dev/null || echo 0)
+            echo "   got $SIZE bytes"
+            if unzip -t "$RUNNER_TEMP/ftv-silo.ipa" > /dev/null 2>&1; then
+              echo "   the IPA is a valid zip"
+              echo "   $U" > "$RUNNER_TEMP/ipa_source.txt"
+              break
+            fi
+            echo "   not a zip, the body was:"
+            head -c 600 "$RUNNER_TEMP/ftv-silo.ipa"
+            echo
+          done
+          [ -f "$RUNNER_TEMP/ipa_source.txt" ] || { echo "::error::could not fetch the IPA"; exit 1; }
 
       - name: Upload to App Store Connect
         env:
