@@ -1,0 +1,119 @@
+name: FTV-Silo-Portal
+
+# Portal-side setup for FTV Silo, using the same spaceship session the
+# Make-FTVPlayer-App workflow uses:
+#   1. register the app group the app and its extensions share
+#   2. create the App Store Connect app record
+#
+# The App Store Connect API key cannot create app records or app groups
+# (the `apps` resource only allows GET/UPDATE, and there is no /v1/appGroups
+# resource), so this goes through the Developer Portal session.
+
+on:
+  workflow_dispatch:
+    inputs:
+      app_name:
+        description: 'The app name'
+        required: false
+        default: 'FTV Silo'
+      bundle_id:
+        description: 'The bundle id'
+        required: false
+        default: 'com.kxvn.ftvsilo'
+      sku:
+        description: 'The SKU'
+        required: false
+        default: 'ftvsilo'
+      app_group:
+        description: 'The app group id'
+        required: false
+        default: 'group.com.kxvn.ftvsilo'
+
+permissions:
+  contents: write
+
+jobs:
+  setup:
+    runs-on: macos-14
+    env:
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPEC_PW: ${{ secrets.APPLE_APP_SPEC_PW }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      NEW_APP_NAME: ${{ inputs.app_name }}
+      NEW_BUNDLE_ID: ${{ inputs.bundle_id }}
+      NEW_SKU: ${{ inputs.sku }}
+      NEW_APP_GROUP: ${{ inputs.app_group }}
+    steps:
+      - name: The portal session
+        env:
+          FASTLANE_USER: ${{ secrets.APPLE_ID }}
+          FASTLANE_PASSWORD: ${{ secrets.APPLE_APP_SPEC_PW }}
+          FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPEC_PW }}
+          FASTLANE_SKIP_2FA: 'true'
+        run: |
+          set +x
+          cd /tmp
+          cat > /tmp/mk.rb <<'RUBY'
+          require 'fastlane'
+          require 'spaceship'
+
+          U  = ENV['FASTLANE_USER']
+          P  = ENV['FASTLANE_PASSWORD']
+          BID = ENV['NEW_BUNDLE_ID']
+          NAME = ENV['NEW_APP_NAME']
+          SKU = ENV['NEW_SKU']
+          GRP = ENV['NEW_APP_GROUP']
+
+          client = Spaceship::PortalClient.new(U, P)
+          begin
+            client.login
+            puts "LOGIN_OK"
+          rescue => e
+            puts "LOGIN_FAIL #{e.class}: #{e.message.to_s[0,300]}"
+          end
+
+          # ---- 1. the app group ----
+          begin
+            groups = Spaceship::Portal.app_group.all
+            puts "APP_GROUPS #{groups.size}"
+            groups.each { |g| puts "APP_GROUP #{g.group_id} | #{g.name} | #{g.id}" }
+            found = groups.find { |g| g.group_id == GRP }
+            if found
+              puts "APP_GROUP_EXISTS #{found.group_id} | #{found.id}"
+            else
+              made = Spaceship::Portal.app_group.create!(name: NAME, group_id: GRP)
+              puts "APP_GROUP_CREATED #{made.group_id} | #{made.id}"
+            end
+          rescue => e
+            puts "APP_GROUP_FAIL #{e.class}: #{e.message.to_s[0,400]}"
+          end
+
+          # ---- 2. the App Store Connect app record ----
+          begin
+            apps = Spaceship::ConnectAPI::App.all
+            puts "ASC_APPS #{apps.size}"
+            apps.each { |a| puts "ASC_APP #{a.id} | #{a.attributes['name']} | #{a.attributes['bundleId']} | #{a.attributes['sku']}" }
+            existing = apps.find { |a| a.attributes['bundleId'] == BID }
+            if existing
+              puts "ASC_APP_EXISTS #{existing.id} | #{existing.attributes['name']}"
+            else
+              made = Spaceship::ConnectAPI::App.create!(
+                name: NAME,
+                bundle_id: BID,
+                sku: SKU,
+                primary_locale: 'en-CA'
+              )
+              puts "ASC_APP_CREATED #{made.id} | #{made.attributes['name']} | #{made.attributes['bundleId']}"
+            end
+          rescue => e
+            puts "ASC_APP_FAIL #{e.class}: #{e.message.to_s[0,600]}"
+          end
+          RUBY
+          ruby /tmp/mk.rb 2>&1 | tee a1.txt | tail -60
+
+      - name: The output
+        uses: actions/upload-artifact@v4
+        with:
+          name: ftv-silo-portal
+          path: /tmp/a1.txt
+          retention-days: 7
