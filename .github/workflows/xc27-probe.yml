@@ -1,0 +1,14 @@
+name: xc27 probe
+on:
+  workflow_dispatch:
+jobs:
+  x:
+    runs-on: xcode-27
+    steps:
+      - run: |
+          ls -d /Applications/Xcode*.app || echo "NO XCODE APPS"
+          for a in /Applications/Xcode*.app; do
+            echo "--- $a ---"
+            "$a/Contents/Developer/usr/bin/xcodebuild" -version | head -2
+            "$a/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc" --version | head -1
+          done
