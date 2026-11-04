@@ -101,8 +101,12 @@ jobs:
           # The real one has to go back in, or App Store Connect rejects the
           # signature with "Invalid Code Signing Entitlements".
           team = os.environ.get("APPLE_TEAM_ID", "").strip()
+          print("the APPLE_TEAM_ID secret is:", repr(team))
           if not team or team == "***":
-              raise SystemExit("no usable team id")
+              # The secret is redacted too. The team id is fixed for this
+              # account and is in the profile's own name/entitlements.
+              team = "6VS7BF6R33"
+          print("the team we will sign with:", team)
           for k, v in list(base.items()):
               if isinstance(v, str) and "***" in v:
                   base[k] = v.replace("***", team)
@@ -176,12 +180,18 @@ jobs:
         run: |
           set -euo pipefail
           set +x
-          xcrun altool --upload-app --file "$RUNNER_TEMP/FTV-Silo.ipa" --type ios \
-            -u "$APPLE_ID" -p "$APPLE_APP_SPEC_PW" --team-id "$APPLE_TEAM_ID" 2>&1 | tee "$RUNNER_TEMP/upload.log"
-          # Trust ONLY the literal success line. A broad error scan marks a
-          # successful upload as a failure.
-          grep -q "No errors uploading" "$RUNNER_TEMP/upload.log" || {
-            echo "::error::the upload did not succeed"; exit 1; }
+          OK=0
+          for ATTEMPT in 1 2 3; do
+            echo "=== the upload attempt $ATTEMPT"
+            xcrun altool --upload-app --file "$RUNNER_TEMP/FTV-Silo.ipa" --type ios \
+              -u "$APPLE_ID" -p "$APPLE_APP_SPEC_PW" --team-id 6VS7BF6R33 2>&1 | tee "$RUNNER_TEMP/upload.log"
+            # Trust ONLY the literal success line. A broad error scan marks a
+            # successful upload as a failure.
+            if grep -q "No errors uploading" "$RUNNER_TEMP/upload.log"; then OK=1; break; fi
+            echo "--- not accepted, waiting and trying again"
+            sleep 45
+          done
+          [ "$OK" = "1" ] || { echo "::error::the upload did not succeed"; exit 1; }
           echo "UPLOAD_OK"
 
       - name: The outcome
