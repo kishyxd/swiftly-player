@@ -27,9 +27,15 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: The API key
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
         run: |
-          echo "${{ secrets.ASC_KEY_P8 }}" > "$RUNNER_TEMP/asc_key.p8"
+          set -euo pipefail
+          # ASC_KEY_P8 is stored base64 encoded. altool needs the PEM.
+          echo "$ASC_KEY_P8" | base64 -d > "$RUNNER_TEMP/asc_key.p8"
           echo "   the key is $(wc -c < "$RUNNER_TEMP/asc_key.p8") bytes"
+          head -1 "$RUNNER_TEMP/asc_key.p8"
 
       - name: Fetch the IPA
         run: |
