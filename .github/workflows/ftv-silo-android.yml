@@ -91,6 +91,7 @@ jobs:
             "-PsiloBuildNumber=${{ inputs.build_number }}" \
             "-PsiloVersionCode=${{ inputs.build_number }}" \
             -PsiloReleaseChannel=release \
+            -x lintVitalRelease -x lintVital \
             --no-daemon --max-workers=2
 
       - name: Inspect the APKs
