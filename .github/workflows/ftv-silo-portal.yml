@@ -72,12 +72,16 @@ jobs:
           FASTLANE_PASSWORD: ${{ secrets.APPLE_APP_SPEC_PW }}
           FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPEC_PW }}
           FASTLANE_SKIP_2FA: 'true'
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
         run: |
           set +x
           cd /tmp
           cat > /tmp/mk.rb <<'RUBY'
           require 'fastlane'
           require 'spaceship'
+          require 'base64'
 
           U  = ENV['FASTLANE_USER']
           P  = ENV['FASTLANE_PASSWORD']
@@ -85,6 +89,21 @@ jobs:
           NAME = ENV['NEW_APP_NAME']
           SKU = ENV['NEW_SKU']
           GRP = ENV['NEW_APP_GROUP']
+
+          # The portal login tries to fetch an API key from App Store Connect
+          # and times out. Give spaceship the key we already have so it does
+          # not have to.
+          begin
+            raw = ENV['ASC_KEY_P8'].to_s
+            raw = Base64.decode64(raw) unless raw.start_with?('-----')
+            Spaceship::ConnectAPI.token = {
+              key_id: ENV['ASC_KEY_ID'], issuer_id: ENV['ASC_ISSUER_ID'],
+              key: raw, duration: 1200
+            }
+            puts "TOKEN_SET"
+          rescue => e
+            puts "TOKEN_FAIL #{e.class}: #{e.message.to_s[0,300]}"
+          end
 
           client = Spaceship::PortalClient.new
           begin
